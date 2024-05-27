@@ -6,7 +6,7 @@
 	<title>Gamut Mapping Experiments - Gradients</title>
 	<link rel="stylesheet" href="gradients.css" />
 	<link rel="shortcut icon" />
-	<script type="module" src="https://colorjs.io/elements/css-color/css-color.js"></script>
+	<script type="module" src="https://elements.colorjs.io/src/color-swatch/color-swatch.js"></script>
 	<script type="module" src="gradients.js"></script>
 </head>
 <body>
@@ -25,12 +25,12 @@
 		<label for="flush">Flush:</label> <input type="checkbox" v-model="flush" name="flush">
 	</div>
 	<div class="color-inputs">
-		<css-color swatch="large" @colorchange="colorChangeFrom" :value="from">
+		<color-swatch size="large" @colorchange="colorChangeFrom" :value="from">
 			<input v-model="from" />
-		</css-color>
-		<css-color swatch="large" @colorchange="colorChangeTo" :value="to">
+		</color-swatch>
+		<color-swatch size="large" @colorchange="colorChangeTo" :value="to">
 			<input v-model="to" />
-		</css-color>
+		</color-swatch>
 	</div>
 	<div class="mapped-gradient oog">
 		<details class="gamut-legend"><summary><strong>Gamut indicator</strong></summary>

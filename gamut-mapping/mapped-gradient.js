@@ -54,7 +54,7 @@ export default {
 
 	compilerOptions: {
 		isCustomElement (tag) {
-			return tag === "css-color";
+			return tag === "color-swatch";
 		},
 	},
 

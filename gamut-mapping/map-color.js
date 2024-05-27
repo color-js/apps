@@ -131,7 +131,7 @@ export default {
 
 	compilerOptions: {
 		isCustomElement (tag) {
-			return tag === "css-color";
+			return tag === "color-swatch";
 		},
 	},
 
@@ -145,9 +145,9 @@ export default {
 						<small class="description">The color as displayed directly by the browser.</small>
 					</dt>
 					<dd>
-						<css-color swatch="large" @colorchange="event => colorNullable = event.detail.color" :value="colorInput">
+						<color-swatch size="large" @colorchange="event => colorNullable = event.detail.color" :value="colorInput">
 							<input v-model="colorInput" />
-						</css-color>
+						</color-swatch>
 						<details class="space-coords">
 							<summary>Raw coordinates</summary>
 							<dl class="space-coords">
@@ -179,7 +179,7 @@ export default {
 						<small v-if="config.description" class="description">{{ config.description }}</small>
 					</dt>
 					<dd>
-						<css-color swatch="large" :color="mapped[method].color"></css-color>
+						<color-swatch size="large" :color="mapped[method].color"></color-swatch>
 						<dl class="deltas" v-if="!Object.values(mapped[method].deltas).every(d => d === 0)">
 							<div v-for="(delta, c) of mapped[method].deltas" :class="'delta-' + c.toLowerCase()">
 								<dt>Δ{{ c }}</dt>

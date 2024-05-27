@@ -1,7 +1,7 @@
 :root {
 	--font-mono: Consolas, Inconsolata, Monaco, monospace;
 }
-css-color input {
+color-swatch input {
 	padding: .15em .3em .1em;
 	border: 1px solid hsl(220 10% 78%);
 	border-radius: .25em;
@@ -79,5 +79,5 @@ details.timing-info {
 		justify-content: space-between;
 		gap: 1em;
 	}
-	
+
 }
