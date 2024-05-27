@@ -1,0 +1,20 @@
+---
+layout: "plain.njk"
+permalink: index.html
+includes: '<link rel="stylesheet" href="https://colorjs.io/assets/css/home.css">'
+---
+<header>
+	<nav>
+		{% include "partials/_nav-links.njk" %}
+	</nav>
+
+	<hgroup class="logo">
+		<img src="https://colorjs.io/logo.svg" alt="">
+		<h1>Color Apps</h1>
+		<h2>A collection of color tools</h2>
+	</hgroup>
+</header>
+
+<main>
+	{{ content | safe }}
+</main>

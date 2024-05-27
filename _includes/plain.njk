@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html data-route="{{ page.url }}">
+<head>
+<title>
+	{%- if title -%}{{ title }} &bull;{%- else -%}Color Apps{%- endif -%}
+</title>
+<meta name="viewport" content="width=device-width" />
+<link rel="shortcut icon" href="https://colorjs.io/logo.svg">
+<link rel="stylesheet" href="https://colorjs.io/assets/css/style.css">
+
+<script src="https://colorjs.io/color.js" type="module"></script>
+
+{{ includes | safe }}
+
+</head>
+<body class="{% if body_classes %} {{ body_classes }} {% else %} language-javascript {% endif %}">
+
+{{ content | safe }}
+
+<footer>
+	Created by <a href="http://lea.verou.me">Lea Verou</a> (co-editor of CSS Color 4 and 5)
+	and <a href="https://svgees.us">Chris Lilley</a> (co-editor of CSS Color 3, 4, and 5; W3C representative to ICC).
+
+	Co-maintained by <a href="https://github.com/facelessuser">Isaac Muse</a>,
+	<a href="https://github.com/jgerigmeyer">Jonny Gerig Meyer</a>,
+	and
+	<a href="https://github.com/MysteryBlokHed">Adam Thompson-Sharpe</a>,
+	with lots of help from a <a href="https://github.com/color-js/color.js/graphs/contributors">community of contributors</a>.
+
+	<nav>
+		{% include "partials/_nav-links.njk" %}
+	</nav>
+</footer>
+
+<script src="https://colorjs.io/assets/js/index.js" type="module"></script>
+
+</body>
+</html>
