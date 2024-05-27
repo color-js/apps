@@ -1,0 +1,28 @@
+@import url('https://colorjs.io/assets/css/style.css');
+
+.logo.logo {
+	grid-gap: 0 .6em;
+}
+
+.logo > img {
+	--border: .2em;
+	--button-size: .4em;
+	--button-gap: .6em;
+	--button-params: calc(var(--border)) / .4em .4em border-box no-repeat;
+	--window-background: oklch(87% 0.005 265);
+
+	padding: .2em .4em;
+	border: var(--border) solid transparent;
+	border-top-width: calc(var(--border) * 2 + var(--button-size));
+	border-radius: .3em;
+	box-shadow: .05em .1em 1em -.6em hsl(220 10% 50%);
+	font-size: 75%;
+
+	background:
+		radial-gradient(circle, var(--color-red,    oklch(67% 47% 25 )) 66%, transparent 70%) var(--button-size) var(--button-params),
+		radial-gradient(circle, var(--color-yellow, oklch(77% 42% 70 )) 66%, transparent 70%) calc(var(--button-size) + var(--button-gap)) var(--button-params),
+		radial-gradient(circle, var(--color-green,  oklch(71% 45% 136)) 66%, transparent 70%) calc(var(--button-size) + 2 * var(--button-gap)) var(--button-params),
+		linear-gradient(white 0% 100%) 0 0 / 100% 100% no-repeat padding-box,
+		var(--window-background)
+		;
+}
