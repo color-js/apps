@@ -10,7 +10,7 @@ let app = createApp({
 		let params = new URLSearchParams(location.search);
 		const urlFromColor = params.get("from");
 		const urlToColor = params.get("to");
-		const from =  urlFromColor || "oklch(90% .8 250)";
+		const from =  urlFromColor || "oklch(90% .4 250)";
 		const to = urlToColor || "oklch(40% .1 20)";
 		const methods = ["none", "clip", "scale-lh", "css", "raytrace", "edge-seeker", "chromium"];
 		const runResults = {};
@@ -63,7 +63,7 @@ let app = createApp({
 			this.parsedFrom = event.detail?.value || this.parsedFrom;
 		},
 		colorChangeTo (event) {
-			this.parsedTo = event.detail?.value || this.parsedFrom;
+			this.parsedTo = event.detail?.value || this.parsedTo;
 		},
 		tryParse (input) {
 			try {
