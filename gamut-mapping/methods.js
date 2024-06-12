@@ -19,6 +19,16 @@ const methods = {
 		label: "CSS",
 		description: "CSS Color 4 gamut mapping method.",
 	},
+	"css-rec2020": {
+		label: "CSS Rec2020",
+		description: "CSS Color 4 gamut mapping to rec2020, then Naïve clipping to the P3 gamut.",
+		compute: (color) => {
+			return color
+				.clone()
+				.toGamut({ space: "rec2020", method: "css" })
+				.toGamut({ space: "p3", method: "clip" });
+		},
+	},
 	"scale-lh": {
 		label: "Scale LH",
 		description: "Runs Scale, sets L, H to those of the original color, then runs Scale again.",
