@@ -227,7 +227,7 @@ const methods = {
 			let oklab = color.to("oklab");
 
 			// Clamp lightness and see if we are in gamut.
-			oklab.l = util.clamp(0.0, oklab.l, 1.0);
+			oklab.l = util.clamp(0.0, oklab.l, 1.0);  // If doing adaptive lightness, this might not be wanted.
 			if (oklab.inGamut("p3", { epsilon: 0 })) {
 				return oklab.to("p3");
 			}
@@ -236,7 +236,7 @@ const methods = {
 			let [l, a, b] = oklab.coords;
 			// Bjorn used 0.00001, are there issues with 0.0?
 			const epsilon = 0.0
-			const c = Math.max(epsilon, Math.sqrt(a ** 2 + b ** 2));
+			let c = Math.max(epsilon, Math.sqrt(a ** 2 + b ** 2));
 
 			// Normalize a and b
 			if (c) {
@@ -261,7 +261,9 @@ const methods = {
 			if (target !== l) {
 				oklab.l = target * (1 - t) + t * l;
 			}
-			oklab.oklch.c = c * t;
+			c *= t;
+			oklab.a = c * a;
+			oklab.b = c * b;
 
 			// Convert back to P3 and clip.
 			return oklab.to('p3').toGamut({method: 'clip'});
