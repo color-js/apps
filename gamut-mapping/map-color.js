@@ -116,6 +116,11 @@ export default {
 	methods: {
 		toPrecision: Color.util.toPrecision,
 		abs: Math.abs,
+		colorchange (event) {
+			if (event.detail?.value) {
+				this.colorNullable = event.detail.value;
+			}
+		},
 	},
 
 	watch: {
@@ -145,7 +150,7 @@ export default {
 						<small class="description">The color as displayed directly by the browser.</small>
 					</dt>
 					<dd>
-						<color-swatch size="large" @colorchange="event => colorNullable = event.detail.color" :value="colorInput">
+						<color-swatch size="large" @colorchange="colorchange" :value="colorInput">
 							<input v-model="colorInput" />
 						</color-swatch>
 						<details class="space-coords">
