@@ -145,7 +145,7 @@ export default {
 						<small class="description">The color as displayed directly by the browser.</small>
 					</dt>
 					<dd>
-						<color-swatch size="large" @colorchange="event => colorNullable = event.detail.color" :value="colorInput">
+						<color-swatch size="large" @colorchange="event => colorNullable = event.target.color" :value="colorInput">
 							<input v-model="colorInput" />
 						</color-swatch>
 						<details class="space-coords">
