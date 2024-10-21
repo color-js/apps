@@ -179,7 +179,7 @@ export default {
 						<small v-if="config.description" class="description">{{ config.description }}</small>
 					</dt>
 					<dd>
-						<color-swatch size="large" :value="mapped[method].color"></color-swatch>
+						<color-swatch size="large" :color="mapped[method].color"></color-swatch>
 						<dl class="deltas" v-if="!Object.values(mapped[method].deltas).every(d => d === 0)">
 							<div v-for="(delta, c) of mapped[method].deltas" :class="'delta-' + c.toLowerCase()">
 								<dt>Δ{{ c }}</dt>
