@@ -60,10 +60,10 @@ let app = createApp({
 
 	methods: {
 		colorChangeFrom (event) {
-			this.parsedFrom = event.detail?.value || this.parsedFrom;
+			this.parsedFrom = event.target.color || this.parsedFrom;
 		},
 		colorChangeTo (event) {
-			this.parsedTo = event.detail?.value || this.parsedTo;
+			this.parsedTo = event.target.color || this.parsedTo;
 		},
 		tryParse (input) {
 			try {
