@@ -15,34 +15,22 @@ body {
 	background: var(--transparency);
 }
 
-input[type=number]::-webkit-inner-spin-button {
-	opacity: .5;
-	transform: translateX(.1em);
-}
-
 header {
 	align-items: center;
-	margin: 0 0 .5em;
 	line-height: 1;
 	letter-spacing: -.05em;
 }
 
-	header select {
-		max-width: calc(100% - .2em);
-		box-sizing: content-box;
-		padding: 0;
-		border: .1em solid hsl(220 10% 60%);
-		border-radius: .2em;
-		margin-bottom: .2em;
-		font: inherit;
-		color: inherit;
-		background: none;
-		font-size: 150%;
-		text-overflow: ellipsis;
-	}
-
 	header button {
+		padding: .4em .6em;
+		border: 0;
+		margin: 0 .5em;
+		background: rgb(0 0 0 /.15);
+		border-radius: .3em;
+		font-weight: bold;
+		text-transform: uppercase;
 		vertical-align: .4em;
+		cursor: pointer;
 	}
 
 main {
@@ -55,6 +43,52 @@ main {
 	box-shadow: .05em .05em .1em rgba(0,0,0,.2), 0 0 0 100vmax var(--color);
 }
 
+color-picker {
+	/* Don't allow content to stretch the grid */
+	grid-template-columns: min-max(0, 1fr);
+
+	&::part(color-space) {
+		box-sizing: content-box;
+		inline-size: calc(100% - .2em);
+		padding: 0;
+		margin: 0;
+
+		border: .1em solid hsl(220 10% 60%);
+
+		font-size: 250%;
+		font-weight: 700;
+
+		field-sizing: initial;
+	}
+
+	&::part(color-space-base) {
+		inline-size: 100%;
+		block-size: 100%;
+		padding: 0;
+		margin: 0;
+
+		font-size: 120%;
+
+		field-sizing: initial;
+		text-overflow: ellipsis;
+	}
+
+	&::part(sliders) {
+		grid-column: 1 / -1;
+	}
+
+	&::part(channel-slider) {
+		text-transform: uppercase;
+		font-size: smaller;
+		font-weight: bold;
+		color: rgb(0 0 0 / .5);
+	}
+
+	&::part(swatch) {
+		display: none;
+	}
+}
+
 fieldset {
 	border: 1px solid hsl(220 10% 80%);
 	border-radius: .3em;
@@ -63,8 +97,7 @@ fieldset {
 }
 
 label,
-legend,
-details summary {
+legend {
 	display: block;
 	text-transform: uppercase;
 	font-size: smaller;
@@ -76,70 +109,6 @@ details summary {
 abbr {
 	text-transform: initial;
 }
-
-.color-slider {
-	display: block;
-	margin: 0 1em auto 0;
-	width: 100%;
-	-moz-appearance: none;
-	-webkit-appearance: none;
-	background: linear-gradient(to right, var(--stops)), var(--transparency);
-	height: 2.2em;
-	border-radius: .3em;
-	box-shadow: 0 0 1px rgba(0, 0, 0, 0.5);
-}
-
-.color-slider::-webkit-slider-thumb {
-	width: 1em;
-	height: 2.3em;
-	-webkit-appearance: none;
-	border-radius: .15em;
-	border: 1px solid black;
-	box-shadow: 0 0 0 1px white;
-}
-
-.color-slider::-moz-range-thumb {
-	width: 1em;
-	height: 2.3em;
-	border-radius: .15em;
-	border: 1px solid black;
-	box-shadow: 0 0 0 1px white;
-	background: transparent;
-}
-
-.color-slider::-moz-range-track {
-	background: none;
-}
-
-.color-slider-label {
-	position: relative;
-}
-
-.color-slider + input[type=number] {
-	position: absolute;
-	margin-top: -4em;
-	left: calc(100% * var(--percentage));
-	transform: translateX(-50%);
-	padding: .2em .5em;
-	width: 3em;
-	border: 0;
-	border-radius: .3em;
-	text-align: center;
-	color: white;
-	background: rgba(0,0,0,.8);
-	font: inherit;
-	font-size: 120%;
-	transition: .3s left cubic-bezier(.17,.67,.49,1.48) ;
-}
-
-	/* Prevent input from moving all over the place as we type */
-	.color-slider + input[type=number]:focus {
-		transition-delay: .5s;
-	}
-
-	label:not(:focus-within):not(:hover) > .color-slider + input[type=number] {
-		display: none;
-	}
 
 input.color-css,
 input.color-srgb {
@@ -172,55 +141,6 @@ input.color-srgb {
 
 label:not(.out-of-gamut) .out-of-gamut-warning {
 	display: none;
-}
-
-main > footer {
-	background: rgba(0,0,30,.05);
-	padding: inherit;
-	padding-top: 1rem;
-	padding-bottom: 1rem;
-	margin: -1.5rem;
-	margin-top: 1rem;
-	color: rgba(0,0,30,.6);
-	font-size: smaller;
-}
-
-	main > footer a {
-		color: inherit;
-		font-weight: bold;
-	}
-
-h2 {
-	display: flex;
-	line-height: 1;
-}
-
-	button {
-		padding: .4em .6em;
-		border: 0;
-		margin: 0 .5em;
-		background: rgba(0,0,0,.15);
-		border-radius: .3em;
-		font-weight: bold;
-		text-transform: uppercase;
-		cursor: pointer;
-	}
-
-		h2 button:hover {
-			background: rgba(0,0,0,.25);
-		}
-
-		h2 .clear {
-			margin-left: auto;
-		}
-
-		h2 .clear:hover {
-			background: #c00;
-			color: white;
-		}
-
-details {
-	margin-top: 1em;
 }
 
 .precision input {
