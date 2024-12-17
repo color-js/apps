@@ -1,4 +1,5 @@
 import Color from "https://colorjs.io/color.js";
+import "https://elements.colorjs.io/src/color-picker/color-picker.js";
 import {createApp} from "https://unpkg.com/vue@3.2.37/dist/vue.esm-browser.prod.js";
 
 if (!globalThis.requestIdleCallback) {
