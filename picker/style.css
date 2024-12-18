@@ -41,6 +41,13 @@ main {
 	margin: 1em auto;
 	background: #f0f0f0;
 	box-shadow: .05em .05em .1em rgba(0,0,0,.2), 0 0 0 100vmax var(--color);
+	opacity: 0;
+
+	body.ready & {
+		opacity: 1;
+		/* UI appears in 0.25s in total. We add the 0.1s delay to let the `<color-picker>` components settle down. */
+		transition: opacity .15s .1s;
+  }
 }
 
 color-picker {

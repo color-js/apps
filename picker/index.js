@@ -101,3 +101,15 @@ document.addEventListener("click", evt => {
 		evt.target.select();
 	}
 });
+
+Promise.allSettled([
+	customElements.whenDefined("color-picker"),
+	customElements.whenDefined("space-picker"),
+	customElements.whenDefined("channel-slider"),
+	customElements.whenDefined("color-swatch"),
+]).then(() => {
+	// All components are registered now!
+	// Add the `ready` class so the UI fades in.
+	// Credit: https://www.abeautifulsite.net/posts/flash-of-undefined-custom-elements/
+	document.body.classList.add("ready");
+});
