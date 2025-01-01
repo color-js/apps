@@ -21,18 +21,6 @@ header {
 	letter-spacing: -.05em;
 }
 
-	header button {
-		padding: .4em .6em;
-		border: 0;
-		margin: 0 .5em;
-		background: rgb(0 0 0 /.15);
-		border-radius: .3em;
-		font-weight: bold;
-		text-transform: uppercase;
-		vertical-align: .4em;
-		cursor: pointer;
-	}
-
 main {
 	padding: 1.5em;
 	border-radius: .5em;
