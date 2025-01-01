@@ -79,22 +79,6 @@ let app = createApp({
 	},
 }).mount("#app");
 
-window.CSS_color_to_LCH = function CSS_color_to_LCH (str) {
-	str = str || prompt("Enter any CSS color");
-
-	if (!str) {
-		return;
-	}
-
-	try {
-		app.$refs.picker.color = new Color(str).to(app.color.space);
-	}
-	catch (e) {
-		alert(e.message);
-		return;
-	}
-};
-
 // Select text in readonly input fields when you focus them
 document.addEventListener("click", evt => {
 	if (evt.target.matches("input[readonly]")) {

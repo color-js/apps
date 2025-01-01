@@ -10,9 +10,9 @@
 	<script src="https://stretchy.verou.me/dist/stretchy.iife.min.js" data-stretchy-filter="autosize" async defer></script>
 </head>
 <body id="app">
-	<main>
+	<main :style="{ '--color': css_color }">
 		<header>
-			<h1>Colour Picker <button onclick="CSS_color_to_LCH()">Import color…</button></h1>
+			<h1>Colour Picker</h1>
 		</header>
 
 		<color-picker alpha @colorchange="color = $event.target.color" ref="picker"></color-picker>
