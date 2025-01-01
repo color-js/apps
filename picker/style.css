@@ -1,3 +1,8 @@
+:root {
+	--transparency: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill-opacity=".05"><rect width="50" height="50" /><rect x="50" y="50" width="50" height="50" /></svg>')
+	0 0 / 20px 20px #f8f8f8;
+}
+
 body {
 	display: flex;
 	align-items: flex-start;
@@ -7,6 +12,7 @@ body {
 	padding: 1em 2em;
 	margin: 0;
 	font: 100%/1.6 Helvetica Neue, sans-serif;
+	background: var(--transparency);
 }
 
 header {
@@ -34,6 +40,7 @@ main {
 	max-width: 90vw;
 	margin: 1em auto;
 	background: #f0f0f0;
+	box-shadow: .05em .05em .1em rgba(0,0,0,.2), 0 0 0 100vmax var(--color);
 	opacity: 0;
 
 	&:has(color-picker:defined) {
@@ -73,7 +80,8 @@ color-picker {
 		text-overflow: ellipsis;
 	}
 
-	&::part(sliders) {
+	&::part(sliders),
+	&::part(details) {
 		grid-column: 1 / -1;
 	}
 
@@ -85,14 +93,16 @@ color-picker {
 	}
 
 	&::part(swatch) {
-		border-radius: 0;
-		position: absolute;
-		inset: 0;
-		z-index: -1;
+		/* We need the gamut badge to be placed absolutely relative to the body, not the color swatch */
+		display: contents;
 	}
 
-	&::part(details) {
+	&::part(swatch-base) {
 		display: none;
+	}
+
+	&::part(gamut) {
+		font-size: clamp(1rem, 2vw, 1.5rem);
 	}
 }
 
