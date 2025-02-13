@@ -23,7 +23,7 @@ function renderSpace(space, format, color) {
 
 	return `<tr id="space-${ space.id }${ format ? "--" + format : ''}" data-id="${ space.id }">
 		<td><label class="pin" title="Pin / Unpin to top"><input type=checkbox name="pin" value="${ space.id }">📌</label></td>
-		<th>${space.name}${ format ? `(${format})` : '' }</th>
+		<th>${space.name}${ format ? ` (${format})` : '' }</th>
 		<td>${converted.coords.join(", ")}</td>
 		<td>
 			<div class="serialization ${inGamut || str === str_mapped ? "in-gamut" : "out-of-gamut"} ${!inGamut && str === str_mapped ? "gamut-mapped" : ""}">
