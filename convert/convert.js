@@ -5,6 +5,40 @@ function getURLParams () {
 	return Object.fromEntries(new URL(location).searchParams);
 }
 
+function renderSpace(space, format, color) {
+	let id = space.id;
+	let converted = color.to(id);
+
+	if (id === "srgb" || (id === "p3") && supportsP3) {
+		colorOutput.style.background = converted;
+		favicon.href = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"><rect width="100%" fill="${converted}" /></svg>`;
+	}
+
+	let precision = precisionInput.value;
+	let inGamut = converted.inGamut();
+	let str = converted.toString({precision, inGamut: false, format});
+	let str_mapped = converted.toString({precision, inGamut: true, format});
+	let permalink = `?color=${encodeURIComponent(str)}&precision=${encodeURIComponent(precision)}`;
+	let permalink_mapped = `?color=${encodeURIComponent(str_mapped)}&precision=${encodeURIComponent(precision)}`;
+
+	return `<tr id="space-${ space.id }${ format ? "--" + format : ''}" data-id="${ space.id }">
+		<td><label class="pin" title="Pin / Unpin to top"><input type=checkbox name="pin" value="${ space.id }">📌</label></td>
+		<th>${space.name}${ format ? `(${format})` : '' }</th>
+		<td>${converted.coords.join(", ")}</td>
+		<td>
+			<div class="serialization ${inGamut || str === str_mapped ? "in-gamut" : "out-of-gamut"} ${!inGamut && str === str_mapped ? "gamut-mapped" : ""}">
+				<a href="${permalink}" ${!inGamut ? 'title="Out of gamut"' : ""}>${str}</a>
+				<button class="copy" data-clipboard-text="${str}" title="Copy">📋</button>
+			</div>
+			${str !== str_mapped ? `
+			<div class="serialization gamut-mapped">
+				<a href="${permalink_mapped}">${str_mapped}</a>
+				<button class="copy" data-clipboard-text="${str_mapped}" title="Copy">📋</button>
+			</div>` : ""}
+		</td>
+	</tr>`;
+}
+
 function update () {
 	try {
 		var color = new Color(colorInput.value);
@@ -47,38 +81,10 @@ function update () {
 		let spaces = new Set(Color.Space.all);
 
 		for (let space of spaces) {
-			let id = space.id;
-			let converted = color.to(id);
-
-			if (id === "srgb" || (id === "p3") && supportsP3) {
-				colorOutput.style.background = converted;
-				favicon.href = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"><rect width="100%" fill="${converted}" /></svg>`;
-			}
-
-			let precision = precisionInput.value;
-			let inGamut = converted.inGamut();
-			let str = converted.toString({precision, inGamut: false});
-			let str_mapped = converted.toString({precision, inGamut: true});
-			let permalink = `?color=${encodeURIComponent(str)}&precision=${encodeURIComponent(precision)}`;
-			let permalink_mapped = `?color=${encodeURIComponent(str_mapped)}&precision=${encodeURIComponent(precision)}`;
-
-			ret += `<tr id="space-${ space.id }" data-id="${ space.id }">
-				<td><label class="pin" title="Pin / Unpin to top"><input type=checkbox name="pin" value="${ space.id }">📌</label></td>
-				<th>${space.name}</th>
-				<td>${converted.coords.join(", ")}</td>
-				<td>
-					<div class="serialization ${inGamut || str === str_mapped ? "in-gamut" : "out-of-gamut"} ${!inGamut && str === str_mapped ? "gamut-mapped" : ""}">
-						<a href="${permalink}" ${!inGamut ? 'title="Out of gamut"' : ""}>${str}</a>
-						<button class="copy" data-clipboard-text="${str}" title="Copy">📋</button>
-					</div>
-					${str !== str_mapped ? `
-					<div class="serialization gamut-mapped">
-						<a href="${permalink_mapped}">${str_mapped}</a>
-						<button class="copy" data-clipboard-text="${str_mapped}" title="Copy">📋</button>
-					</div>` : ""}
-				</td>
-			</tr>`;
+			ret += renderSpace(space, undefined, color);
 		}
+
+		ret += renderSpace(Color.spaces.srgb, "hex", color);
 
 		output.tBodies[0].innerHTML = ret;
 		updatePinned();
@@ -143,7 +149,7 @@ function updatePinned (pinned) {
 }
 
 function getPinned () {
-	return (localStorage.spaces_pinned ?? "srgb, hsl, p3, oklch, oklch, lch, lab").split(", ");
+	return (localStorage.spaces_pinned ?? "srgb, srgb--hex, hsl, p3, oklch, oklch, lch, lab").split(", ");
 }
 
 import("https://incrementable.verou.me/incrementable.mjs").then(module => {
