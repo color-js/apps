@@ -293,10 +293,16 @@ const methods = {
 		trace: (mapColor) => {
 			let [light, chroma, hue] = mapColor.coords;
 			mapColor.c = 0;
-			let achroma = mapColor.to("p3-linear").coords;
+			let anchor = mapColor.to("p3-linear").coords;
 			mapColor.c = chroma;
 			mapColor = mapColor.to("p3-linear");
 			let raytrace = methods.raytrace.raytrace_box;
+			// Assume an RGB range between 0 - 1.
+			// This could be different depending on the RGB max luminance and could
+			// be calculated to be different depending on needs.
+			// We'll use this to adjust our anchor point closer to the gamut surface.
+			let low = 1e-6;
+			let high = 1 - low;
 
 			// Cast a ray from the zero chroma color to the target color.
 			// Trace the line to the RGB cube edge and find where it intersects.
@@ -307,7 +313,15 @@ const methods = {
 					oklch.l = light;
 					oklch.h = hue;
 				}
-				const intersection = raytrace(achroma, mapColor.coords);
+				const current = mapColor.coords;
+				const intersection = raytrace(anchor, current);
+
+				// Adjust anchor point closer to surface, when possible, to improve results for some spaces.
+				// But not too close to the surface.
+				if (i && current.every((x) => low < x && x < high)) {
+					anchor = current;
+				}
+
 				if (intersection.length) {
 					mapColor.setAll(mapColor.space, intersection);
 					continue;
