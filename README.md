@@ -21,4 +21,4 @@ They are useful in their own right, but also serve as [Color.js](https://colorjs
 
 ## External
 
-- [What the color?](https://projects.verou.me/whathecolor/): A color guessing game
+- [What the color?](https://whathecolor.com/): A color guessing game
