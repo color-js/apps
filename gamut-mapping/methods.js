@@ -2,6 +2,7 @@ import Color from "https://colorjs.io/dist/color.js";
 import { WHITES } from "https://colorjs.io/src/adapt.js";
 import * as util from "https://colorjs.io/src/util.js";
 import {findCusp, findGamutIntersection} from "https://colorjs.io/src/spaces/okhsl.js";
+import { constrain as constrainAngle } from "https://colorjs.io/src/angles.js";
 import { makeEdgeSeeker } from "./edge-seeker/makeEdgeSeeker.js";
 
 // Make a function to get the maximum chroma for a given lightness and hue
@@ -290,12 +291,97 @@ const methods = {
 			}
 			return methods.raytrace.trace(mapColor);
 		},
-		trace: (mapColor) => {
-			let [light, chroma, hue] = mapColor.coords;
-			mapColor.c = 0;
-			let anchor = mapColor.to("p3-linear").coords;
-			mapColor.c = chroma;
-			mapColor = mapColor.to("p3-linear");
+
+		oklchToLinearRGB (lch) {
+			// Convert from Oklab to linear RGB.
+			//
+			// Can be any gamut as long as `lmsToRgb` is a matrix
+			// that transform the LMS values to the linear RGB space.
+
+			let c = lch[1];
+			let h = lch[2];
+			// to lab
+			let result = [
+				lch[0],
+				c * Math.cos((h * Math.PI) / 180),
+				c * Math.sin((h * Math.PI) / 180)
+			];
+
+			// To LMS
+			util.multiply_v3_m3x3(
+				result,
+				[
+					[ 1.0000000000000000,  0.3963377773761749,  0.2158037573099136 ],
+					[ 1.0000000000000000, -0.1055613458156586, -0.0638541728258133 ],
+					[ 1.0000000000000000, -0.0894841775298119, -1.2914855480194092 ]
+				],
+				result
+			);
+			result[0] = result[0] ** 3;
+			result[1] = result[1] ** 3;
+			result[2] = result[2] ** 3;
+
+			// To RGB
+			util.multiply_v3_m3x3(
+				result,
+				[
+					[3.127768971361874, -2.2571357625916395, 0.12936679122976516],
+					[-1.0910090184377979, 2.413331710306922, -0.32232269186912466],
+					[-0.02601080193857028, -0.508041331704167, 1.5340521336427373]
+				],
+				result
+			);
+			return result;
+		},
+
+		LinearRGBtoOklch (rgb) {
+			// Convert from Oklch to linear RGB.
+			//
+			// Can be any gamut as long as `lmsToRgb` is a matrix
+			// that transform the LMS values to the linear RGB space.
+
+			// To LMS
+			let result = util.multiply_v3_m3x3(
+				rgb,
+				[
+					[0.4813798527499543, 0.4621183710113182, 0.05650177623872754],
+					[0.2288319418112447, 0.6532168193835677, 0.11795123880518772],
+					[0.08394575232299314, 0.22416527097756647, 0.6918889766994405]
+				]
+			);
+
+			result[0] = Math.cbrt(result[0]);
+			result[1] = Math.cbrt(result[1]);
+			result[2] = Math.cbrt(result[2]);
+
+			util.multiply_v3_m3x3(
+				result,
+				[
+					[ 0.2104542683093140,  0.7936177747023054, -0.0040720430116193 ],
+					[ 1.9779985324311684, -2.4285922420485799,  0.4505937096174110 ],
+					[ 0.0259040424655478,  0.7827717124575296, -0.8086757549230774 ]
+				],
+				result
+			);
+
+			let a = result[1];
+			let b = result[2];
+			return [
+				result[0],
+				Math.sqrt(a ** 2 + b ** 2),
+				constrainAngle((Math.atan2(b, a) * 180) / Math.PI)
+			];
+		},
+
+		trace: (orig) => {
+			let coords = orig.coords;
+			let [light, chroma, hue] = coords;
+			coords[1] = 0;
+
+			let anchor = methods.raytrace.oklchToLinearRGB(coords);
+			coords[1] = chroma;
+			let mapColor = methods.raytrace.oklchToLinearRGB(coords);
+
 			let raytrace = methods.raytrace.raytrace_box;
 			// Assume an RGB range between 0 - 1.
 			// This could be different depending on the RGB max luminance and could
@@ -309,11 +395,12 @@ const methods = {
 			// Correct L and h within the perceptual OkLCh after each attempt.
 			for (let i = 0; i < 4; i++) {
 				if (i) {
-					const oklch = mapColor.oklch;
-					oklch.l = light;
-					oklch.h = hue;
+					const oklch = methods.raytrace.LinearRGBtoOklch(mapColor);
+					oklch[0] = light
+					oklch[2] = hue;
+					mapColor = methods.raytrace.oklchToLinearRGB(oklch);
 				}
-				const current = mapColor.coords;
+				const current = mapColor.slice();
 				const intersection = raytrace(anchor, current);
 
 				// Adjust anchor point closer to surface, when possible, to improve results for some spaces.
@@ -323,7 +410,7 @@ const methods = {
 				}
 
 				if (intersection.length) {
-					mapColor.setAll(mapColor.space, intersection);
+					mapColor = intersection.slice();
 					continue;
 				}
 
@@ -332,18 +419,18 @@ const methods = {
 			}
 
 			// Remove noise from floating point math by clipping
-			let coords = mapColor.coords;
-			mapColor.setAll(
-				mapColor.space,
+			orig.setAll(
+				'p3-linear',
 				[
-					util.clamp(0.0, coords[0], 1.0),
-					util.clamp(0.0, coords[1], 1.0),
-					util.clamp(0.0, coords[2], 1.0),
-				],
+					util.clamp(0.0, mapColor[0], 1.0),
+					util.clamp(0.0, mapColor[1], 1.0),
+					util.clamp(0.0, mapColor[2], 1.0),
+				]
 			);
 
-			return mapColor.to("p3");
+			return orig.to("p3");
 		},
+
 		raytrace_box: (start, end, bmin = [0, 0, 0], bmax = [1, 1, 1]) => {
 			// Use slab method to detect intersection of ray and box and return intersect.
 			// https://en.wikipedia.org/wiki/Slab_method
