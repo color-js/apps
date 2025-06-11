@@ -8,10 +8,11 @@ export default {
 
 	computed: {
 		results () {
-			const [none, ...methodsTested] = Object.keys(this.runResults);
+			const methodsTested = Object.keys(this.runResults).filter(method => method !== "none");
+
 			return methodsTested.map(method => {
-				const data = this.runResults[method];
-				const total = data.reduce((acc, value) => acc + value);
+				const data = this.runResults[method] ?? [];
+				const total = data.reduce((acc, value) => acc + value, 0);
 
 				return {
 					id: method,

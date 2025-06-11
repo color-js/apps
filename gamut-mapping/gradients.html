@@ -23,6 +23,13 @@
 		<input v-model="maxDeltaE" type="number" min="1" name="maxDeltaE"/><br/>
 		<div>{{steps.length}} Gradient Steps</div>
 		<label for="flush">Flush:</label> <input type="checkbox" v-model="flush" name="flush">
+		<details id="algorithms">
+			<summary>Algorithms</summary>
+			<label v-for="method in methods" :key="method">
+				<input type="checkbox" v-model="enabledMethods" :value="method" />
+				{{ method }}
+			</label>
+		</details>
 	</div>
 	<div class="color-inputs">
 		<color-swatch size="large" @colorchange="colorChangeFrom" :value="from">
@@ -46,8 +53,8 @@
 			<div v-for="[title, step] in oogSteps" :style="{'--step-color': step}" :title="title"></div>
 		</div>
 	</div>
-	<div :class="{flush, 'gradients': true}">
-		<article class="method" v-for="(i, method) of methods">
+	<div :class="{flush, 'gradients': true}" :key="refresh">
+		<article class="method" v-for="(i, method) of enabledMethods">
 			<mapped-gradient :key="i" :steps="steps" :method="i" @report-time="reportTime"/>
 		</article>
 	</div>

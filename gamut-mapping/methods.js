@@ -11,6 +11,10 @@ const p3EdgeSeeker = makeEdgeSeeker((r, g, b) => {
 	const [l, c, h = 0] = new Color("p3", [r, g, b]).to("oklch").coords;
 	return { l, c, h };
 });
+const rec2020EdgeSeeker = makeEdgeSeeker((r, g, b) => {
+	const [l, c, h = 0] = new Color("rec2020", [r, g, b]).to("oklch").coords;
+	return { l, c, h };
+});
 
 const methods = {
 	"clip": {
@@ -192,7 +196,7 @@ const methods = {
 		},
 	},
 	"bjorn" : {
-		label: "Björn Ottosson",
+		label: "Björn Ottosson P3",
 		description: "Approach using Oklab as defined by the creator of Oklab, Bjorn Ottosson. Projected toward constant lightness.",
 		lmsToP3Linear: [
 			[ 3.1277689713618737, -2.2571357625916377,  0.1293667912297650],
@@ -268,6 +272,85 @@ const methods = {
 
 			// Convert back to P3 and clip.
 			return oklab.to('p3').toGamut({method: 'clip'});
+		},
+	},
+	"bjornRec2020" : {
+		label: "Björn Ottosson Rec2020",
+		description: "Approach using Oklab as defined by the creator of Oklab, Bjorn Ottosson. Projected toward constant lightness.",
+		lmsToRec2020Linear: [
+			[2.1399067304346517, -1.2463894937606181, 0.10648276332596672],
+			[-0.8847358357577675, 2.1632309383612007, -0.27849510260343346],
+			[-0.04857374640044416, -0.454503149714096, 1.5030768961145402],
+		],
+		rec2020Coeff: [
+			// Red
+			[
+				// Limit
+				[-1.36834899, -0.46664773],
+				// `Kn` coefficients
+				[1.2572445, 1.71580176, 0.5648733,  0.79507316, 0.58716363],
+			],
+			// Green
+			[
+				// Limit
+				[2.01150796, -2.0379096],
+				// `Kn` coefficients
+				[0.74087755, -0.4586733, 0.08182977, 0.12598705, -0.14570327],
+			],
+			// Blue
+			[
+				// Limit
+				[0.06454093, 2.29709336],
+				// `Kn` coefficients
+				[1.36920484e+00, -1.64666735e-02, -1.14197870e+00, -5.01064768e-01, 1.19905985e-03],
+			],
+		],
+		compute: (color) => {
+			// Approach described in https://bottosson.github.io/posts/gamutclipping/
+			// For comparison against CSS approaches, constant lightness was used.
+			let oklab = color.to("oklab");
+
+			// Clamp lightness and see if we are in gamut.
+			oklab.l = util.clamp(0.0, oklab.l, 1.0);  // If doing adaptive lightness, this might not be wanted.
+			if (oklab.inGamut("rec2020", { epsilon: 0 })) {
+				return oklab.to("rec2020");
+			}
+
+			// Get coordinates and calculate chroma
+			let [l, a, b] = oklab.coords;
+			// Bjorn used 0.00001, are there issues with 0.0?
+			const epsilon = 0.0
+			let c = Math.max(epsilon, Math.sqrt(a ** 2 + b ** 2));
+
+			// Normalize a and b
+			if (c) {
+				a /= c;
+				b /= c;
+			}
+
+			// Get gamut specific transform from LMS to RGB and related coefficients
+			const lmsToLinear = methods.bjornRec2020.lmsToRec2020Linear;
+			const coeff = methods.bjornRec2020.rec2020Coeff;
+
+			// Find the lightness and chroma for the cusp.
+			let cusp = findCusp(a, b, lmsToLinear, coeff);
+
+			// Set the target lightness towards which chroma reduction will take place.
+			// `cusp[0]` is approximate lightness of cusp, l is current lightness.
+			// One could apply some adaptive lightness if desired.
+			const target = l; // cusp[0];
+			const t = findGamutIntersection(a, b, l, c, target, lmsToLinear, coeff, cusp);
+
+			// Adjust lightness and chroma
+			if (target !== l) {
+				oklab.l = target * (1 - t) + t * l;
+			}
+			c *= t;
+			oklab.a = c * a;
+			oklab.b = c * b;
+
+			// Convert back to rec2020 and clip.
+			return oklab.to("rec2020").toGamut({method: "clip"});
 		},
 	},
 	"raytrace": {
@@ -486,9 +569,170 @@ const methods = {
 			];
 		},
 	},
+	"raytraceRec2020": {
+		label: "Raytrace Rec2020",
+		description: "Uses ray tracing to find a color with reduced chroma on the RGB surface.",
+		compute: (color) => {
+			// An approached originally designed for ColorAide.
+			// https://facelessuser.github.io/coloraide/gamut/#ray-tracing-chroma-reduction
+			if (color.inGamut("rec2020", { epsilon: 0 })) {
+				return color.to("rec2020");
+			}
+
+			let mapColor = color.to("oklch");
+			let lightness = mapColor.coords[0];
+
+			if (lightness >= 1) {
+				return new Color({ space: "xyz-d65", coords: WHITES["D65"] }).to("p3");
+			}
+			else if (lightness <= 0) {
+				return new Color({ space: "xyz-d65", coords: [0, 0, 0] }).to("p3");
+			}
+			return methods.raytraceRec2020.trace(mapColor);
+		},
+
+		oklchToLinearRGB (lch) {
+			// Convert from Oklab to linear RGB.
+			//
+			// Can be any gamut as long as `lmsToRgb` is a matrix
+			// that transform the LMS values to the linear RGB space.
+
+			let c = lch[1];
+			let h = lch[2];
+			// to lab
+			let result = [
+				lch[0],
+				c * Math.cos((h * Math.PI) / 180),
+				c * Math.sin((h * Math.PI) / 180)
+			];
+
+			// To LMS
+			util.multiply_v3_m3x3(
+				result,
+				[
+					[ 1.0000000000000000,  0.3963377773761749,  0.2158037573099136 ],
+					[ 1.0000000000000000, -0.1055613458156586, -0.0638541728258133 ],
+					[ 1.0000000000000000, -0.0894841775298119, -1.2914855480194092 ]
+				],
+				result
+			);
+			result[0] = result[0] ** 3;
+			result[1] = result[1] ** 3;
+			result[2] = result[2] ** 3;
+
+			// To RGB
+			util.multiply_v3_m3x3(
+				result,
+				[
+					[2.1399067304346517, -1.2463894937606181, 0.10648276332596672],
+					[-0.8847358357577675, 2.1632309383612007, -0.27849510260343346],
+					[-0.04857374640044416, -0.454503149714096, 1.5030768961145402]
+				],
+				result
+			);
+			return result;
+		},
+
+		LinearRGBtoOklch (rgb) {
+			// Convert from Oklch to linear RGB.
+			//
+			// Can be any gamut as long as `lmsToRgb` is a matrix
+			// that transform the LMS values to the linear RGB space.
+
+			// To LMS
+			let result = util.multiply_v3_m3x3(
+				rgb,
+				[
+					[0.6167557848654442, 0.3601984012264634, 0.023045813908092294],
+					[0.2651330593926367, 0.6358393720678492, 0.0990275685395141],
+					[0.10010262952034829, 0.20390652261661446, 0.6959908478630372]
+				]
+			);
+
+			result[0] = Math.cbrt(result[0]);
+			result[1] = Math.cbrt(result[1]);
+			result[2] = Math.cbrt(result[2]);
+
+			util.multiply_v3_m3x3(
+				result,
+				[
+					[ 0.2104542683093140,  0.7936177747023054, -0.0040720430116193 ],
+					[ 1.9779985324311684, -2.4285922420485799,  0.4505937096174110 ],
+					[ 0.0259040424655478,  0.7827717124575296, -0.8086757549230774 ]
+				],
+				result
+			);
+
+			let a = result[1];
+			let b = result[2];
+			return [
+				result[0],
+				Math.sqrt(a ** 2 + b ** 2),
+				constrainAngle((Math.atan2(b, a) * 180) / Math.PI)
+			];
+		},
+
+		trace: (orig) => {
+			let coords = orig.coords;
+			let [light, chroma, hue] = coords;
+			coords[1] = 0;
+
+			let anchor = methods.raytraceRec2020.oklchToLinearRGB(coords);
+			coords[1] = chroma;
+			let mapColor = methods.raytraceRec2020.oklchToLinearRGB(coords);
+
+			let raytrace = methods.raytrace.raytrace_box;
+			// Assume an RGB range between 0 - 1.
+			// This could be different depending on the RGB max luminance and could
+			// be calculated to be different depending on needs.
+			// We'll use this to adjust our anchor point closer to the gamut surface.
+			let low = 1e-6;
+			let high = 1 - low;
+
+			// Cast a ray from the zero chroma color to the target color.
+			// Trace the line to the RGB cube edge and find where it intersects.
+			// Correct L and h within the perceptual OkLCh after each attempt.
+			for (let i = 0; i < 4; i++) {
+				if (i) {
+					const oklch = methods.raytraceRec2020.LinearRGBtoOklch(mapColor);
+					oklch[0] = light;
+					oklch[2] = hue;
+					mapColor = methods.raytraceRec2020.oklchToLinearRGB(oklch);
+				}
+				const current = mapColor.slice();
+				const intersection = raytrace(anchor, current);
+
+				// Adjust anchor point closer to surface, when possible, to improve results for some spaces.
+				// But not too close to the surface.
+				if (i && current.every((x) => low < x && x < high)) {
+					anchor = current;
+				}
+
+				if (intersection.length) {
+					mapColor = intersection.slice();
+					continue;
+				}
+
+				// If there was no change, we are done
+				break;
+			}
+
+			// Remove noise from floating point math by clipping
+			orig.setAll(
+				'rec2020-linear',
+				[
+					util.clamp(0.0, mapColor[0], 1.0),
+					util.clamp(0.0, mapColor[1], 1.0),
+					util.clamp(0.0, mapColor[2], 1.0),
+				]
+			);
+
+			return orig.to("rec2020");
+		},
+	},
 	"edge-seeker": {
 		label: "Edge Seeker",
-		description: "Using a LUT to detect edges of the gamut and reduce chroma accordingly.",
+		description: "Using a LUT to detect edges of the p3 gamut and reduce chroma accordingly.",
 		compute: (color) => {
 			let [l, c, h] = color.to("oklch").coords;
 			if (l <= 0) {
@@ -503,6 +747,25 @@ const methods = {
 			}
 			// At this point it is safe to clip the values
 			return new Color("oklch", [l, c, h]).toGamut({ space: "p3", method: "clip" });
+		},
+	},
+	"edge-seeker-rec2020": {
+		label: "Edge Seeker rec2020",
+		description: "Using a LUT to detect edges of the rec2020 gamut and reduce chroma accordingly.",
+		compute: (color) => {
+			let [l, c, h] = color.to("oklch").coords;
+			if (l <= 0) {
+				return new Color("oklch", [0, 0, h]);
+			}
+			if (l >= 1) {
+				return new Color("oklch", [1, 0, h]);
+			}
+			let maxChroma = rec2020EdgeSeeker(l, h || 0);
+			if (c > maxChroma) {
+				c = maxChroma;
+			}
+			// Don't clip, and return rec2020 gamut
+			return new Color("oklch", [l, c, h]);
 		},
 	},
 	// "scale125": {
