@@ -11,6 +11,10 @@ const p3EdgeSeeker = makeEdgeSeeker((r, g, b) => {
 	const [l, c, h = 0] = new Color("p3", [r, g, b]).to("oklch").coords;
 	return { l, c, h };
 });
+const rec2020EdgeSeeker = makeEdgeSeeker((r, g, b) => {
+	const [l, c, h = 0] = new Color("rec2020", [r, g, b]).to("oklch").coords;
+	return { l, c, h };
+});
 
 const methods = {
 	"clip": {
@@ -488,7 +492,7 @@ const methods = {
 	},
 	"edge-seeker": {
 		label: "Edge Seeker",
-		description: "Using a LUT to detect edges of the gamut and reduce chroma accordingly.",
+		description: "Using a LUT to detect edges of the p3 gamut and reduce chroma accordingly.",
 		compute: (color) => {
 			let [l, c, h] = color.to("oklch").coords;
 			if (l <= 0) {
@@ -498,6 +502,25 @@ const methods = {
 				return new Color("oklch", [1, 0, h]);
 			}
 			let maxChroma = p3EdgeSeeker(l, h || 0);
+			if (c > maxChroma) {
+				c = maxChroma;
+			}
+			// At this point it is safe to clip the values
+			return new Color("oklch", [l, c, h]).toGamut({ space: "p3", method: "clip" });
+		},
+	},
+	"edge-seeker-rec2020": {
+		label: "Edge Seeker rec2020",
+		description: "Using a LUT to detect edges of the rec2020 gamut and reduce chroma accordingly.",
+		compute: (color) => {
+			let [l, c, h] = color.to("oklch").coords;
+			if (l <= 0) {
+				return new Color("oklch", [0, 0, h]);
+			}
+			if (l >= 1) {
+				return new Color("oklch", [1, 0, h]);
+			}
+			let maxChroma = rec2020EdgeSeeker(l, h || 0);
 			if (c > maxChroma) {
 				c = maxChroma;
 			}

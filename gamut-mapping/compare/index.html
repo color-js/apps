@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Color GMA Test</title>
+		<script type="module" src="script.js"></script>
+		<link rel="modulepreload" href="worker.js" />
+	</head>
+	<body>
+		<h1>GMA Comparison</h1>
+		<p>
+			This compares the output of different gamut mapping algorithms when
+			mapping to <code>rec2020</code>, and then clipping to <code>p3</code> and
+			<code>srgb</code> to approximate clipping to the display device.
+		</p>
+		<p>
+			It steps through the <code>xyz-d65</code> space with the provided delta,
+			and checks a color if it is outside of <code>rec2020</code>.
+		</p>
+    <dl>
+      <dt>Scales:</dt>
+      <dd>
+        <ul>
+          <li>L = 0-100 (So a 1 would be equivalent to 0.01 or 1%)</li>
+          <li>C = 0-0.4 (Most of the mapped colors had very high chroma to start with, so we're seeing large shifts here, as expected)</li>
+          <li>h = 0-360</li>
+
+        </ul>
+      </dd>
+      <dt>Algorithms:</dt>
+      <dd>
+        <ul>
+          <li>edge: Edge Tracer, mapping to rec2020</li>
+          <li>chromium: Chromium "baked in" implementation, mapping to rec2020</li>
+          <li>bjorn: Björn Ottosson method, mapping to p3</li>
+          <li>raytrace: Raytrace, mapping to p3</li>
+        </ul>
+    </dl>
+
+
+
+		<button id="run">Run</button>
+		<label for="delta">Delta</label>
+		<input
+			type="number"
+			id="delta"
+			value="0.03"
+			step="0.01"
+			min="0.01"
+			max="1"
+		/>
+
+		<pre id="output"></pre>
+	</body>
+</html>
