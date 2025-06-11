@@ -65,4 +65,4 @@ export const chromiumColor = (color) => methods.chromium.compute(color);
 
 export const bjornColor = (color) => methods.bjornRec2020.compute(color);
 
-export const raytraceColor = (color) => methods["raytrace"].compute(color);
+export const raytraceColor = (color) => methods.raytraceRec2020.compute(color);
