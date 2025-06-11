@@ -75,12 +75,15 @@ const processColor = (color) => {
 
 	const clippedStraightToP3 = clipP3(color);
 	const clippedStraightToP3Delta = deltas(color, clippedStraightToP3);
+
 	const chromiumClippedToP3 = chromiumColor(color);
 	const chromiumClippedToSrgb = clipSrgb(chromiumClippedToP3);
 	const chromiumP3Delta = deltas(color, chromiumClippedToP3);
 	const chromiumSrgbDelta = deltas(color, chromiumClippedToSrgb);
-	const bjornClippedToP3 = bjornColor(color);
-	const bjornClippedToSrgb = clipSrgb(bjornClippedToP3);
+
+	const bjorn = bjornColor(color);
+	const bjornClippedToP3 = clipP3(bjorn);
+	const bjornClippedToSrgb = clipSrgb(bjorn);
 	const bjornP3Delta = deltas(color, bjornClippedToP3);
 	const bjornSrgbDelta = deltas(color, bjornClippedToSrgb);
 
