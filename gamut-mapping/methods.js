@@ -524,8 +524,8 @@ const methods = {
 			if (c > maxChroma) {
 				c = maxChroma;
 			}
-			// At this point it is safe to clip the values
-			return new Color("oklch", [l, c, h]).toGamut({ space: "p3", method: "clip" });
+			// Don't clip, and return rec2020 gamut
+			return new Color("oklch", [l, c, h]);
 		},
 	},
 	// "scale125": {

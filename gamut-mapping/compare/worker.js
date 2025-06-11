@@ -68,13 +68,12 @@ const run = ({delta}) => {
 
 const processColor = (color) => {
 	const edgeSeeker = edgeSeekerColor(color);
-	const edgeDelta = deltas(color, edgeSeeker);
+	const edgeClippedToP3 = clipP3(edgeSeeker);
+	const edgeClippedToSrgb = clipSrgb(edgeSeeker);
+	const edgeP3Delta = deltas(color, edgeClippedToP3);
+	const edgeSrgbDelta = deltas(color, edgeClippedToSrgb);
 
-	const clippedToP3 = clipP3(edgeSeeker);
-	const clippedToSrgb = clipSrgb(edgeSeeker);
 	const clippedStraightToP3 = clipP3(color);
-	const p3Delta = deltas(color, clippedToP3);
-	const srgbDelta = deltas(color, clippedToSrgb);
 	const clippedStraightToP3Delta = deltas(color, clippedStraightToP3);
 	const chromiumClippedToP3 = chromiumColor(color);
 	const chromiumClippedToSrgb = clipSrgb(chromiumClippedToP3);
@@ -94,12 +93,11 @@ const processColor = (color) => {
 	return {
 		color,
 		edgeSeeker,
-		edgeDelta,
-		clippedToP3,
-		clippedToSrgb,
+		edgeClippedToP3,
+		edgeClippedToSrgb,
 		clippedStraightToP3,
-		p3Delta,
-		srgbDelta,
+		edgeP3Delta,
+		edgeSrgbDelta,
 		clippedStraightToP3Delta,
 		chromiumClippedToP3,
 		chromiumClippedToSrgb,
@@ -116,9 +114,9 @@ const processColor = (color) => {
 
 const aggregate = (colorData, index) => {
 	const {
-		p3Delta,
+		edgeP3Delta,
 		clippedStraightToP3Delta,
-		srgbDelta,
+		edgeSrgbDelta,
 		chromiumP3Delta,
 		chromiumSrgbDelta,
 		bjornP3Delta,
@@ -128,15 +126,15 @@ const aggregate = (colorData, index) => {
 	} = colorData;
 
 	const map = [
-		["edgeToP3", p3Delta],
-		["clipToP3", clippedStraightToP3Delta],
-		["edgeToSrgb", srgbDelta],
+		["edgeToP3", edgeP3Delta],
+		["edgeToSrgb", edgeSrgbDelta],
 		["chromiumToP3", chromiumP3Delta],
 		["chromiumToSrgb", chromiumSrgbDelta],
 		["bjornToP3", bjornP3Delta],
 		["bjornToSrgb", bjornSrgbDelta],
 		["raytraceToP3", raytraceP3Delta],
 		["raytraceToSrgb", raytraceSrgbDelta],
+		["clipToP3", clippedStraightToP3Delta],
 	];
 
 	map.forEach(([key, delta]) => {
