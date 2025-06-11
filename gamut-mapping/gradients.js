@@ -12,11 +12,13 @@ let app = createApp({
 		const urlToColor = params.get("to");
 		const from =  urlFromColor || "oklch(90% .4 250)";
 		const to = urlToColor || "oklch(40% .1 20)";
-		const methods = ["none", "clip", "scale-lh", "css", "css-rec2020", "raytrace", "bjorn", "edge-seeker", "chromium"];
+		const methods = ["none", "clip", "scale-lh", "css", "css-rec2020", "raytrace", "raytraceRec2020", "bjorn", "bjornRec2020", "edge-seeker", "edge-seeker-rec2020", "chromium"];
+		const enabledMethods = ["clip", "css-rec2020", "raytraceRec2020", "bjornRec2020", "edge-seeker-rec2020", "chromium"];
 		const runResults = {};
-		methods.forEach(method => runResults[method] = []);
+		enabledMethods.forEach(method => runResults[method] = []);
 		return {
-			methods: methods,
+			methods,
+			enabledMethods,
 			from: from,
 			to: to,
 			parsedFrom: this.tryParse(from),
@@ -27,6 +29,7 @@ let app = createApp({
 			params: params,
 			interpolationSpaces: ["oklch", "oklab", "p3", "rec2020", "lab"],
 			runResults: runResults,
+			refresh: 0,
 		};
 	},
 
@@ -97,6 +100,12 @@ let app = createApp({
 			deep: true,
 			immediate: true,
 		},
+		enabledMethods(newValue) {
+			const runResults = {};
+			newValue.forEach(method => runResults[method] = []);
+			this.runResults = runResults;
+			this.refresh++;
+		}
 	},
 
 	components: {
