@@ -144,40 +144,7 @@ const aggregate = (colorData, index) => {
 		["L", "C", "H", "delta2000"].forEach((d) => {
 			res[d] = runningAverage(res[d], delta[d], index);
 		});
-
-		// Update worst case
-		// if (!res.worst || res.worst.delta2000 < delta.delta2000) {
-		//   res.worst = {
-		//     color: colorData.color.toString(),
-		//     delta2000: delta.delta2000,
-		//     L: delta.L,
-		//     C: delta.C,
-		//     H: delta.H,
-		//   };
-		// }
 	});
-
-	// // To P3 Edge
-	// const p3Res = results.edgeToP3;
-	// ["L", "C", "H", "delta2000"].forEach((delta) => {
-	//   p3Res[delta] = runningAverage(p3Res[delta], p3Delta[delta], index);
-	// });
-
-	// // To P3 clip
-	// const clipP3Res = results.clipToP3;
-	// ["L", "C", "H", "delta2000"].forEach((delta) => {
-	//   clipP3Res[delta] = runningAverage(
-	//     clipP3Res[delta],
-	//     clippedStraightToP3Delta[delta],
-	//     index
-	//   );
-	// });
-
-	// // To sRGB Edge
-	// const srgbRes = results.edgeToSrgb;
-	// ["L", "C", "H", "delta2000"].forEach((delta) => {
-	//   srgbRes[delta] = runningAverage(srgbRes[delta], srgbDelta[delta], index);
-	// });
 
 	return results;
 };
