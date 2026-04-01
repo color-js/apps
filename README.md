@@ -16,6 +16,7 @@ They are useful in their own right, but also serve as [Color.js](https://colorjs
 - [Convert across everything](convert)
 - [Gamut Mapping Gradients](gamut-mapping/gradients)
 - [Gamut Mapping Playground](gamut-mapping)
+- [Gamut Mapping Comparison](gamut-mapping/compare)
 - [Gradient interpolation](gradients)
 - [Named color proximity](named)
 

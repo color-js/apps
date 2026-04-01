@@ -79,5 +79,10 @@ details.timing-info {
 		justify-content: space-between;
 		gap: 1em;
 	}
+}
 
+#algorithms{
+	label{
+		margin-inline-end: 1em;
+	}
 }
