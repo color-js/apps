@@ -1,0 +1,60 @@
+body {
+	font: 100% system-ui;
+}
+
+@media (width > 950px) {
+	body {
+		display: flex;
+		gap: 2rem;
+		align-items: start;
+		position: relative;
+
+		> #params {
+			min-width: calc(15vw + 20em);
+			position: sticky;
+			top: 1em;
+		}
+
+		> #scales {
+			flex: 1;
+		}
+	}
+}
+
+@media (width > 1250px) {
+	.scale {
+		display: grid;
+		grid-template-columns: 1fr auto;
+		gap: 0 1em;
+		align-items: start;
+
+		> :not(color-scale, .callout) {
+			grid-column: 1 / -1;
+		}
+
+		.callout {
+			grid-column: 2;
+		}
+	}
+}
+
+
+
+.callout {
+	background: light-dark(var(--color-90), var(--color-10));
+	border: 1px solid light-dark(var(--color-80), var(--color-20));
+	border-radius: 0.25em;
+	color: light-dark(var(--color-10), var(--color-90));
+	padding: .5em .8em 1em;
+
+	.h2 {
+		font-weight: bold;
+		font-size: 1.25em;
+		margin-bottom: 0.5em;
+		color: light-dark(var(--color-40), var(--color-60));
+	}
+
+	p {
+		margin: 0;
+	}
+}
