@@ -16,37 +16,37 @@ const L = {
 const scales = {
 	raw: {
 		name: "Raw",
-		getColor: (level, color) => color.set('l', L[level])
+		getColor: (level, color) => color.set("l", L[level]),
 	},
 	clipped: {
 		name: "Clipped (P3)",
-		getColor: (level, color) => scales.raw.getColor(level, color).toGamut({space: "p3", method: "clip"})
+		getColor: (level, color) => scales.raw.getColor(level, color).toGamut({ space: "p3", method: "clip" }),
 	},
 	mapped: {
 		name: "Gamut mapped (sRGB)",
 		getColor: (level, color) => {
 			let l = color.get("oklch.l");
 			let targetL = L[level];
-			color.set('l', L[level]);
+			color.set("l", L[level]);
 			if (targetL <= l + 0.01 && targetL >= l - 0.01) {
 				return color;
 			}
 
-			return color.toGamut({space: "srgb", method: "oklch.c"});
-		}
+			return color.toGamut({ space: "srgb", method: "oklch.c" });
+		},
 	},
 	mapped_p3: {
 		name: "Gamut mapped (P3)",
 		getColor: (level, color) => {
 			let l = color.get("oklch.l");
 			let targetL = L[level];
-			color.set('l', L[level]);
+			color.set("l", L[level]);
 			if (targetL <= l + 0.01 && targetL >= l - 0.01) {
 				return color;
 			}
 
-			return color.toGamut({space: "p3", method: "oklch.c"});
-		}
+			return color.toGamut({ space: "p3", method: "oklch.c" });
+		},
 	},
 	colormix: {
 		name: "color-mix()",
@@ -58,7 +58,7 @@ const scales = {
 			let mixAmount = (targetL - l) / (extremeL - l);
 
 			return color.mix(mixWith, mixAmount);
-		}
+		},
 	},
 	combo_raw: {
 		name: "color-mix() + clipped",
@@ -66,8 +66,7 @@ const scales = {
 			let mapped = scales.clipped.getColor(level, color.clone());
 			let mixed = scales.colormix.getColor(level, color.clone());
 			return mapped.mix(mixed, 0.5);
-			// return mapped;
-		}
+		},
 	},
 	combo: {
 		name: "color-mix() + gamut mapped (sRGB)",
@@ -75,7 +74,7 @@ const scales = {
 			let mapped = scales.mapped.getColor(level, color.clone());
 			let mixed = scales.colormix.getColor(level, color.clone());
 			return mapped.mix(mixed, 0.5);
-		}
+		},
 	},
 };
 
