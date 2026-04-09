@@ -1,3 +1,4 @@
+import { createApp } from "vue";
 import "color-elements/color-picker";
 import "color-elements/color-scale";
 
@@ -78,39 +79,49 @@ const scales = {
 	},
 };
 
-let scalesContainer = document.getElementById("scales");
+globalThis.app = createApp({
+	compilerOptions: {
+		isCustomElement (tag) {
+			return tag.startsWith("color-");
+		},
+	},
 
-input.addEventListener("colorchange", e => {
-	let color = input.color;
+	data () {
+		return {
+			color: null,
+			darkMode: false,
+		};
+	},
 
-	for (let id in scales) {
-		let scale = scales[id];
+	computed: {
+		scaleEntries () {
+			if (!this.color) {
+				return [];
+			}
 
-		if (!scale.element) {
-			scalesContainer.insertAdjacentHTML("beforeend", `
-				<article class="scale" id="scale_${id}">
-					<h3>${scale.name}</h3>
-					<color-scale space="oklch"></color-scale>
-					<div class="callout">
-						<div class="h2">Heading</div>
-						<p>Paragraph</p>
-					</div>
-				</article>
-			`);
-			scale.container = scalesContainer.lastElementChild;
-			scale.element = scale.container.querySelector("color-scale");
-			scalesContainer.appendChild(scale.container);
-		}
+			return Object.entries(scales).map(([id, scale]) => {
+				let tints = {};
+				let cssVars = {};
 
-		let tints = {};
-		for (let level in L) {
-			tints[level] = scale.getColor(level, color.clone());
-			scale.container.style.setProperty('--color-' + level, tints[level].toString());
-		}
-		scale.element.colors = tints;
-	}
-});
+				for (let level in L) {
+					tints[level] = scale.getColor(level, this.color.clone());
+					cssVars["--color-" + level] = tints[level].toString();
+				}
 
-dark_mode.onclick = e => {
-	document.documentElement.style.colorScheme = dark_mode.checked ? "dark" : "";
-}
+				return { id, name: scale.name, tints, cssVars };
+			});
+		},
+	},
+
+	methods: {
+		onColorChange (e) {
+			this.color = e.target.color;
+		},
+	},
+
+	watch: {
+		darkMode (value) {
+			document.documentElement.style.colorScheme = value ? "dark" : "";
+		},
+	},
+}).mount(document.body);

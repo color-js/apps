@@ -10,13 +10,19 @@
 </head>
 <body>
 	<section id="params">
-	<label><input type="checkbox" switch id="dark_mode"> Dark mode</label>
-	<color-picker id="input" space="oklch" color="oklch(70% 0.16 205)"></color-picker>
+	<label><input type="checkbox" switch v-model="darkMode"> Dark mode</label>
+	<color-picker id="input" space="oklch" color="oklch(70% 0.16 205)" @colorchange="onColorChange"></color-picker>
 	</section>
 	<section id="scales">
 		<h2>Generated color scales</h2>
-
-
+		<article v-for="scale in scaleEntries" :key="scale.id" class="scale" :id="'scale_' + scale.id" :style="scale.cssVars">
+			<h3>{{ scale.name }}</h3>
+			<color-scale space="oklch" :colors.prop="scale.tints"></color-scale>
+			<div class="callout">
+				<div class="h2">Heading</div>
+				<p>Paragraph</p>
+			</div>
+		</article>
 	</section>
 </body>
 </html>
