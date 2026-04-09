@@ -1,5 +1,5 @@
-import Color from "https://colorjs.io/color.js";
-import * as contrastAlgorithms from "https://colorjs.io/src/contrast/index.js";
+import Color from "colorjs.io";
+import * as contrastAlgorithms from "colorjs.io/src/contrast/index.js";
 
 for (let algo in contrastAlgorithms) {
 	let algoName = algo.replace(/^contrast/, "");

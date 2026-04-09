@@ -1,4 +1,4 @@
-import Color from "https://colorjs.io/dist/color.js";
+import Color from "colorjs.io";
 import methods from "./methods.js";
 
 const lch = ["L", "C", "H"];

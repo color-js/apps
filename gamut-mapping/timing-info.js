@@ -1,5 +1,5 @@
 import methods from "./methods.js";
-import Color from "https://colorjs.io/dist/color.js";
+import Color from "colorjs.io";
 
 export default {
 	props: {

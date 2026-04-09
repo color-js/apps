@@ -1,6 +1,6 @@
-import Color from "https://colorjs.io/color.js";
-import {ColorSpace, to, serialize, display, inGamut, steps} from "https://colorjs.io/src/index-fn.js";
-import {type} from "https://colorjs.io/src/util.js";
+import Color from "colorjs.io";
+import {ColorSpace, to, serialize, display, inGamut, steps} from "colorjs.io/fn";
+import {type} from "colorjs.io/src/util.js";
 
 // Expose Color.js functions as globals so we can easily reference them from Mavo
 window.ColorSpace = ColorSpace;

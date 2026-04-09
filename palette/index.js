@@ -1,4 +1,4 @@
-import Color from "https://colorjs.io/color.js";
+import Color from "colorjs.io";
 
 // TODO generate these
 let increments = [

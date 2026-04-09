@@ -1,5 +1,5 @@
-import { createApp } from "https://unpkg.com/vue@3.2.37/dist/vue.esm-browser.js";
-import Color from "https://colorjs.io/dist/color.js";
+import { createApp } from "vue";
+import Color from "colorjs.io";
 import methods from "./methods.js";
 import MapColor from "./map-color.js";
 

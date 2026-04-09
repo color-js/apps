@@ -1,8 +1,8 @@
-import Color from "https://colorjs.io/dist/color.js";
-import { WHITES } from "https://colorjs.io/src/adapt.js";
-import * as util from "https://colorjs.io/src/util.js";
-import {findCusp, findGamutIntersection} from "https://colorjs.io/src/spaces/okhsl.js";
-import { constrain as constrainAngle } from "https://colorjs.io/src/angles.js";
+import Color from "colorjs.io";
+import { WHITES } from "colorjs.io/src/adapt.js";
+import * as util from "colorjs.io/src/util.js";
+import {findCusp, findGamutIntersection} from "colorjs.io/src/spaces/okhsl.js";
+import { constrain as constrainAngle } from "colorjs.io/src/angles.js";
 import { makeEdgeSeeker } from "./edge-seeker/makeEdgeSeeker.js";
 
 // Make a function to get the maximum chroma for a given lightness and hue

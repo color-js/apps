@@ -10,7 +10,9 @@
 		"build": "run-s build:html",
 		"watch": "run-p watch:*",
 		"prepack": "npm run build",
-		"release": "release-it"
+		"release": "release-it",
+		"dependencies": "npx nudeps",
+		"prepare": "npx nudeps"
 	},
 	"repository": {
 		"type": "git",
@@ -38,9 +40,13 @@
 		"@typescript-eslint/eslint-plugin": "latest",
 		"@typescript-eslint/parser": "latest",
 		"npm-run-all": "^4.1.5",
+		"nudeps": "^0.2.4",
 		"release-it": "^17.1.1"
 	},
 	"dependencies": {
-		"colorjs.io": "^0.5.0"
+		"color-elements": ">=0.0.10",
+		"colorjs.io": "^0.6.1",
+		"incrementable": "^2.0.0",
+		"vue": "^3"
 	}
 }

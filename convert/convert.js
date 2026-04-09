@@ -1,3 +1,5 @@
+import Color from "colorjs.io";
+
 const favicon = document.querySelector('link[rel="shortcut icon"]');
 const supportsP3 = window.CSS && CSS.supports("color", "color(display-p3 0 1 0)");
 
@@ -152,7 +154,7 @@ function getPinned () {
 	return (localStorage.spaces_pinned ?? "srgb, srgb--hex, hsl, p3, oklch, oklch, lch, lab").split(", ");
 }
 
-import("https://incrementable.verou.me/incrementable.mjs").then(module => {
+import("incrementable").then(module => {
 	let Incrementable = module.default;
 
 	new Incrementable(colorInput);

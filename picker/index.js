@@ -1,5 +1,5 @@
-import Color from "https://colorjs.io/color.js";
-import {createApp} from "https://unpkg.com/vue@3.2.37/dist/vue.esm-browser.prod.js";
+import Color from "colorjs.io";
+import {createApp} from "vue";
 
 if (!globalThis.requestIdleCallback) {
 	globalThis.requestIdleCallback = globalThis.requestAnimationFrame;

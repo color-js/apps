@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="style.css">
 
 <script src="https://get.mavo.io/v0.2.4/mavo.js"></script>
-<script src="https://colorjs.io/color.js" type="module"></script>
+<script src="../importmap.js"></script>
 
 </head>
 <body mv-app mv-storage="local" mv-autosave mv-mode="edit">
@@ -82,6 +82,8 @@
 	</select>
 </div>
 <script type="module">
+	import Color from "colorjs.io";
+
 	window.ColorSpaces = Object.values(Color.spaces).map(s => {
 		return {id: s.id, name: s.name}
 	});

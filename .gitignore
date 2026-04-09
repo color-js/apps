@@ -1,4 +1,5 @@
 node_modules/
+importmap.js
 .claude
 
 # Ignore generated HTML files

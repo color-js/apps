@@ -1,5 +1,5 @@
-import Color from "https://colorjs.io/src/index.js";
-import KEYWORDS from "https://colorjs.io/src/keywords.js";
+import Color from "colorjs.io";
+import KEYWORDS from "colorjs.io/src/keywords.js";
 
 const L_CUTOFF = .65;
 

@@ -1,5 +1,5 @@
-import "https://elements.colorjs.io/src/color-picker/color-picker.js";
-import "https://elements.colorjs.io/src/color-scale/color-scale.js";
+import "color-elements/color-picker";
+import "color-elements/color-scale";
 
 const L = {
 	90: 0.97,
