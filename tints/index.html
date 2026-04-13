@@ -15,8 +15,15 @@
 	</section>
 	<section id="scales">
 		<h2>Generated color scales</h2>
-		<article v-for="scale in scaleEntries" :key="scale.id" class="scale" :id="'scale_' + scale.id" :style="scale.cssVars">
-			<h3>{{ scale.name }}</h3>
+		<article v-for="scale in allScales" :key="scale.id" class="scale" :class="{ combo: scale.isCombo }" :id="'scale_' + scale.id" :style="scale.cssVars">
+			<h3>
+				<label v-if="!scale.isCombo"><input type="checkbox" :checked="selected[scale.id]" @change="toggleScale(scale.id)"> {{ scale.name }}</label>
+				<template v-else>{{ scale.name }}</template>
+				<label v-if="!scale.isCombo && selected[scale.id] && selectedScales.length >= 2" class="weight-slider">
+					<input type="range" min="0" max="100" v-model.number="selected[scale.id].weight">
+					<output>{{ normalizedWeights[scale.id] }}%</output>
+				</label>
+			</h3>
 			<color-scale space="oklch" :colors.prop="scale.tints"></color-scale>
 			<div class="callout">
 				<div class="h2">Heading</div>

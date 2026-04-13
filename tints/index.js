@@ -61,22 +61,6 @@ const scales = {
 			return color.mix(mixWith, mixAmount);
 		},
 	},
-	combo_raw: {
-		name: "color-mix() + clipped",
-		getColor: (level, color) => {
-			let mapped = scales.clipped.getColor(level, color.clone());
-			let mixed = scales.colormix.getColor(level, color.clone());
-			return mapped.mix(mixed, 0.5);
-		},
-	},
-	combo: {
-		name: "color-mix() + gamut mapped (sRGB)",
-		getColor: (level, color) => {
-			let mapped = scales.mapped.getColor(level, color.clone());
-			let mixed = scales.colormix.getColor(level, color.clone());
-			return mapped.mix(mixed, 0.5);
-		},
-	},
 };
 
 globalThis.app = createApp({
@@ -90,6 +74,10 @@ globalThis.app = createApp({
 		return {
 			color: null,
 			darkMode: false,
+			selected: {
+				clipped: {},
+				colormix: {},
+			},
 		};
 	},
 
@@ -111,11 +99,100 @@ globalThis.app = createApp({
 				return { id, name: scale.name, tints, cssVars };
 			});
 		},
+
+		selectedScales () {
+			return this.scaleEntries.filter(s => this.selected[s.id]);
+		},
+
+		/** Normalizes raw weights to sum to 100, like color-mix() percentage scaling. */
+		normalizedWeights () {
+			let ids = Object.keys(this.selected).filter(id => this.selected[id]);
+			let rawWeights = ids.map(id => this.selected[id].weight ?? 1);
+			let total = rawWeights.reduce((sum, w) => sum + w, 0);
+
+			if (total === 0) {
+				return {};
+			}
+
+			let result = {};
+			let assigned = 0;
+			for (let i = 0; i < ids.length; i++) {
+				if (i === ids.length - 1) {
+					result[ids[i]] = 100 - assigned;
+				}
+				else {
+					let w = Math.round(rawWeights[i] / total * 100);
+					result[ids[i]] = w;
+					assigned += w;
+				}
+			}
+			return result;
+		},
+
+		/**
+		 * Produces a combo scale by weighted-mixing the tints of all selected scales.
+		 * Uses sequential weighted mixing: for colors [c1, c2, …] with weights [w1, w2, …],
+		 * start with c1, mix c2 at w2/(w1+w2), mix c3 at w3/(w1+w2+w3), etc.
+		 */
+		comboEntry () {
+			if (this.selectedScales.length < 2) {
+				return null;
+			}
+
+			let tints = {};
+			let cssVars = {};
+
+			for (let level in L) {
+				let result = null;
+				let totalWeight = 0;
+
+				for (let scale of this.selectedScales) {
+					let w = this.selected[scale.id].weight ?? 1;
+
+					if (result === null) {
+						result = scale.tints[level].clone();
+						totalWeight = w;
+					}
+					else {
+						totalWeight += w;
+						result = result.mix(scale.tints[level], w / totalWeight);
+					}
+				}
+
+				tints[level] = result;
+				cssVars["--color-" + level] = result.toString();
+			}
+
+			let nw = this.normalizedWeights;
+			let isEqual = new Set(this.selectedScales.map(s => nw[s.id])).size === 1;
+			let name = isEqual
+				? this.selectedScales.map(s => s.name).join(" + ")
+				: this.selectedScales.map(s => `${nw[s.id]}% ${s.name}`).join(" + ");
+
+			return { id: "combo", name, tints, cssVars, isCombo: true };
+		},
+
+		/** All scale entries (individual + combo) for a single v-for loop. */
+		allScales () {
+			if (this.comboEntry) {
+				return [...this.scaleEntries, this.comboEntry];
+			}
+			return this.scaleEntries;
+		},
 	},
 
 	methods: {
 		onColorChange (e) {
 			this.color = e.target.color;
+		},
+
+		toggleScale (id) {
+			if (this.selected[id]) {
+				delete this.selected[id];
+			}
+			else {
+				this.selected[id] = {};
+			}
 		},
 	},
 
