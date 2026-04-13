@@ -11,9 +11,10 @@ They are useful in their own right, but also serve as [Color.js](https://colorjs
 
 ## Tools
 
-- [Black or white?](blackwhite)
+- [Contrast checker (WIP)](contrast)
 - [Color picker for any color space](picker)
 - [Convert across everything](convert)
+- [Black or white?](blackwhite)
 - [Gradient interpolation](gradients)
 - [Named color proximity](named)
 
@@ -21,6 +22,7 @@ They are useful in their own right, but also serve as [Color.js](https://colorjs
 
 - [Gamut Mapping Gradients](gamut-mapping/gradients)
 - [Gamut Mapping Playground](gamut-mapping)
+- [Tints](tints)
 
 ## External
 

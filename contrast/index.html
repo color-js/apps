@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Contrast Checker</title>
+	<script src="../importmap.js"></script>
+	<script src="index.js" type="module"></script>
+	<link rel="stylesheet" href="style.css">
+</head>
+<body>
+	<header>
+		<h1>Contrast checker</h1>
+	</header>
+
+	<section id="inputs">
+		<div class="color-input">
+			<label>Text</label>
+			<color-picker alpha space="oklch" color="oklch(50% 0.15 265)"
+				@colorchange="onTextColorChange" ref="textPicker"></color-picker>
+		</div>
+		<button @click="swap" class="swap" title="Swap text and background colors">⇄</button>
+		<div class="color-input">
+			<label>Background</label>
+			<color-picker alpha space="oklch" color="oklch(97% 0.02 90)"
+				@colorchange="onBgColorChange" ref="bgPicker"></color-picker>
+		</div>
+	</section>
+
+	<section id="preview" :class="{ translucent: hasAlpha }" v-if="textColor && bgColor">
+		<div class="preview-content" :style="previewStyle">
+			<h2>Large Heading</h2>
+			<p>The quick brown fox jumps over the lazy dog. This sample text demonstrates
+				how readable your chosen color combination is at body text size.</p>
+			<p class="small">Fine print and small annotations — 12px text</p>
+			<p><a :style="{ color: 'inherit' }">A sample link</a>
+				&bull; <button class="sample-button" :style="{ color: 'inherit', borderColor: 'currentColor' }">Button</button></p>
+		</div>
+	</section>
+
+	<section id="results" v-if="wcag && apca">
+		<article class="algorithm" :style="{ '--indicator': wcagIndicator }">
+			<h2>WCAG 2.1</h2>
+			<div class="ratio">{{ wcagDisplay }}</div>
+			<div class="levels">
+				<div v-for="level in wcag.levels" :key="level.id"
+					class="level" :class="{ pass: level.pass, partial: level.partial }">
+					<span class="badge">{{ level.label }}</span>
+					<span class="description">{{ level.description }}</span>
+					<span class="pct" v-if="level.pct != null">{{ level.pct }}%</span>
+				</div>
+			</div>
+		</article>
+
+		<article class="algorithm" :style="{ '--indicator': apcaIndicator }">
+			<h2>APCA</h2>
+			<div class="ratio">{{ apcaDisplay }}</div>
+			<div class="levels">
+				<div v-for="level in apca.levels" :key="level.min"
+					class="level" :class="{ pass: level.pass, partial: level.partial }">
+					<span class="badge">Lc {{ level.min }}+</span>
+					<span class="description">{{ level.label }}</span>
+					<span class="font" v-if="level.font">{{ level.font }}</span>
+					<span class="pct" v-if="level.pct != null">{{ level.pct }}%</span>
+				</div>
+			</div>
+		</article>
+
+		<p v-if="bgIsTranslucent" class="alpha-note">
+			Background is semi-transparent — contrast depends on the backing color.
+			Showing range from black to white.
+		</p>
+	</section>
+</body>
+</html>
