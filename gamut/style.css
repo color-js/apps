@@ -31,7 +31,11 @@ color-picker {
 .wheel-wrap {
 	position: relative;
 	width: var(--size);
-	height: var(--size);
+	/* Stay square when shrunk on narrow viewports, and reserve space on each side
+	   for the h=0°/180° labels which sit ~1.6em outside the wheel. */
+	max-width: calc(100% - 6em);
+	aspect-ratio: 1;
+	container-type: inline-size;
 	/* OOG backdrop: the layers paint `transparent` outside their in-gamut hue ranges,
 	   so this colour shows through anywhere the gamut doesn't reach. */
 	background: light-dark(#d8d8d8, #2c2c2c);
@@ -96,7 +100,7 @@ color-picker {
 		border: 2px solid white;
 		box-shadow: 0 0 0 1px rgb(0 0 0 / 0.4), 0 1px 2px rgb(0 0 0 / 0.4);
 		pointer-events: none;
-		--r: calc(min(var(--marker-c) / var(--max-c), 1) * var(--size) / 2);
+		--r: calc(min(var(--marker-c) / var(--max-c), 1) * 50cqi);
 		transform:
 			rotate(calc(-1 * var(--marker-h)))
 			translateX(var(--r))
@@ -115,6 +119,6 @@ color-picker {
 		font-size: 0.8em;
 		color: color-mix(in oklch, currentColor, transparent 40%);
 		translate: -50% -50%;
-		transform: rotate(calc(-1 * var(--angle))) translateX(calc(var(--size) / 2 + 1.6em)) rotate(var(--angle));
+		transform: rotate(calc(-1 * var(--angle))) translateX(calc(50cqi + 1.6em)) rotate(var(--angle));
 	}
 }
