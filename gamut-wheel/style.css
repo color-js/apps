@@ -35,6 +35,8 @@ color-picker {
 
 	canvas {
 		display: block;
+		/* Out-of-gamut pixels are left transparent in the canvas; the backdrop shows through. */
+		background: light-dark(#d8d8d8, #2c2c2c);
 		border-radius: 50%;
 	}
 
