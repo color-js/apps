@@ -31,9 +31,7 @@ color-picker {
 .wheel-wrap {
 	position: relative;
 	width: var(--size);
-	/* Stay square when shrunk on narrow viewports, and reserve space on each side
-	   for the h=0°/180° labels which sit ~1.6em outside the wheel. */
-	max-width: calc(100% - 6em);
+	max-width: 100%;
 	aspect-ratio: 1;
 	container-type: inline-size;
 	/* OOG backdrop: the layers paint `transparent` outside their in-gamut hue ranges,
@@ -101,10 +99,9 @@ color-picker {
 		box-shadow: 0 0 0 1px rgb(0 0 0 / 0.4), 0 1px 2px rgb(0 0 0 / 0.4);
 		pointer-events: none;
 		--r: calc(min(var(--marker-c) / var(--max-c), 1) * 50cqi);
-		transform:
-			rotate(calc(-1 * var(--marker-h)))
-			translateX(var(--r))
-			rotate(var(--marker-h));
+		translate:
+			calc(var(--r) * cos(var(--marker-h)))
+			calc(var(--r) * sin(var(--marker-h)) * -1);
 	}
 }
 
@@ -118,7 +115,14 @@ color-picker {
 		inset: 50% auto auto 50%;
 		font-size: 0.8em;
 		color: color-mix(in oklch, currentColor, transparent 40%);
-		translate: -50% -50%;
-		transform: rotate(calc(-1 * var(--angle))) translateX(calc(50cqi + 1.6em)) rotate(var(--angle));
+		--r: calc(50cqi + 1.6em);
+		translate:
+			calc(-50% + var(--r) * cos(var(--angle)))
+			calc(-50% - var(--r) * sin(var(--angle)));
+	}
+
+	/* h=0° / h=180° sit on the horizontal axis and overflow narrow viewports. */
+	@container (max-width: 32em) {
+		span:nth-child(odd) { display: none; }
 	}
 }
