@@ -22,6 +22,7 @@ They are useful in their own right, but also serve as [Color.js](https://colorjs
 
 - [Gamut Mapping Gradients](gamut-mapping/gradients)
 - [Gamut Mapping Playground](gamut-mapping)
+- [Gamut Wheel](gamut-wheel)
 - [Tints](tints)
 
 ## External

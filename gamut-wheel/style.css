@@ -1,0 +1,90 @@
+body {
+	font: 100% system-ui;
+	max-width: 60em;
+	margin-inline: auto;
+	padding: 1em;
+}
+
+header p {
+	color: color-mix(in oklch, currentColor, transparent 30%);
+	max-width: 50em;
+}
+
+main {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: 2em 4em;
+}
+
+.controls {
+	flex: 0 1 auto;
+	min-width: 0;
+}
+
+color-picker {
+	grid-template-columns: 1fr;
+	flex: 1;
+}
+
+.wheel-wrap {
+	position: relative;
+	width: var(--size);
+	height: var(--size);
+
+	canvas {
+		display: block;
+		border-radius: 50%;
+	}
+
+	.overlay {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		pointer-events: none;
+		overflow: visible;
+	}
+}
+
+.ring {
+	fill: none;
+	stroke: white;
+	stroke-width: 1;
+	stroke-dasharray: 3 4;
+	opacity: 0.55;
+	mix-blend-mode: difference;
+}
+
+.ring-label {
+	font: 600 0.7em / 1 system-ui;
+	fill: white;
+	stroke: black;
+	stroke-width: 3;
+	paint-order: stroke;
+	text-anchor: middle;
+	dominant-baseline: middle;
+}
+
+.marker {
+	stroke: white;
+	stroke-width: 2;
+	paint-order: stroke fill;
+	filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.4));
+}
+
+.hue-labels {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+
+	span {
+		position: absolute;
+		inset: 50% auto auto 50%;
+		font-size: 0.8em;
+		color: color-mix(in oklch, currentColor, transparent 40%);
+		translate: -50% -50%;
+		transform: rotate(calc(-1 * var(--angle))) translateX(calc(var(--size) / 2 + 1.6em)) rotate(var(--angle));
+	}
+}

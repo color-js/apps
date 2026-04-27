@@ -7,6 +7,7 @@ export default {
 			"color-elements/color-scale": "./node_modules/color-elements/src/color-scale/color-scale.js",
 			"color-elements/color-slider": "./node_modules/color-elements/src/color-slider/color-slider.js",
 			"color-elements/color-swatch": "./node_modules/color-elements/src/color-swatch/color-swatch.js",
+			"colorjs.io/fn": "./node_modules/colorjs.io/src/index-fn.js",
 		},
 	},
 };

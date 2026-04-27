@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>OKLCH Gamut Wheel</title>
+	<script src="../importmap.js"></script>
+	<script src="index.js" type="module"></script>
+	<link rel="stylesheet" href="style.css">
+</head>
+<body>
+	<header>
+		<h1>OKLCH Gamut Wheel</h1>
+		<p>Slice of the P3 gamut at the picked lightness.
+			Hue runs around the wheel; <strong>distance from the center is chroma</strong>
+			(0 at the center, {{ maxChroma }} at the edge).
+			Grey = out of gamut.</p>
+	</header>
+
+	<main>
+		<color-picker space="oklch" color="oklch(0.5 0.2 240)" @colorchange="onColorChange"></color-picker>
+
+		<div class="wheel-wrap" :style="{ '--size': cssSize + 'px' }">
+			<canvas ref="canvas"></canvas>
+			<svg class="overlay" :viewBox="`0 0 ${cssSize} ${cssSize}`">
+				<g :transform="`translate(${cssSize / 2} ${cssSize / 2})`">
+					<circle v-for="t in chromaTicks" :key="'ring-' + t.value"
+						class="ring" :r="t.radius"></circle>
+					<text v-for="t in chromaTicks" :key="'lbl-' + t.value"
+						class="ring-label" x="0" :y="-t.radius">{{ t.value }}</text>
+					<circle class="marker"
+						:cx="markerPos.x" :cy="markerPos.y"
+						r="9" :fill="markerColor"></circle>
+				</g>
+			</svg>
+			<div class="hue-labels" aria-hidden="true">
+				<span style="--angle: 0deg">h=0°</span>
+				<span style="--angle: 90deg">h=90°</span>
+				<span style="--angle: 180deg">h=180°</span>
+				<span style="--angle: 270deg">h=270°</span>
+			</div>
+		</div>
+	</main>
+</body>
+</html>
