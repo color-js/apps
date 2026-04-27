@@ -5,17 +5,12 @@ body {
 	padding: 1em;
 }
 
-header p {
-	color: color-mix(in oklch, currentColor, transparent 30%);
-	max-width: 50em;
-}
-
 main {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
 	justify-content: center;
-	gap: 2em 4em;
+	gap: 2em 1.5em;
 }
 
 .controls {

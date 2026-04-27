@@ -9,14 +9,6 @@
 	<link rel="stylesheet" href="style.css">
 </head>
 <body>
-	<header>
-		<h1>OKLCH Gamut Wheel</h1>
-		<p>Slice of the P3 gamut at the picked lightness.
-			Hue runs around the wheel; <strong>distance from the center is chroma</strong>
-			(0 at the center, {{ maxChroma }} at the edge).
-			Grey = out of gamut.</p>
-	</header>
-
 	<main>
 		<color-picker space="oklch" color="oklch(0.5 0.2 240)" @colorchange="onColorChange"></color-picker>
 
