@@ -32,48 +32,76 @@ color-picker {
 	position: relative;
 	width: var(--size);
 	height: var(--size);
+	/* OOG backdrop: the layers paint `transparent` outside their in-gamut hue ranges,
+	   so this colour shows through anywhere the gamut doesn't reach. */
+	background: light-dark(#d8d8d8, #2c2c2c);
+	border-radius: 50%;
 
-	canvas {
-		display: block;
-		/* Out-of-gamut pixels are left transparent in the canvas; the backdrop shows through. */
-		background: light-dark(#d8d8d8, #2c2c2c);
-		border-radius: 50%;
-	}
-
-	.overlay {
+	.layers {
 		position: absolute;
 		inset: 0;
-		width: 100%;
-		height: 100%;
-		pointer-events: none;
-		overflow: visible;
+		/* clip-path applied inline as a polygon traced from the per-L gamut boundary. */
 	}
-}
 
-.ring {
-	fill: none;
-	stroke: white;
-	stroke-width: 1;
-	stroke-dasharray: 3 4;
-	opacity: 0.55;
-	mix-blend-mode: difference;
-}
+	.layer {
+		position: absolute;
+		/* Each layer is sized so its outer edge corresponds to its --c on the chroma axis.
+		   c == max-c → inset 0 (full size); c == 0 → inset 50% (zero size at centre). */
+		inset: calc((1 - var(--c) / var(--max-c)) * 50%);
+		border-radius: 50%;
+		/* Single static gradient: hue 0° at 3 o'clock, math-CCW around the wheel. CSS conic
+		   gradients run clockwise from the `from` angle, so we map gradient angle θ to math
+		   hue (-θ) — at gradient pos 90° (= 6 o'clock) we want math hue 270°, etc. `in oklch`
+		   interpolates the hue on the shorter path, which here is always the right one. */
+		background:
+			conic-gradient(from 90deg in oklch,
+				oklch(var(--l) var(--c) 0deg) 0deg,
+				oklch(var(--l) var(--c) 270deg) 90deg,
+				oklch(var(--l) var(--c) 180deg) 180deg,
+				oklch(var(--l) var(--c) 90deg) 270deg,
+				oklch(var(--l) var(--c) 0deg) 360deg);
+	}
 
-.ring-label {
-	font: 600 0.7em / 1 system-ui;
-	fill: white;
-	stroke: black;
-	stroke-width: 3;
-	paint-order: stroke;
-	text-anchor: middle;
-	dominant-baseline: middle;
-}
+	.tick-ring {
+		position: absolute;
+		inset: calc((1 - var(--tick-c) / var(--max-c)) * 50%);
+		border-radius: 50%;
+		border: 1px dashed white;
+		opacity: 0.55;
+		mix-blend-mode: difference;
+		pointer-events: none;
+	}
 
-.marker {
-	stroke: white;
-	stroke-width: 2;
-	paint-order: stroke fill;
-	filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.4));
+	.tick-label {
+		position: absolute;
+		top: calc((1 - var(--tick-c) / var(--max-c)) * 50%);
+		left: 50%;
+		translate: -50% -50%;
+		font: 600 0.7em / 1 system-ui;
+		color: white;
+		paint-order: stroke fill;
+		-webkit-text-stroke: 2px black;
+		pointer-events: none;
+	}
+
+	.marker {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 18px;
+		height: 18px;
+		margin: -9px 0 0 -9px;
+		border-radius: 50%;
+		background: oklch(var(--l) var(--marker-c) var(--marker-h));
+		border: 2px solid white;
+		box-shadow: 0 0 0 1px rgb(0 0 0 / 0.4), 0 1px 2px rgb(0 0 0 / 0.4);
+		pointer-events: none;
+		--r: calc(min(var(--marker-c) / var(--max-c), 1) * var(--size) / 2);
+		transform:
+			rotate(calc(-1 * var(--marker-h)))
+			translateX(var(--r))
+			rotate(var(--marker-h));
+	}
 }
 
 .hue-labels {

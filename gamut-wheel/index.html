@@ -20,19 +20,26 @@
 	<main>
 		<color-picker space="oklch" color="oklch(0.5 0.2 240)" @colorchange="onColorChange"></color-picker>
 
-		<div class="wheel-wrap" :style="{ '--size': cssSize + 'px' }">
-			<canvas ref="canvas"></canvas>
-			<svg class="overlay" :viewBox="`0 0 ${cssSize} ${cssSize}`">
-				<g :transform="`translate(${cssSize / 2} ${cssSize / 2})`">
-					<circle v-for="t in chromaTicks" :key="'ring-' + t.value"
-						class="ring" :r="t.radius"></circle>
-					<text v-for="t in chromaTicks" :key="'lbl-' + t.value"
-						class="ring-label" x="0" :y="-t.radius">{{ t.value }}</text>
-					<circle class="marker"
-						:cx="markerPos.x" :cy="markerPos.y"
-						r="9" :fill="markerColor"></circle>
-				</g>
-			</svg>
+		<div class="wheel-wrap" :style="{
+			'--size': cssSize + 'px',
+			'--max-c': maxChroma,
+			'--l': lightness,
+		}">
+			<div class="layers" :style="{ 'clip-path': clipPath }">
+				<div v-for="layer in layers" :key="layer.idx" class="layer"
+					:style="{ '--c': layer.c }"></div>
+			</div>
+
+			<template v-for="c in chromaTicks" :key="c">
+				<div class="tick-ring" :style="{ '--tick-c': c }" aria-hidden="true"></div>
+				<div class="tick-label" :style="{ '--tick-c': c }" aria-hidden="true">{{ c }}</div>
+			</template>
+
+			<div class="marker" :style="{
+				'--marker-c': markerC,
+				'--marker-h': markerH + 'deg',
+			}" aria-hidden="true"></div>
+
 			<div class="hue-labels" aria-hidden="true">
 				<span style="--angle: 0deg">h=0°</span>
 				<span style="--angle: 90deg">h=90°</span>
