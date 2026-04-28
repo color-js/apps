@@ -35,10 +35,24 @@ globalThis.app = createApp({
 			maxChroma: MAX_CHROMA,
 			cssSize: CSS_SIZE,
 			chromaTicks: [0.1, 0.2, 0.3, 0.4],
+			dragging: false,
+			// (c, h) snapshot at pointerdown, used to lock the constrained axis
+			// when shift/alt is held during the drag.
+			dragLockC: 0,
+			dragLockH: 0,
 		};
 	},
 
 	computed: {
+		/**
+		 * One-way binding into <color-picker>. The picker re-emits `colorchange`
+		 * whenever its `color` prop is set; `onColorChange` writes the same values
+		 * back into our state, so Vue sees no diff and the loop terminates.
+		 */
+		pickerColor () {
+			return `oklch(${this.lightness} ${this.markerC} ${this.markerH})`;
+		},
+
 		/**
 		 * Per-L gamut boundary as `maxC[h]`. On a drag, the previous L's curve is a
 		 * stone's throw away — `updateMaxC` walks from each prev value outward or
@@ -101,6 +115,59 @@ globalThis.app = createApp({
 			this.lightness = l;
 			this.markerC = c || 0;
 			this.markerH = h || 0;
+		},
+
+		onPointerDown (e) {
+			if (e.button !== 0) {
+				return;
+			}
+			e.preventDefault();
+			this.dragging = true;
+			this.dragLockC = this.markerC;
+			this.dragLockH = this.markerH;
+			e.currentTarget.setPointerCapture(e.pointerId);
+			this.updateMarkerFromPointer(e);
+		},
+
+		onPointerMove (e) {
+			if (!this.dragging) {
+				return;
+			}
+			this.updateMarkerFromPointer(e);
+		},
+
+		onPointerUp (e) {
+			if (!this.dragging) {
+				return;
+			}
+			this.dragging = false;
+			if (e.currentTarget.hasPointerCapture?.(e.pointerId)) {
+				e.currentTarget.releasePointerCapture(e.pointerId);
+			}
+		},
+
+		/**
+		 * Pointer → polar (c, h) on the wheel. Shift locks chroma to the value at
+		 * pointerdown (drag along the ring); Alt locks hue (drag along the radius).
+		 */
+		updateMarkerFromPointer (e) {
+			const rect = this.$refs.wheel.getBoundingClientRect();
+			const radius = rect.width / 2;
+			const dx = e.clientX - (rect.left + radius);
+			const dy = e.clientY - (rect.top + radius);
+			const r = Math.min(Math.hypot(dx, dy) / radius, 1);
+			let c = r * MAX_CHROMA;
+			let h = (Math.atan2(-dy, dx) * 180 / Math.PI + 360) % 360;
+
+			if (e.shiftKey) {
+				c = this.dragLockC;
+			}
+			if (e.altKey) {
+				h = this.dragLockH;
+			}
+
+			this.markerC = c;
+			this.markerH = h;
 		},
 	},
 }).mount(document.body);
