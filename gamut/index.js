@@ -111,7 +111,8 @@ globalThis.app = createApp({
 
 	methods: {
 		onColorChange (e) {
-			let [l, c, h] = e.target.color.coords;
+			// Picker may be in any space; convert so our (L, C, H) state stays in oklch.
+			let [l, c, h] = e.target.color.to("oklch").coords;
 			this.lightness = l;
 			this.markerC = c || 0;
 			this.markerH = h || 0;
