@@ -16,6 +16,9 @@ main {
 .controls {
 	flex: 0 1 auto;
 	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.6em;
 }
 
 color-picker {
@@ -157,7 +160,9 @@ color-picker {
 .oog-mode {
 	display: inline-flex;
 	align-items: center;
-	gap: 0.4em;
-	font-size: 0.9em;
+	gap: 0.3em;
+	font-size: 0.8em;
+	color: color-mix(in oklch, currentColor, transparent 30%);
 	cursor: pointer;
+	align-self: start;
 }

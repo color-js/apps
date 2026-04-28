@@ -10,11 +10,12 @@
 </head>
 <body>
 	<main>
-		<color-picker space="oklch" :color="pickerColor" @colorchange="onColorChange"></color-picker>
-
-		<label class="oog-mode">
-			<input type="checkbox" v-model="paintOOG"> Paint out of gamut colors
-		</label>
+		<div class="controls">
+			<color-picker space="oklch" :color="pickerColor" @colorchange="onColorChange"></color-picker>
+			<label class="oog-mode">
+				<input type="checkbox" v-model="paintOOG"> Paint out of gamut colors
+			</label>
+		</div>
 
 		<div class="wheel-wrap" ref="wheel"
 			:class="{ dragging }"
