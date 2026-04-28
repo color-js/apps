@@ -33,6 +33,15 @@ color-picker {
 	   so this colour shows through anywhere the gamut doesn't reach. */
 	background: light-dark(#d8d8d8, #2c2c2c);
 	border-radius: 50%;
+	cursor: crosshair;
+	/* Suppress browser pan/zoom so dragging the marker on touch doesn't scroll. */
+	touch-action: none;
+	-webkit-user-select: none;
+	user-select: none;
+
+	&.dragging {
+		cursor: grabbing;
+	}
 
 	.layers {
 		position: absolute;

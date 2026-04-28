@@ -10,9 +10,15 @@
 </head>
 <body>
 	<main>
-		<color-picker space="oklch" color="oklch(0.5 0.2 240)" @colorchange="onColorChange"></color-picker>
+		<color-picker space="oklch" :color="pickerColor" @colorchange="onColorChange"></color-picker>
 
-		<div class="wheel-wrap" :style="{
+		<div class="wheel-wrap" ref="wheel"
+			:class="{ dragging }"
+			@pointerdown="onPointerDown"
+			@pointermove="onPointerMove"
+			@pointerup="onPointerUp"
+			@pointercancel="onPointerUp"
+			:style="{
 			'--size': cssSize + 'px',
 			'--max-c': maxChroma,
 			'--l': lightness,
