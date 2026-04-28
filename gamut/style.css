@@ -46,7 +46,11 @@ color-picker {
 	.layers {
 		position: absolute;
 		inset: 0;
-		/* clip-path applied inline as a polygon traced from the per-L gamut boundary. */
+		clip-path: var(--gamut-shape);
+	}
+
+	&[data-oog-mode="auto"] .layers {
+		clip-path: none;
 	}
 
 	.layer {
@@ -106,6 +110,25 @@ color-picker {
 		translate:
 			calc(var(--r) * cos(var(--marker-h)))
 			calc(var(--r) * sin(var(--marker-h)) * -1);
+	}
+
+	.boundary {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		background: white;
+		clip-path: var(--gamut-shape);
+		mix-blend-mode: difference;
+
+		&::after {
+			content: "";
+			position: absolute;
+			inset: 0;
+			background: black;
+			clip-path: var(--gamut-shape);
+			transform: scale(0.99);
+			transform-origin: center;
+		}
 	}
 }
 

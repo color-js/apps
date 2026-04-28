@@ -91,25 +91,22 @@ globalThis.app = createApp({
 		},
 
 		/**
-		 * The gamut boundary as a CSS `polygon(...)` string in percentage coordinates,
-		 * to be applied as `clip-path` on the layer stack. One vertex per hue bucket;
-		 * the polygon's edges are anti-aliased natively by the browser so the gamut
-		 * boundary stays smooth no matter how coarse our `maxC` sampling is.
+		 * The gamut boundary as a CSS `polygon(...)` string in percentage coordinates.
+		 * One vertex per hue bucket; published as `--gamut-shape` on the wheel so
+		 * both the layer clip and the "auto"-mode boundary overlay can reuse the
+		 * exact same shape via `clip-path: var(--gamut-shape)`.
 		 */
-		clipPath () {
-			if (this.oogMode === "auto") {
-				return "none";
-			}
+		gamutShape () {
 			const maxC = this.maxC;
 			const n = maxC.length;
-			const points = [];
+			const points = new Array(n);
 			for (let i = 0; i < n; i++) {
 				const h = (i / n) * 360;
 				const r = maxC[i] / MAX_CHROMA;
 				const hRad = (h * Math.PI) / 180;
 				const x = 50 + r * 50 * Math.cos(hRad);
 				const y = 50 - r * 50 * Math.sin(hRad); // screen y is flipped
-				points.push(`${x.toFixed(2)}% ${y.toFixed(2)}%`);
+				points[i] = `${x.toFixed(2)}% ${y.toFixed(2)}%`;
 			}
 			return `polygon(${points.join(", ")})`;
 		},
