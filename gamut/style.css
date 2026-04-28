@@ -36,8 +36,8 @@ color-picker {
 	cursor: crosshair;
 	/* Suppress browser pan/zoom so dragging the marker on touch doesn't scroll. */
 	touch-action: none;
-	user-select: none;
 	-webkit-user-select: none;
+	user-select: none;
 
 	&.dragging {
 		cursor: grabbing;
