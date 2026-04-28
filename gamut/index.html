@@ -12,15 +12,13 @@
 	<main>
 		<color-picker space="oklch" :color="pickerColor" @colorchange="onColorChange"></color-picker>
 
-		<fieldset class="oog-mode">
-			<legend>Out of gamut colors</legend>
-			<label><input type="radio" v-model="oogMode" value="dont-paint"> Don't paint</label>
-			<label><input type="radio" v-model="oogMode" value="auto"> Auto</label>
-		</fieldset>
+		<label class="oog-mode">
+			<input type="checkbox" v-model="paintOOG"> Paint out of gamut colors
+		</label>
 
 		<div class="wheel-wrap" ref="wheel"
 			:class="{ dragging }"
-			:data-oog-mode="oogMode"
+			:data-paint-oog="paintOOG"
 			@pointerdown="onPointerDown"
 			@pointermove="onPointerMove"
 			@pointerup="onPointerUp"
@@ -46,7 +44,7 @@
 				'--marker-h': markerH + 'deg',
 			}" aria-hidden="true"></div>
 
-			<div v-if="oogMode === 'auto'" class="boundary" aria-hidden="true"></div>
+			<div v-if="paintOOG" class="boundary" aria-hidden="true"></div>
 
 			<div class="hue-labels" aria-hidden="true">
 				<span style="--angle: 0deg">h=0°</span>

@@ -49,7 +49,7 @@ color-picker {
 		clip-path: var(--gamut-shape);
 	}
 
-	&[data-oog-mode="auto"] .layers {
+	&[data-paint-oog="true"] .layers {
 		clip-path: none;
 	}
 
@@ -155,23 +155,9 @@ color-picker {
 }
 
 .oog-mode {
-	border: 1px solid color-mix(in oklch, currentColor, transparent 80%);
-	border-radius: 0.4em;
-	padding: 0.4em 0.8em 0.6em;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4em;
 	font-size: 0.9em;
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.4em 1em;
-
-	legend {
-		padding-inline: 0.4em;
-		color: color-mix(in oklch, currentColor, transparent 30%);
-	}
-
-	label {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.3em;
-		cursor: pointer;
-	}
+	cursor: pointer;
 }

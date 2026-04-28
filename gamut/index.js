@@ -40,9 +40,9 @@ globalThis.app = createApp({
 			// when shift/alt is held during the drag.
 			dragLockC: 0,
 			dragLockH: 0,
-			// "dont-paint" clips the disc to the P3 gamut polygon; "auto" lifts
-			// the clip and lets the browser render OOG OKLCH values natively.
-			oogMode: "dont-paint",
+			// When true, lifts the clip and lets the browser render OOG OKLCH
+			// values natively. When false, the disc is clipped to the P3 polygon.
+			paintOOG: false,
 		};
 	},
 
