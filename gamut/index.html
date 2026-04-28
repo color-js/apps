@@ -12,6 +12,12 @@
 	<main>
 		<color-picker space="oklch" :color="pickerColor" @colorchange="onColorChange"></color-picker>
 
+		<fieldset class="oog-mode">
+			<legend>Out of gamut colors</legend>
+			<label><input type="radio" v-model="oogMode" value="dont-paint"> Don't paint</label>
+			<label><input type="radio" v-model="oogMode" value="auto"> Auto</label>
+		</fieldset>
+
 		<div class="wheel-wrap" ref="wheel"
 			:class="{ dragging }"
 			@pointerdown="onPointerDown"

@@ -130,3 +130,25 @@ color-picker {
 		span:nth-child(odd) { display: none; }
 	}
 }
+
+.oog-mode {
+	border: 1px solid color-mix(in oklch, currentColor, transparent 80%);
+	border-radius: 0.4em;
+	padding: 0.4em 0.8em 0.6em;
+	font-size: 0.9em;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4em 1em;
+
+	legend {
+		padding-inline: 0.4em;
+		color: color-mix(in oklch, currentColor, transparent 30%);
+	}
+
+	label {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3em;
+		cursor: pointer;
+	}
+}
