@@ -10,7 +10,7 @@ main {
 	flex-wrap: wrap;
 	align-items: center;
 	justify-content: center;
-	gap: 2em 1.5em;
+	gap: 1em 4em;
 }
 
 .controls {
