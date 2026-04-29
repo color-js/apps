@@ -172,3 +172,33 @@ color-picker {
 		cursor: pointer;
 	}
 }
+
+.gamut {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25em;
+
+	label {
+		padding: 0.1em 0.45em;
+		border-radius: 0.25em;
+		border: 1px solid color-mix(in oklch, currentColor, transparent 80%);
+
+		input {
+			/* radio is the source of truth; hide it visually but keep it focusable */
+			position: absolute;
+			opacity: 0;
+			pointer-events: none;
+		}
+
+		&:has(:checked) {
+			background: color-mix(in oklch, currentColor, transparent 85%);
+			border-color: color-mix(in oklch, currentColor, transparent 50%);
+			color: color-mix(in oklch, currentColor, transparent 0%);
+		}
+
+		&:has(:focus-visible) {
+			outline: 2px solid Highlight;
+			outline-offset: 1px;
+		}
+	}
+}

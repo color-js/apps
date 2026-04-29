@@ -13,14 +13,12 @@
 		<div class="controls">
 			<color-picker space="oklch" :color="pickerColor" @colorchange="onColorChange"></color-picker>
 			<div class="meta">
-				<label class="gamut">
+				<div class="gamut">
 					Gamut:
-					<select :value="gamut" @change="gamut = $event.target.value">
-						<option value="srgb">sRGB</option>
-						<option value="p3">P3</option>
-						<option value="rec2020">Rec2020</option>
-					</select>
-				</label>
+					<label><input type="radio" name="gamut" value="srgb" :checked="gamut === 'srgb'" @change="gamut = 'srgb'">sRGB</label>
+					<label><input type="radio" name="gamut" value="p3" :checked="gamut === 'p3'" @change="gamut = 'p3'">P3</label>
+					<label><input type="radio" name="gamut" value="rec2020" :checked="gamut === 'rec2020'" @change="gamut = 'rec2020'">Rec2020</label>
+				</div>
 				<label class="oog-mode">
 					<input type="checkbox" v-model="paintOOG"> Paint out of gamut colors
 				</label>
