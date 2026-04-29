@@ -12,9 +12,19 @@
 	<main>
 		<div class="controls">
 			<color-picker space="oklch" :color="pickerColor" @colorchange="onColorChange"></color-picker>
-			<label class="oog-mode">
-				<input type="checkbox" v-model="paintOOG"> Paint out of gamut colors
-			</label>
+			<div class="meta">
+				<label class="gamut">
+					Gamut:
+					<select v-model="gamut">
+						<option value="srgb">sRGB</option>
+						<option value="p3">P3</option>
+						<option value="rec2020">Rec2020</option>
+					</select>
+				</label>
+				<label class="oog-mode">
+					<input type="checkbox" v-model="paintOOG"> Paint out of gamut colors
+				</label>
+			</div>
 		</div>
 
 		<div class="wheel-wrap" ref="wheel"

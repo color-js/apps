@@ -157,12 +157,18 @@ color-picker {
 	}
 }
 
-.oog-mode {
-	display: inline-flex;
+.meta {
+	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
-	gap: 0.3em;
+	gap: 0.4em 1em;
 	font-size: 0.8em;
 	color: color-mix(in oklch, currentColor, transparent 30%);
-	cursor: pointer;
-	align-self: start;
+
+	label {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3em;
+		cursor: pointer;
+	}
 }
