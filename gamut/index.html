@@ -10,10 +10,24 @@
 </head>
 <body>
 	<main>
-		<color-picker space="oklch" :color="pickerColor" @colorchange="onColorChange"></color-picker>
+		<div class="controls">
+			<color-picker space="oklch" :color="pickerColor" @colorchange="onColorChange"></color-picker>
+			<div class="meta">
+				<div class="gamut">
+					Gamut:
+					<label><input type="radio" name="gamut" value="srgb" :checked="gamut === 'srgb'" @change="gamut = 'srgb'">sRGB</label>
+					<label><input type="radio" name="gamut" value="p3" :checked="gamut === 'p3'" @change="gamut = 'p3'">P3</label>
+					<label><input type="radio" name="gamut" value="rec2020" :checked="gamut === 'rec2020'" @change="gamut = 'rec2020'">Rec2020</label>
+				</div>
+				<label class="oog-mode">
+					<input type="checkbox" v-model="paintOOG"> Paint out of gamut colors
+				</label>
+			</div>
+		</div>
 
 		<div class="wheel-wrap" ref="wheel"
 			:class="{ dragging }"
+			:data-paint-oog="paintOOG"
 			@pointerdown="onPointerDown"
 			@pointermove="onPointerMove"
 			@pointerup="onPointerUp"
@@ -22,8 +36,9 @@
 			'--size': cssSize + 'px',
 			'--max-c': maxChroma,
 			'--l': lightness,
+			'--gamut-shape': gamutShape,
 		}">
-			<div class="layers" :style="{ 'clip-path': clipPath }">
+			<div class="layers">
 				<div v-for="layer in layers" :key="layer.idx" class="layer"
 					:style="{ '--c': layer.c }"></div>
 			</div>
@@ -37,6 +52,8 @@
 				'--marker-c': markerC,
 				'--marker-h': markerH + 'deg',
 			}" aria-hidden="true"></div>
+
+			<div v-if="paintOOG" class="boundary" aria-hidden="true"></div>
 
 			<div class="hue-labels" aria-hidden="true">
 				<span style="--angle: 0deg">h=0°</span>

@@ -15,9 +15,23 @@ const HUE_BUCKETS = 360;       // 1° resolution for the gamut boundary polygon
 const SEARCH_ITERS = 12;       // binary-search iterations per hue (precision ≈ MAX_CHROMA / 2^12)
 const PROBE_ITERS = 6;         // refine iterations after optimistic walk
 
-// Cache the most recent (L, maxC) so consecutive renders at the same L do no work,
-// and so drag updates can probe outward/inward from the previous L's boundary.
+// Pick the widest gamut the device claims to support. matchMedia("color-gamut: x")
+// matches if the display covers x or wider, so probe from widest to narrowest.
+function detectGamut () {
+	if (matchMedia("(color-gamut: rec2020)").matches) {
+		return "rec2020";
+	}
+	if (matchMedia("(color-gamut: p3)").matches) {
+		return "p3";
+	}
+	return "srgb";
+}
+
+// Cache the most recent (L, gamut, maxC) so consecutive renders at the same L
+// do no work, and so drag updates can probe outward/inward from the previous
+// L's boundary. Changing the target gamut invalidates the cache entirely.
 let cachedL = null;
+let cachedGamut = null;
 let cachedMaxC = null;
 
 globalThis.app = createApp({
@@ -40,6 +54,11 @@ globalThis.app = createApp({
 			// when shift/alt is held during the drag.
 			dragLockC: 0,
 			dragLockH: 0,
+			// When true, lifts the clip and lets the browser render OOG OKLCH
+			// values natively. When false, the disc is clipped to the gamut polygon.
+			paintOOG: false,
+			// Target gamut for the boundary; defaults to the device's widest support.
+			gamut: detectGamut(),
 		};
 	},
 
@@ -61,11 +80,16 @@ globalThis.app = createApp({
 		 */
 		maxC () {
 			const L = this.lightness;
-			if (cachedL === L && cachedMaxC) {
+			const gamut = this.gamut;
+			if (cachedL === L && cachedGamut === gamut && cachedMaxC) {
 				return cachedMaxC;
 			}
-			const arr = cachedMaxC ? updateMaxC(L, cachedMaxC) : computeMaxC(L);
+			// Reuse the previous boundary as a warm start only when the target gamut
+			// is unchanged; a different gamut wants a fresh full search.
+			const warmStart = cachedMaxC && cachedGamut === gamut;
+			const arr = warmStart ? updateMaxC(L, cachedMaxC, gamut) : computeMaxC(L, gamut);
 			cachedL = L;
+			cachedGamut = gamut;
 			cachedMaxC = arr;
 			return arr;
 		},
@@ -88,22 +112,22 @@ globalThis.app = createApp({
 		},
 
 		/**
-		 * The gamut boundary as a CSS `polygon(...)` string in percentage coordinates,
-		 * to be applied as `clip-path` on the layer stack. One vertex per hue bucket;
-		 * the polygon's edges are anti-aliased natively by the browser so the gamut
-		 * boundary stays smooth no matter how coarse our `maxC` sampling is.
+		 * The gamut boundary as a CSS `polygon(...)` string in percentage coordinates.
+		 * One vertex per hue bucket; published as `--gamut-shape` on the wheel so
+		 * both the layer clip and the "auto"-mode boundary overlay can reuse the
+		 * exact same shape via `clip-path: var(--gamut-shape)`.
 		 */
-		clipPath () {
+		gamutShape () {
 			const maxC = this.maxC;
 			const n = maxC.length;
-			const points = [];
+			const points = new Array(n);
 			for (let i = 0; i < n; i++) {
 				const h = (i / n) * 360;
 				const r = maxC[i] / MAX_CHROMA;
 				const hRad = (h * Math.PI) / 180;
 				const x = 50 + r * 50 * Math.cos(hRad);
 				const y = 50 - r * 50 * Math.sin(hRad); // screen y is flipped
-				points.push(`${x.toFixed(2)}% ${y.toFixed(2)}%`);
+				points[i] = `${x.toFixed(2)}% ${y.toFixed(2)}%`;
 			}
 			return `polygon(${points.join(", ")})`;
 		},
@@ -173,8 +197,8 @@ globalThis.app = createApp({
 	},
 }).mount(document.body);
 
-/** Full binary search per hue. Used the first time we see a given L. */
-function computeMaxC (L) {
+/** Full binary search per hue. Used the first time we see a given (L, gamut). */
+function computeMaxC (L, gamut) {
 	const arr = new Float32Array(HUE_BUCKETS);
 	for (let i = 0; i < HUE_BUCKETS; i++) {
 		const h = (i / HUE_BUCKETS) * 360;
@@ -182,7 +206,7 @@ function computeMaxC (L) {
 		let hi = MAX_CHROMA;
 		for (let iter = 0; iter < SEARCH_ITERS; iter++) {
 			const mid = (lo + hi) / 2;
-			if (inGamut({ space: "oklch", coords: [L, mid, h] }, "p3")) {
+			if (inGamut({ space: "oklch", coords: [L, mid, h] }, gamut)) {
 				lo = mid;
 			}
 			else {
@@ -201,7 +225,7 @@ function computeMaxC (L) {
  * a few binary-search iterations. For small ΔL each hue takes ~3–7 inGamut calls
  * instead of SEARCH_ITERS (12).
  */
-function updateMaxC (L, prevMaxC) {
+function updateMaxC (L, prevMaxC, gamut) {
 	const n = prevMaxC.length;
 	const arr = new Float32Array(n);
 
@@ -211,14 +235,14 @@ function updateMaxC (L, prevMaxC) {
 		let lo;
 		let hi;
 
-		const startInGamut = inGamut({ space: "oklch", coords: [L, startC, h] }, "p3");
+		const startInGamut = inGamut({ space: "oklch", coords: [L, startC, h] }, gamut);
 
 		if (startInGamut) {
 			// Boundary is at startC or above. Walk outward.
 			lo = startC;
 			hi = MAX_CHROMA;
 			let step = 0.005;
-			while (lo + step <= MAX_CHROMA && inGamut({ space: "oklch", coords: [L, lo + step, h] }, "p3")) {
+			while (lo + step <= MAX_CHROMA && inGamut({ space: "oklch", coords: [L, lo + step, h] }, gamut)) {
 				lo += step;
 				step *= 2;
 			}
@@ -233,7 +257,7 @@ function updateMaxC (L, prevMaxC) {
 			hi = startC;
 			lo = 0;
 			let step = 0.005;
-			while (hi - step >= 0 && !inGamut({ space: "oklch", coords: [L, hi - step, h] }, "p3")) {
+			while (hi - step >= 0 && !inGamut({ space: "oklch", coords: [L, hi - step, h] }, gamut)) {
 				hi -= step;
 				step *= 2;
 			}
@@ -247,7 +271,7 @@ function updateMaxC (L, prevMaxC) {
 		// Refine the bracket [lo, hi] with binary search.
 		for (let iter = 0; iter < PROBE_ITERS; iter++) {
 			const mid = (lo + hi) / 2;
-			if (inGamut({ space: "oklch", coords: [L, mid, h] }, "p3")) {
+			if (inGamut({ space: "oklch", coords: [L, mid, h] }, gamut)) {
 				lo = mid;
 			}
 			else {

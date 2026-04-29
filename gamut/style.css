@@ -14,8 +14,11 @@ main {
 }
 
 .controls {
-	flex: 0 1 auto;
+	flex: 1;
 	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.6em;
 }
 
 color-picker {
@@ -46,7 +49,11 @@ color-picker {
 	.layers {
 		position: absolute;
 		inset: 0;
-		/* clip-path applied inline as a polygon traced from the per-L gamut boundary. */
+		clip-path: var(--gamut-shape);
+	}
+
+	&[data-paint-oog="true"] .layers {
+		clip-path: none;
 	}
 
 	.layer {
@@ -107,6 +114,25 @@ color-picker {
 			calc(var(--r) * cos(var(--marker-h)))
 			calc(var(--r) * sin(var(--marker-h)) * -1);
 	}
+
+	.boundary {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		background: white;
+		clip-path: var(--gamut-shape);
+		mix-blend-mode: difference;
+
+		&::after {
+			content: "";
+			position: absolute;
+			inset: 0;
+			background: black;
+			clip-path: var(--gamut-shape);
+			transform: scale(0.99);
+			transform-origin: center;
+		}
+	}
 }
 
 .hue-labels {
@@ -128,5 +154,53 @@ color-picker {
 	/* h=0° / h=180° sit on the horizontal axis and overflow narrow viewports. */
 	@container (max-width: 32em) {
 		span:nth-child(odd) { display: none; }
+	}
+}
+
+.meta {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.4em 1em;
+	font-size: 0.8em;
+	color: color-mix(in oklch, currentColor, transparent 30%);
+
+	label {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3em;
+		cursor: pointer;
+	}
+}
+
+.gamut {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25em;
+
+	label {
+		padding: 0.1em 0.45em;
+		border-radius: 0.25em;
+		border: 1px solid color-mix(in oklch, currentColor, transparent 80%);
+
+		input {
+			/* radio is the source of truth; hide it visually but keep it focusable */
+			position: absolute;
+			opacity: 0;
+			pointer-events: none;
+		}
+
+		&:has(:checked) {
+			/* iOS Safari resolves AccentColorText to black, so force white for
+			   contrast on the system blue / accent fill. */
+			background: AccentColor;
+			color: white;
+			border-color: AccentColor;
+		}
+
+		&:has(:focus-visible) {
+			outline: 2px solid Highlight;
+			outline-offset: 1px;
+		}
 	}
 }
