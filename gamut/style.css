@@ -2,7 +2,8 @@ body {
 	font: 100% system-ui;
 	max-width: 60em;
 	margin-inline: auto;
-	padding: 1em;
+	padding: 0 1em;
+	margin: 0 auto;
 }
 
 main {
@@ -24,6 +25,10 @@ main {
 color-picker {
 	grid-template-columns: 1fr;
 	flex: 1;
+
+	&::part(color-space) {
+		margin-block-end: -.5em;
+	}
 }
 
 .wheel-wrap {
@@ -31,6 +36,7 @@ color-picker {
 	width: var(--size);
 	max-width: 100%;
 	aspect-ratio: 1;
+	margin-block-start: 1em;
 	container-type: inline-size;
 	/* OOG backdrop: the layers paint `transparent` outside their in-gamut hue ranges,
 	   so this colour shows through anywhere the gamut doesn't reach. */
