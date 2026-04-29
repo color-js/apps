@@ -8,7 +8,6 @@ for (let space of Object.values(spaces)) {
 	ColorSpace.register(space);
 }
 
-const CSS_SIZE = 520;
 const MAX_CHROMA = 0.4;
 const LAYERS = 80;             // concentric layers — chroma resolution = MAX_CHROMA / LAYERS
 const HUE_BUCKETS = 360;       // 1° resolution for the gamut boundary polygon
@@ -47,7 +46,6 @@ globalThis.app = createApp({
 			markerC: 0.2,
 			markerH: 240,
 			maxChroma: MAX_CHROMA,
-			cssSize: CSS_SIZE,
 			chromaTicks: [0.1, 0.2, 0.3, 0.4],
 			dragging: false,
 			// (c, h) snapshot at pointerdown, used to lock the constrained axis

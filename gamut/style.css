@@ -32,6 +32,8 @@ color-picker {
 }
 
 .wheel-wrap {
+	--size: 520px;
+
 	position: relative;
 	width: var(--size);
 	max-width: 100%;
