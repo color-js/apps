@@ -33,6 +33,12 @@ color-picker {
 
 .wheel-wrap {
 	--size: 520px;
+	/* Initial values matching the Vue data defaults, so the wheel paints
+	   sensibly during the brief flash before Vue mounts. */
+	--max-c: 0.4;
+	--l: 0.5;
+	--marker-c: 0.2;
+	--marker-h: 240deg;
 
 	position: relative;
 	width: var(--size);
@@ -130,6 +136,9 @@ color-picker {
 		background: white;
 		clip-path: var(--gamut-shape);
 		mix-blend-mode: difference;
+		/* Only meaningful in OOG mode; hidden otherwise so it doesn't paint
+		   a full square before Vue sets --gamut-shape. */
+		display: none;
 
 		&::after {
 			content: "";
@@ -140,6 +149,10 @@ color-picker {
 			transform: scale(0.99);
 			transform-origin: center;
 		}
+	}
+
+	&[data-paint-oog="true"] .boundary {
+		display: block;
 	}
 }
 
