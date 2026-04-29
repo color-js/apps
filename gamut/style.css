@@ -194,9 +194,9 @@ color-picker {
 			/* Fallback first; AccentColor overrides where supported. iOS Safari
 			   resolves AccentColorText to black against its blue accent, so we
 			   force white for contrast. */
-			background: #0066cc;
+			background: hsl(210 100% 40%);
 			background: AccentColor;
-			border-color: #0066cc;
+			border-color: hsl(210 100% 40%);
 			border-color: AccentColor;
 			color: white;
 		}
