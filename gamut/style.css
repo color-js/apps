@@ -191,9 +191,9 @@ color-picker {
 		}
 
 		&:has(:checked) {
-			background: color-mix(in oklch, currentColor, transparent 85%);
-			border-color: color-mix(in oklch, currentColor, transparent 50%);
-			color: color-mix(in oklch, currentColor, transparent 0%);
+			background: AccentColor;
+			color: AccentColorText;
+			border-color: AccentColor;
 		}
 
 		&:has(:focus-visible) {
