@@ -11,7 +11,7 @@ main {
 	flex-wrap: wrap;
 	align-items: center;
 	justify-content: center;
-	gap: 1.5em 4em;
+	gap: .5em 4em;
 }
 
 .controls {
@@ -44,7 +44,7 @@ color-picker {
 	width: var(--size);
 	max-width: 100%;
 	aspect-ratio: 1;
-	margin-block-start: 1em;
+	margin-block-start: 2.5em;
 	container-type: inline-size;
 	/* OOG backdrop: the layers paint `transparent` outside their in-gamut hue ranges,
 	   so this colour shows through anywhere the gamut doesn't reach. */
