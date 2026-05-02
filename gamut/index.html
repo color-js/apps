@@ -13,46 +13,55 @@
 		<div class="controls">
 			<color-picker space="oklch" :color="pickerColor" @colorchange="onColorChange"></color-picker>
 			<div class="meta">
-				<div class="gamut">
-					Gamut:
-					<label><input type="radio" name="gamut" value="srgb" :checked="gamut === 'srgb'" @change="gamut = 'srgb'">sRGB</label>
-					<label><input type="radio" name="gamut" value="p3" :checked="gamut === 'p3'" @change="gamut = 'p3'">P3</label>
-					<label><input type="radio" name="gamut" value="rec2020" :checked="gamut === 'rec2020'" @change="gamut = 'rec2020'">Rec2020</label>
+				<div class="setting">
+					Paint colors in:
+					<label v-for="opt in paintOptions" :key="opt.value">
+						<input type="radio" name="paint-gamut" :value="opt.value"
+							:checked="paintGamut === opt.value" @change="paintGamut = opt.value">
+						{{ opt.label }}
+					</label>
 				</div>
-				<label class="oog-mode">
-					<input type="checkbox" v-model="paintOOG"> Paint out of gamut colors
-				</label>
+				<div class="setting">
+					Show gamut:
+					<label v-for="opt in showOptions" :key="opt.value"
+						:class="{ disabled: paintGamut === opt.value }">
+						<input type="checkbox" v-model="shownGamuts[opt.value]"
+							:disabled="paintGamut === opt.value">
+						{{ opt.label }}
+					</label>
+				</div>
 			</div>
 		</div>
 
 		<div class="wheel-wrap" ref="wheel"
 			:class="{ dragging }"
-			:data-paint-oog="paintOOG"
 			@pointerdown="onPointerDown"
 			@pointermove="onPointerMove"
 			@pointerup="onPointerUp"
 			@pointercancel="onPointerUp"
 			:style="{
-			'--max-c': maxChroma,
-			'--l': lightness,
-			'--gamut-shape': gamutShape,
-		}">
+				'--max-c': maxChroma,
+				'--l': lightness,
+				'--clip': layerClip,
+			}">
 			<div class="layers">
 				<div v-for="layer in layers" :key="layer.idx" class="layer"
 					:style="{ '--c': layer.c }"></div>
 			</div>
 
-			<template v-for="c in chromaTicks" :key="c">
-				<div class="tick-ring" :style="{ '--tick-c': c }" aria-hidden="true"></div>
-				<div class="tick-label" :style="{ '--tick-c': c }" aria-hidden="true">{{ c }}</div>
-			</template>
+			<div v-for="ring in tickRings" :key="ring.key"
+				:class="['tick', 'tick-' + ring.key]"
+				:style="{ '--tick-c': ring.c }"
+				:data-label="ring.c.toFixed(2)" aria-hidden="true"></div>
 
 			<div class="marker" :style="{
 				'--marker-c': markerC,
 				'--marker-h': markerH + 'deg',
 			}" aria-hidden="true"></div>
 
-			<div class="boundary" aria-hidden="true"></div>
+			<div v-for="opt in shownList" :key="opt.value" class="outline"
+				:style="{ '--shape': `var(--shape-${opt.value})` }"
+				aria-hidden="true"></div>
 
 			<div class="hue-labels" aria-hidden="true">
 				<span style="--angle: 0deg">h=0°</span>

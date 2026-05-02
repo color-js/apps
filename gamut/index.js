@@ -14,6 +14,20 @@ const HUE_BUCKETS = 360;       // 1° resolution for the gamut boundary polygon
 const SEARCH_ITERS = 12;       // binary-search iterations per hue (precision ≈ MAX_CHROMA / 2^12)
 const PROBE_ITERS = 6;         // refine iterations after optimistic walk
 
+const PAINT_OPTIONS = [
+	{ value: "srgb",    label: "sRGB" },
+	{ value: "p3",      label: "P3" },
+	{ value: "rec2020", label: "Rec2020" },
+	{ value: "all",     label: "All" },
+];
+
+const SHOW_OPTIONS = [
+	{ value: "srgb",     label: "sRGB" },
+	{ value: "p3",       label: "P3" },
+	{ value: "rec2020",  label: "Rec2020" },
+	{ value: "prophoto", label: "ProPhoto" },
+];
+
 // Pick the widest gamut the device claims to support. matchMedia("color-gamut: x")
 // matches if the display covers x or wider, so probe from widest to narrowest.
 function detectGamut () {
@@ -26,12 +40,10 @@ function detectGamut () {
 	return "srgb";
 }
 
-// Cache the most recent (L, gamut, maxC) so consecutive renders at the same L
-// do no work, and so drag updates can probe outward/inward from the previous
-// L's boundary. Changing the target gamut invalidates the cache entirely.
-let cachedL = null;
-let cachedGamut = null;
-let cachedMaxC = null;
+// Per-gamut cache: gamut → { L, maxC }. Keeping it per-gamut means switching
+// between gamuts (or showing several outlines at once) doesn't invalidate
+// each other's warm-start data.
+const gamutCache = new Map();
 
 globalThis.app = createApp({
 	compilerOptions: {
@@ -46,17 +58,25 @@ globalThis.app = createApp({
 			markerC: 0.2,
 			markerH: 240,
 			maxChroma: MAX_CHROMA,
-			chromaTicks: [0.1, 0.2, 0.3, 0.4],
 			dragging: false,
 			// (c, h) snapshot at pointerdown, used to lock the constrained axis
 			// when shift/alt is held during the drag.
 			dragLockC: 0,
 			dragLockH: 0,
-			// When true, lifts the clip and lets the browser render OOG OKLCH
-			// values natively. When false, the disc is clipped to the gamut polygon.
-			paintOOG: false,
-			// Target gamut for the boundary; defaults to the device's widest support.
-			gamut: detectGamut(),
+			// Single-choice: which gamut the wheel disc is clipped to. "all"
+			// removes the clip and lets OOG OKLCH paint natively.
+			paintGamut: detectGamut(),
+			// Multi-choice: which gamut boundaries to render as overlay outlines.
+			// State is preserved per-gamut even when temporarily disabled (because
+			// it equals paintGamut), so toggling paintGamut restores the prior set.
+			shownGamuts: {
+				srgb: true,
+				p3: true,
+				rec2020: false,
+				prophoto: false,
+			},
+			paintOptions: PAINT_OPTIONS,
+			showOptions: SHOW_OPTIONS,
 		};
 	},
 
@@ -71,25 +91,45 @@ globalThis.app = createApp({
 		},
 
 		/**
-		 * Per-L gamut boundary as `maxC[h]`. On a drag, the previous L's curve is a
-		 * stone's throw away — `updateMaxC` walks from each prev value outward or
-		 * inward until it crosses the new boundary, then refines. For a fresh L
-		 * (no cache), full binary search.
+		 * Gamuts whose maxC we actually need this render: the paint gamut (unless
+		 * "all") plus every gamut currently shown as an outline. Excluding
+		 * paintGamut from the shown set is enforced by the disable rule in the UI,
+		 * so an outline is never drawn redundantly over the disc edge.
+		 */
+		requiredGamuts () {
+			const set = new Set();
+			if (this.paintGamut !== "all") {
+				set.add(this.paintGamut);
+			}
+			for (const [g, on] of Object.entries(this.shownGamuts)) {
+				if (on && g !== this.paintGamut) {
+					set.add(g);
+				}
+			}
+			return [...set];
+		},
+
+		/**
+		 * Map of gamut → maxC[h]. For each required gamut: reuse the cached
+		 * boundary if L matches, warm-start from the cached one if not, full
+		 * binary search if we've never seen this gamut.
 		 */
 		maxC () {
 			const L = this.lightness;
-			const gamut = this.gamut;
-			if (cachedL === L && cachedGamut === gamut && cachedMaxC) {
-				return cachedMaxC;
+			const out = {};
+			for (const g of this.requiredGamuts) {
+				const cached = gamutCache.get(g);
+				let arr;
+				if (cached && cached.L === L) {
+					arr = cached.maxC;
+				}
+				else {
+					arr = cached ? updateMaxC(L, cached.maxC, g) : computeMaxC(L, g);
+					gamutCache.set(g, { L, maxC: arr });
+				}
+				out[g] = arr;
 			}
-			// Reuse the previous boundary as a warm start only when the target gamut
-			// is unchanged; a different gamut wants a fresh full search.
-			const warmStart = cachedMaxC && cachedGamut === gamut;
-			const arr = warmStart ? updateMaxC(L, cachedMaxC, gamut) : computeMaxC(L, gamut);
-			cachedL = L;
-			cachedGamut = gamut;
-			cachedMaxC = arr;
-			return arr;
+			return out;
 		},
 
 		/**
@@ -110,28 +150,93 @@ globalThis.app = createApp({
 		},
 
 		/**
-		 * The gamut boundary as a CSS `polygon(...)` string in percentage coordinates.
-		 * One vertex per hue bucket; published as `--gamut-shape` on the wheel so
-		 * both the layer clip and the "auto"-mode boundary overlay can reuse the
-		 * exact same shape via `clip-path: var(--gamut-shape)`.
+		 * Per-gamut polygon strings, exposed as CSS custom properties on the wheel
+		 * wrapper. A single string per gamut serves both consumers — `clip-path`
+		 * on the layer stack and `border-shape` (or fallback `clip-path`) on the
+		 * matching outline element — so the shape data lives in exactly one place
+		 * in the DOM per gamut.
 		 */
-		gamutShape () {
-			const maxC = this.maxC;
-			const n = maxC.length;
-			const points = new Array(n);
-			for (let i = 0; i < n; i++) {
-				const h = (i / n) * 360;
-				const r = maxC[i] / MAX_CHROMA;
-				const hRad = (h * Math.PI) / 180;
-				const x = 50 + r * 50 * Math.cos(hRad);
-				const y = 50 - r * 50 * Math.sin(hRad); // screen y is flipped
-				points[i] = `${x.toFixed(2)}% ${y.toFixed(2)}%`;
+		shapeVars () {
+			const out = {};
+			for (const [g, arr] of Object.entries(this.maxC)) {
+				out[`--shape-${g}`] = polygonString(arr);
 			}
-			return `polygon(${points.join(", ")})`;
+			return out;
+		},
+
+		/**
+		 * Layer clip-path. "all" mode removes the clip entirely; otherwise we
+		 * point at the paint gamut's shape variable.
+		 */
+		layerClip () {
+			return this.paintGamut === "all" ? "none" : `var(--shape-${this.paintGamut})`;
+		},
+
+		/** Outlines to render, in declaration order. */
+		shownList () {
+			return SHOW_OPTIONS.filter(opt => this.shownGamuts[opt.value] && opt.value !== this.paintGamut);
+		},
+
+		/**
+		 * Two reference rings driven by reactive state: the outermost (max chroma
+		 * the wheel covers) and the paint gamut's outermost reach at this L
+		 * (skipped in "all" mode, where no single gamut is being painted). The
+		 * cursor ring is a separate static element whose position is updated
+		 * directly via CSS custom properties from the pointer handler.
+		 */
+		tickRings () {
+			const out = [
+				{ key: "outer", c: MAX_CHROMA },
+			];
+			if (this.paintGamut !== "all") {
+				const arr = this.maxC[this.paintGamut];
+				let max = 0;
+				for (let i = 0; i < arr.length; i++) {
+					if (arr[i] > max) {
+						max = arr[i];
+					}
+				}
+				out.push({ key: "gamut", c: max });
+			}
+			return out;
+		},
+
+	},
+
+	mounted () {
+		this.applyShapeVars(this.shapeVars);
+	},
+
+	watch: {
+		shapeVars (vars) {
+			this.applyShapeVars(vars);
 		},
 	},
 
 	methods: {
+		/**
+		 * Push the gamut polygon strings straight to the wheel element via
+		 * setProperty, only when they actually change. Bound through Vue's
+		 * `:style` they'd get re-evaluated and diffed on every render —
+		 * including every pointer move while dragging. Keys removed from the
+		 * new map (gamut toggled off) are removed from the element.
+		 */
+		applyShapeVars (vars) {
+			const wheel = this.$refs.wheel;
+			if (!wheel) {
+				return;
+			}
+			for (const opt of SHOW_OPTIONS) {
+				const key = `--shape-${opt.value}`;
+				if (key in vars) {
+					wheel.style.setProperty(key, vars[key]);
+				}
+				else {
+					wheel.style.removeProperty(key);
+				}
+			}
+		},
+
 		onColorChange (e) {
 			// Picker may be in any space; convert so our (L, C, H) state stays in oklch.
 			let [l, c, h] = e.target.color.to("oklch").coords;
@@ -170,8 +275,9 @@ globalThis.app = createApp({
 		},
 
 		/**
-		 * Pointer → polar (c, h) on the wheel. Shift locks chroma to the value at
-		 * pointerdown (drag along the ring); Alt locks hue (drag along the radius).
+		 * Pointer → polar (c, h) on the wheel. Shift locks chroma to the value
+		 * at pointerdown (drag along the ring); Alt locks hue (drag along the
+		 * radius).
 		 */
 		updateMarkerFromPointer (e) {
 			const rect = this.$refs.wheel.getBoundingClientRect();
@@ -179,21 +285,28 @@ globalThis.app = createApp({
 			const dx = e.clientX - (rect.left + radius);
 			const dy = e.clientY - (rect.top + radius);
 			const r = Math.min(Math.hypot(dx, dy) / radius, 1);
-			let c = r * MAX_CHROMA;
-			let h = (Math.atan2(-dy, dx) * 180 / Math.PI + 360) % 360;
-
-			if (e.shiftKey) {
-				c = this.dragLockC;
-			}
-			if (e.altKey) {
-				h = this.dragLockH;
-			}
-
-			this.markerC = c;
-			this.markerH = h;
+			const c = r * MAX_CHROMA;
+			const h = (Math.atan2(-dy, dx) * 180 / Math.PI + 360) % 360;
+			this.markerC = e.shiftKey ? this.dragLockC : c;
+			this.markerH = e.altKey ? this.dragLockH : h;
 		},
 	},
 }).mount(document.body);
+
+/** CSS `polygon(...)` string in percentage coordinates from a maxC[h] array. */
+function polygonString (maxC) {
+	const n = maxC.length;
+	const points = new Array(n);
+	for (let i = 0; i < n; i++) {
+		const h = (i / n) * 360;
+		const r = maxC[i] / MAX_CHROMA;
+		const hRad = (h * Math.PI) / 180;
+		const x = 50 + r * 50 * Math.cos(hRad);
+		const y = 50 - r * 50 * Math.sin(hRad); // screen y is flipped
+		points[i] = `${x.toFixed(2)}% ${y.toFixed(2)}%`;
+	}
+	return `polygon(${points.join(", ")})`;
+}
 
 /** Full binary search per hue. Used the first time we see a given (L, gamut). */
 function computeMaxC (L, gamut) {

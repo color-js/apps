@@ -60,14 +60,32 @@ color-picker {
 		cursor: grabbing;
 	}
 
+	/* Center mark — small dot at c=0, h=anything. Pseudo (rather than a
+	   tick entry) because a c=0 ring collapses to nothing and would need
+	   special-casing through the .tick rules anyway. ::after paints last,
+	   above all the absolutely-positioned children. */
+	&::after {
+		content: "";
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 4px;
+		height: 4px;
+		margin: -2px 0 0 -2px;
+		background: white;
+		border-radius: 50%;
+		mix-blend-mode: difference;
+		pointer-events: none;
+	}
+
 	.layers {
 		position: absolute;
 		inset: 0;
-		clip-path: var(--gamut-shape);
-	}
-
-	&[data-paint-oog="true"] .layers {
-		clip-path: none;
+		clip-path: var(--clip, none);
+		/* Inherits to all .layer children. The wheel-wrap is the only intended
+		   pointer target; without this, every mouse-move hovering the wheel
+		   hit-tests through 80 stacked layer divs, which dominates the frame. */
+		pointer-events: none;
 	}
 
 	.layer {
@@ -89,26 +107,28 @@ color-picker {
 				oklch(var(--l) var(--c) 0deg) 360deg);
 	}
 
-	.tick-ring {
+	/* Reference ring + its label rendered as one element. The element draws
+	   the dashed circle (border, alpha-muted so the ring is quieter than the
+	   label) and ::before drops the chroma value at the top of the ring.
+	   mix-blend-mode on the parent gives both border and label auto-contrast
+	   over whatever colour they sit on. */
+	.tick {
 		position: absolute;
 		inset: calc((1 - var(--tick-c) / var(--max-c)) * 50%);
 		border-radius: 50%;
-		border: 1px dashed white;
-		opacity: 0.55;
+		border: 1px dashed rgb(255 255 255 / 0.55);
 		mix-blend-mode: difference;
 		pointer-events: none;
-	}
 
-	.tick-label {
-		position: absolute;
-		top: calc((1 - var(--tick-c) / var(--max-c)) * 50%);
-		left: 50%;
-		translate: -50% -50%;
-		font: 600 0.7em / 1 system-ui;
-		color: white;
-		paint-order: stroke fill;
-		-webkit-text-stroke: 2px black;
-		pointer-events: none;
+		&::before {
+			content: attr(data-label);
+			position: absolute;
+			top: 0;
+			left: 50%;
+			translate: -50% 0;
+			font: 600 0.7em / 1 system-ui;
+			color: white;
+		}
 	}
 
 	.marker {
@@ -129,30 +149,42 @@ color-picker {
 			calc(var(--r) * sin(var(--marker-h)) * -1);
 	}
 
-	.boundary {
+	/* One outline per shown gamut. Each instance gets its own --shape from
+	   the inline style, pointing at the wrapper's --shape-<gamut> variable.
+	   Rendering is split between two @supports branches at file scope:
+	   border-shape (a real stroke along the polygon) where supported, and
+	   the mix-blend-mode trick (auto-contrast over varying colour) elsewhere. */
+	.outline {
 		position: absolute;
 		inset: 0;
 		pointer-events: none;
+	}
+
+}
+
+@supports (border-shape: inset(0)) {
+	.wheel-wrap .outline {
+		border: 1px solid black;
+		box-shadow: 0 0 0 1px white;
+		border-shape: var(--shape);
+	}
+}
+
+@supports not (border-shape: inset(0)) {
+	.wheel-wrap .outline {
 		background: white;
-		clip-path: var(--gamut-shape);
+		clip-path: var(--shape);
 		mix-blend-mode: difference;
-		/* Only meaningful in OOG mode; hidden otherwise so it doesn't paint
-		   a full square before Vue sets --gamut-shape. */
-		display: none;
 
 		&::after {
 			content: "";
 			position: absolute;
 			inset: 0;
 			background: black;
-			clip-path: var(--gamut-shape);
+			clip-path: var(--shape);
 			transform: scale(0.99);
 			transform-origin: center;
 		}
-	}
-
-	&[data-paint-oog="true"] .boundary {
-		display: block;
 	}
 }
 
@@ -194,7 +226,7 @@ color-picker {
 	}
 }
 
-.gamut {
+.setting {
 	display: inline-flex;
 	align-items: center;
 	gap: 0.25em;
@@ -205,7 +237,8 @@ color-picker {
 		border: 1px solid color-mix(in oklch, currentColor, transparent 80%);
 
 		input {
-			/* radio is the source of truth; hide it visually but keep it focusable */
+			/* The native control is the source of truth; hide it visually
+			   but keep it focusable. */
 			position: absolute;
 			opacity: 0;
 			pointer-events: none;
@@ -225,6 +258,11 @@ color-picker {
 		&:has(:focus-visible) {
 			outline: 2px solid Highlight;
 			outline-offset: 1px;
+		}
+
+		&.disabled {
+			opacity: 0.4;
+			cursor: not-allowed;
 		}
 	}
 }
