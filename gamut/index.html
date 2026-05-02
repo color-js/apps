@@ -35,6 +35,8 @@
 
 		<div class="wheel-wrap" ref="wheel"
 			:class="{ dragging }"
+			@pointerenter="onPointerEnter"
+			@pointerleave="onPointerLeave"
 			@pointerdown="onPointerDown"
 			@pointermove="onPointerMove"
 			@pointerup="onPointerUp"
@@ -53,6 +55,8 @@
 				:class="['tick', 'tick-' + ring.key]"
 				:style="{ '--tick-c': ring.c }"
 				:data-label="ring.c.toFixed(2)" aria-hidden="true"></div>
+
+			<div class="tick tick-pointer" ref="pointerTick" aria-hidden="true"></div>
 
 			<div class="marker" :style="{
 				'--marker-c': markerC,

@@ -111,10 +111,11 @@ color-picker {
 	   the dashed circle (border, alpha-muted so the ring is quieter than the
 	   label) and ::before drops the chroma value at the top of the ring.
 	   mix-blend-mode on the parent gives both border and label auto-contrast
-	   over whatever colour they sit on. */
+	   over whatever colour they sit on. Shared by chroma-positioned ticks
+	   (outer / gamut, positioned by --tick-c below) and the pointer ring
+	   (positioned by pixel offsets via --pointer-x / --pointer-y). */
 	.tick {
 		position: absolute;
-		inset: calc((1 - var(--tick-c) / var(--max-c)) * 50%);
 		border-radius: 50%;
 		border: 1px dashed rgb(255 255 255 / 0.55);
 		mix-blend-mode: difference;
@@ -129,6 +130,27 @@ color-picker {
 			font: 600 0.7em / 1 system-ui;
 			color: white;
 		}
+	}
+
+	.tick:not(.tick-pointer) {
+		inset: calc((1 - var(--tick-c) / var(--max-c)) * 50%);
+	}
+
+	/* Pointer ring positioned entirely from --pointer-x / --pointer-y, set
+	   by the pointermove handler on this very element (not the wrapper, so
+	   its updates don't invalidate descendants of .wheel-wrap that read
+	   other custom properties). Percentages in inset resolve against
+	   .wheel-wrap, so 50% is the wheel radius; max() clamps the ring to
+	   wheel size when the pointer is dragged outside. */
+	.tick-pointer {
+		--dx: calc(var(--pointer-x, 50%) - 50%);
+		--dy: calc(var(--pointer-y, 50%) - 50%);
+		--dist: hypot(var(--dx), var(--dy));
+		inset: max(0px, calc(50% - var(--dist)));
+	}
+
+	&:not(:hover, .dragging) .tick-pointer {
+		opacity: 0;
 	}
 
 	.marker {

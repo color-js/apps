@@ -181,7 +181,7 @@ globalThis.app = createApp({
 		 * Two reference rings driven by reactive state: the outermost (max chroma
 		 * the wheel covers) and the paint gamut's outermost reach at this L
 		 * (skipped in "all" mode, where no single gamut is being painted). The
-		 * cursor ring is a separate static element whose position is updated
+		 * pointer ring is a separate static element whose position is updated
 		 * directly via CSS custom properties from the pointer handler.
 		 */
 		tickRings () {
@@ -245,6 +245,24 @@ globalThis.app = createApp({
 			this.markerH = h || 0;
 		},
 
+		/**
+		 * Capture the pointer the moment it enters the wheel, not just on
+		 * pointerdown. While captured, the browser short-circuits hit-testing
+		 * and routes events straight to .wheel-wrap, so hover gets the same
+		 * cheap event path that drag has via the implicit capture from
+		 * setPointerCapture in onPointerDown. Released on leave so other
+		 * elements (the picker controls) still receive hover normally.
+		 */
+		onPointerEnter (e) {
+			e.currentTarget.setPointerCapture(e.pointerId);
+		},
+
+		onPointerLeave (e) {
+			if (!this.dragging && e.currentTarget.hasPointerCapture?.(e.pointerId)) {
+				e.currentTarget.releasePointerCapture(e.pointerId);
+			}
+		},
+
 		onPointerDown (e) {
 			if (e.button !== 0) {
 				return;
@@ -254,14 +272,11 @@ globalThis.app = createApp({
 			this.dragLockC = this.markerC;
 			this.dragLockH = this.markerH;
 			e.currentTarget.setPointerCapture(e.pointerId);
-			this.updateMarkerFromPointer(e);
+			this.handlePointer(e);
 		},
 
 		onPointerMove (e) {
-			if (!this.dragging) {
-				return;
-			}
-			this.updateMarkerFromPointer(e);
+			this.handlePointer(e);
 		},
 
 		onPointerUp (e) {
@@ -275,20 +290,34 @@ globalThis.app = createApp({
 		},
 
 		/**
-		 * Pointer → polar (c, h) on the wheel. Shift locks chroma to the value
-		 * at pointerdown (drag along the ring); Alt locks hue (drag along the
-		 * radius).
+		 * Pushes the pointer's pixel offset within the wheel into CSS custom
+		 * properties on the .tick-pointer element itself (not the wrapper, so
+		 * other descendants reading the gamut polygon vars don't get their
+		 * styles invalidated by the pointer update). Bypasses Vue so the hot
+		 * pointermove path stays cheap; CSS does the geometry to position the
+		 * pointer ring. Marker state (which the picker observes) is only
+		 * committed while dragging — Shift locks chroma to the value at
+		 * pointerdown, Alt locks hue.
 		 */
-		updateMarkerFromPointer (e) {
-			const rect = this.$refs.wheel.getBoundingClientRect();
+		handlePointer (e) {
+			const wheel = e.currentTarget;
+			const rect = wheel.getBoundingClientRect();
 			const radius = rect.width / 2;
-			const dx = e.clientX - (rect.left + radius);
-			const dy = e.clientY - (rect.top + radius);
+			const dx = e.clientX - rect.left - radius;
+			const dy = e.clientY - rect.top - radius;
 			const r = Math.min(Math.hypot(dx, dy) / radius, 1);
 			const c = r * MAX_CHROMA;
-			const h = (Math.atan2(-dy, dx) * 180 / Math.PI + 360) % 360;
-			this.markerC = e.shiftKey ? this.dragLockC : c;
-			this.markerH = e.altKey ? this.dragLockH : h;
+
+			const pointer = this.$refs.pointerTick;
+			pointer.style.setProperty("--pointer-x", `${dx + radius}px`);
+			pointer.style.setProperty("--pointer-y", `${dy + radius}px`);
+			pointer.dataset.label = c.toFixed(2);
+
+			if (this.dragging) {
+				const h = (Math.atan2(-dy, dx) * 180 / Math.PI + 360) % 360;
+				this.markerC = e.shiftKey ? this.dragLockC : c;
+				this.markerH = e.altKey ? this.dragLockH : h;
+			}
 		},
 	},
 }).mount(document.body);
