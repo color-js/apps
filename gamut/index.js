@@ -178,6 +178,39 @@ globalThis.app = createApp({
 		},
 
 		/**
+		 * Dynamic favicon: a gray backdrop circle (so something is always
+		 * legible in the tab even when the picked colour is near-white or
+		 * matches the page background), with the picked colour painted into
+		 * the paint gamut's polygon on top. The polygon gets a 1px stroke so
+		 * its outline is visible regardless of how close the fill is to the
+		 * backdrop. "All" mode fills the whole disc with the colour. Polygon
+		 * is downsampled to ~30 vertices — smooth at favicon size and keeps
+		 * the data URL short.
+		 */
+		favicon () {
+			let shape;
+			if (this.paintGamut === "all") {
+				shape = `<circle cx='50' cy='50' r='50' fill='${this.pickerColor}'/>`;
+			}
+			else {
+				const arr = this.maxC[this.paintGamut];
+				const step = Math.max(1, Math.floor(arr.length / 30));
+				const pts = [];
+				for (let i = 0; i < arr.length; i += step) {
+					const h = (i / arr.length) * 360;
+					const r = arr[i] / MAX_CHROMA;
+					const hRad = (h * Math.PI) / 180;
+					const x = 50 + r * 50 * Math.cos(hRad);
+					const y = 50 - r * 50 * Math.sin(hRad);
+					pts.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+				}
+				shape = `<polygon points='${pts.join(" ")}' fill='${this.pickerColor}' stroke='black' stroke-width='1' vector-effect='non-scaling-stroke'/>`;
+			}
+			const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' style='color-scheme:light dark'><circle cx='50' cy='50' r='50' fill='light-dark(#d8d8d8,#2c2c2c)'/>${shape}</svg>`;
+			return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+		},
+
+		/**
 		 * Two reference rings driven by reactive state: the outermost (max chroma
 		 * the wheel covers) and the paint gamut's outermost reach at this L
 		 * (skipped in "all" mode, where no single gamut is being painted). The
@@ -205,11 +238,15 @@ globalThis.app = createApp({
 
 	mounted () {
 		this.applyShapeVars(this.shapeVars);
+		this.applyFavicon(this.favicon);
 	},
 
 	watch: {
 		shapeVars (vars) {
 			this.applyShapeVars(vars);
+		},
+		favicon (url) {
+			this.applyFavicon(url);
 		},
 	},
 
@@ -235,6 +272,10 @@ globalThis.app = createApp({
 					wheel.style.removeProperty(key);
 				}
 			}
+		},
+
+		applyFavicon (url) {
+			document.querySelector("link[rel=icon]").href = url;
 		},
 
 		onColorChange (e) {
