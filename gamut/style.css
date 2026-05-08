@@ -1,3 +1,17 @@
+:root {
+	/* Accent + fallback. iOS Safari resolves AccentColorText to black against
+	   its blue accent, so we keep --accent-fg as a constant white instead of
+	   binding it to AccentColorText. */
+	--accent: hsl(210 100% 40%);
+	--accent-fg: white;
+}
+
+@supports (color: AccentColor) {
+	:root {
+		--accent: AccentColor;
+	}
+}
+
 body {
 	font: 100% system-ui;
 	max-width: 60em;
@@ -266,25 +280,29 @@ color-picker {
 			pointer-events: none;
 		}
 
-		&:has(:checked) {
-			/* Fallback first; AccentColor overrides where supported. iOS Safari
-			   resolves AccentColorText to black against its blue accent, so we
-			   force white for contrast. */
-			background: hsl(210 100% 40%);
-			background: AccentColor;
-			border-color: hsl(210 100% 40%);
-			border-color: AccentColor;
-			color: white;
+		&:has(:checked):not(.painted) {
+			background: var(--accent);
+			border-color: var(--accent);
+			color: var(--accent-fg);
+		}
+
+		/* Paint gamut: shown via the disc edge regardless of the checkbox.
+		   Dashed accent border marks it as the paint gamut; the fill toggles
+		   with the underlying checked state so the user can see their preference
+		   take effect (it'll matter once paintGamut moves elsewhere). The
+		   matching input also has .indeterminate set for AT semantics. */
+		&.painted {
+			border-color: var(--accent);
+			border-style: dashed;
+
+			&:has(:checked) {
+				background: color-mix(in oklch, var(--accent), transparent 82%);
+			}
 		}
 
 		&:has(:focus-visible) {
 			outline: 2px solid Highlight;
 			outline-offset: 1px;
-		}
-
-		&.disabled {
-			opacity: 0.4;
-			cursor: not-allowed;
 		}
 	}
 }

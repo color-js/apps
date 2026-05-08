@@ -25,9 +25,9 @@
 				<div class="setting">
 					Show gamut:
 					<label v-for="opt in showOptions" :key="opt.value"
-						:class="{ disabled: paintGamut === opt.value }">
+						:class="{ painted: paintGamut === opt.value }">
 						<input type="checkbox" v-model="shownGamuts[opt.value]"
-							:disabled="paintGamut === opt.value">
+							:indeterminate="paintGamut === opt.value">
 						{{ opt.label }}
 					</label>
 				</div>

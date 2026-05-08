@@ -67,8 +67,9 @@ globalThis.app = createApp({
 			// removes the clip and lets OOG OKLCH paint natively.
 			paintGamut: detectGamut(),
 			// Multi-choice: which gamut boundaries to render as overlay outlines.
-			// State is preserved per-gamut even when temporarily disabled (because
-			// it equals paintGamut), so toggling paintGamut restores the prior set.
+			// The paint gamut's entry shows as indeterminate (it's already drawn
+			// as the disc edge) but stays toggleable — the stored value takes
+			// effect once paintGamut moves elsewhere.
 			shownGamuts: {
 				srgb: true,
 				p3: true,
