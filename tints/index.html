@@ -17,10 +17,10 @@
 		<h2>Generated color scales</h2>
 		<article v-for="scale in allScales" :key="scale.id" class="scale" :class="{ combo: scale.isCombo }" :id="'scale_' + scale.id" :style="scale.cssVars">
 			<h3>
-				<label v-if="!scale.isCombo"><input type="checkbox" :checked="selected[scale.id]" @change="toggleScale(scale.id)"> {{ scale.name }}</label>
+				<label v-if="!scale.isCombo"><input type="checkbox" :checked="scale.id in selected" @change="toggleScale(scale.id)"> {{ scale.name }}</label>
 				<template v-else>{{ scale.name }}</template>
-				<label v-if="!scale.isCombo && selected[scale.id] && selectedScales.length >= 2" class="weight-slider">
-					<input type="range" min="0" max="100" v-model.number="selected[scale.id].weight">
+				<label v-if="!scale.isCombo && scale.id in selected && selectedScales.length >= 2" class="weight-slider">
+					<input type="range" min="0" max="100" :value="normalizedWeights[scale.id]" @input="setWeight(scale.id, $event.target.valueAsNumber)">
 					<output>{{ normalizedWeights[scale.id] }}%</output>
 				</label>
 			</h3>

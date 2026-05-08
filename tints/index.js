@@ -61,6 +61,7 @@ const scales = {
 			return color.mix(mixWith, mixAmount);
 		},
 	},
+
 };
 
 globalThis.app = createApp({
@@ -74,9 +75,10 @@ globalThis.app = createApp({
 		return {
 			color: null,
 			darkMode: false,
+			// Maps each selected scale id to its weight (0–100). Weights always sum to 100.
 			selected: {
-				clipped: {},
-				colormix: {},
+				clipped: 50,
+				colormix: 50,
 			},
 		};
 	},
@@ -101,31 +103,19 @@ globalThis.app = createApp({
 		},
 
 		selectedScales () {
-			return this.scaleEntries.filter(s => this.selected[s.id]);
+			return this.scaleEntries.filter(s => s.id in this.selected);
 		},
 
-		/** Normalizes raw weights to sum to 100, like color-mix() percentage scaling. */
+		/** Selected weights rounded to integers summing to exactly 100. */
 		normalizedWeights () {
-			let ids = Object.keys(this.selected).filter(id => this.selected[id]);
-			let rawWeights = ids.map(id => this.selected[id].weight ?? 1);
-			let total = rawWeights.reduce((sum, w) => sum + w, 0);
-
-			if (total === 0) {
-				return {};
-			}
-
+			let ids = Object.keys(this.selected);
 			let result = {};
 			let assigned = 0;
-			for (let i = 0; i < ids.length; i++) {
-				if (i === ids.length - 1) {
-					result[ids[i]] = 100 - assigned;
-				}
-				else {
-					let w = Math.round(rawWeights[i] / total * 100);
-					result[ids[i]] = w;
-					assigned += w;
-				}
-			}
+			ids.forEach((id, i) => {
+				let w = i === ids.length - 1 ? 100 - assigned : Math.round(this.selected[id]);
+				result[id] = w;
+				assigned += w;
+			});
 			return result;
 		},
 
@@ -139,6 +129,9 @@ globalThis.app = createApp({
 				return null;
 			}
 
+			let nw = this.normalizedWeights;
+			let contributors = this.selectedScales.filter(s => nw[s.id] > 0);
+
 			let tints = {};
 			let cssVars = {};
 
@@ -146,8 +139,8 @@ globalThis.app = createApp({
 				let result = null;
 				let totalWeight = 0;
 
-				for (let scale of this.selectedScales) {
-					let w = this.selected[scale.id].weight ?? 1;
+				for (let scale of contributors) {
+					let w = nw[scale.id];
 
 					if (result === null) {
 						result = scale.tints[level].clone();
@@ -163,7 +156,6 @@ globalThis.app = createApp({
 				cssVars["--color-" + level] = result.toString();
 			}
 
-			let nw = this.normalizedWeights;
 			let isEqual = new Set(this.selectedScales.map(s => nw[s.id])).size === 1;
 			let name = isEqual
 				? this.selectedScales.map(s => s.name).join(" + ")
@@ -187,11 +179,33 @@ globalThis.app = createApp({
 		},
 
 		toggleScale (id) {
-			if (this.selected[id]) {
+			if (id in this.selected) {
 				delete this.selected[id];
+				this.rescale(this.selected, 100);
 			}
 			else {
-				this.selected[id] = {};
+				let share = 100 / (Object.keys(this.selected).length + 1);
+				this.rescale(this.selected, 100 - share);
+				this.selected[id] = share;
+			}
+		},
+
+		/** The dragged slider is authoritative; siblings rescale to fill the remainder. */
+		setWeight (id, weight) {
+			let { [id]: _, ...others } = this.selected;
+			this.rescale(others, 100 - weight);
+			Object.assign(this.selected, others, { [id]: weight });
+		},
+
+		/** Scales the values of `weights` so they sum to `target`, mutating in place. */
+		rescale (weights, target) {
+			let keys = Object.keys(weights);
+			if (keys.length === 0) {
+				return;
+			}
+			let sum = keys.reduce((s, k) => s + weights[k], 0);
+			for (let k of keys) {
+				weights[k] = sum > 0 ? weights[k] * target / sum : target / keys.length;
 			}
 		},
 	},
