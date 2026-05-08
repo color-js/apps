@@ -178,11 +178,12 @@ color-picker {
 		background: oklch(var(--l) var(--marker-c) var(--marker-h));
 		border: 2px solid white;
 		box-shadow: 0 0 0 1px rgb(0 0 0 / 0.4), 0 1px 2px rgb(0 0 0 / 0.4);
-		pointer-events: none;
+
 		--r: calc(min(var(--marker-c) / var(--max-c), 1) * 50cqi);
 		translate:
 			calc(var(--r) * cos(var(--marker-h)))
 			calc(var(--r) * sin(var(--marker-h)) * -1);
+		cursor: grab;
 	}
 
 	/* One outline per shown gamut. Each instance gets its own --shape from
