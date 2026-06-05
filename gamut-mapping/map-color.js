@@ -1,5 +1,6 @@
 import Color from "colorjs.io";
 import methods from "./methods.js";
+import "color-elements/color-picker";
 
 const lch = ["L", "C", "H"];
 let spacesToShow = [Color.spaces.oklch, Color.spaces.p3, Color.spaces["p3-linear"]];
@@ -10,23 +11,22 @@ export default {
 	},
 	emits: ["update:modelValue"],
 	data () {
-		let defaultValue = "oklch(90% .8 250)";
-		let color;
-
+		// The space the picker opens in. We seed it from the input color so the
+		// picker shows the color in its own space rather than the registry's
+		// first space. It's a one-time snapshot, not reactive: the display space
+		// is a view concern the picker owns afterwards, so we don't fight the
+		// user when they type a color whose space differs from the one on screen.
+		let space;
 		try {
-			color = new Color(this.modelValue);
+			space = new Color(this.modelValue).space.id;
 		}
 		catch (e) {
-			color = new Color("transparent");
+			space = "oklch";
 		}
 
 		return {
-			color,
-			colorNullable: color,
-			defaultValue,
 			methods,
-			Color,
-			lch: ["L", "C", "H"],
+			initialSpace: space,
 		};
 	},
 
@@ -38,6 +38,19 @@ export default {
 			set (value) {
 				this.$emit("update:modelValue", value);
 			},
+		},
+		/**
+		 * The parsed input color, derived straight from the model value. Every
+		 * downstream computation (raw coordinates, gamut-mapped variants) reads
+		 * from here, so updating the model value is the single source of truth.
+		 */
+		color () {
+			try {
+				return new Color(this.modelValue);
+			}
+			catch (e) {
+				return new Color("transparent");
+			}
 		},
 		colorLCH () {
 			return this.color.to("oklch");
@@ -116,22 +129,24 @@ export default {
 	methods: {
 		toPrecision: Color.util.toPrecision,
 		abs: Math.abs,
-	},
 
-	watch: {
-		colorNullable () {
-			if (this.colorNullable === null) {
-				// Probably typing
-				return;
-			}
-
-			this.color = this.colorNullable;
+		/**
+		 * Push user edits back into the model value. We listen to `input` rather
+		 * than `colorchange` on purpose: the picker fires `input` only for genuine
+		 * user actions (sliders, swatch field, space picker), and never for
+		 * programmatic `color`/`space` sets. That breaks the data-flow loop (our
+		 * own binding writing back to the picker doesn't echo) and stops the
+		 * picker's setup transients from clobbering the model. Invalid/mid-typing
+		 * input never re-dispatches, so `color` is always a valid color here.
+		 */
+		onInput (e) {
+			this.colorInput = e.target.color.toString();
 		},
 	},
 
 	compilerOptions: {
 		isCustomElement (tag) {
-			return tag === "color-swatch";
+			return tag === "color-swatch" || tag === "color-picker";
 		},
 	},
 
@@ -145,9 +160,7 @@ export default {
 						<small class="description">The color as displayed directly by the browser.</small>
 					</dt>
 					<dd>
-						<color-swatch size="large" @colorchange="event => colorNullable = event.target.color" :value="colorInput">
-							<input v-model="colorInput" />
-						</color-swatch>
+						<color-picker :space.attr="initialSpace" :color="colorInput" @input="onInput" alpha></color-picker>
 						<details class="space-coords">
 							<summary>Raw coordinates</summary>
 							<dl class="space-coords">
