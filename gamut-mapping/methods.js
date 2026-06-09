@@ -1,9 +1,10 @@
 import Color from "colorjs.io";
-import { WHITES } from "colorjs.io/src/adapt.js";
+import { WHITES } from "https://colorjs.io/src/adapt.js";
 import * as util from "colorjs.io/src/util.js";
 import {findCusp, findGamutIntersection} from "colorjs.io/src/spaces/okhsl.js";
 import { constrain as constrainAngle } from "colorjs.io/src/angles.js";
 import { makeEdgeSeeker } from "./edge-seeker/makeEdgeSeeker.js";
+import hslClipIterative from "./hsl-clip-iterative.js";
 
 // Make a function to get the maximum chroma for a given lightness and hue
 // Lookup table is created once and reused
@@ -543,6 +544,11 @@ const methods = {
 	// 		return new Color("p3-linear", mapped).to("p3");
 	// 	}
 	// },
+	"hsl-clip-iterative max 5": {
+		label: "HSL Clip Iterative",
+		description: "Iteratively reduce chroma in HSL space until the color is in gamut, up to 5 iterations.",
+		compute: hslClipIterative,
+	},
 };
 
 export default methods;
