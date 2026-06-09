@@ -37,7 +37,7 @@ export default function compute (color) {
 	color = color.to("oklch");
 	let ret = color;
 	for (let i = 0; i < 5; i++) {
-		let hsl = ret.to("hsl");
+		let hsl = ret.to("hsl-p3");
 		let s = hsl.coords[1];
 		if (s > 100) {
 			s = 100;
