@@ -14,14 +14,14 @@ const L = {
 	10: 0.2,
 };
 
-const scales = {
+const scaleDefs = {
 	raw: {
 		name: "Raw",
 		getColor: (level, color) => color.set("l", L[level]),
 	},
 	clipped: {
 		name: "Clipped (P3)",
-		getColor: (level, color) => scales.raw.getColor(level, color).toGamut({ space: "p3", method: "clip" }),
+		getColor: (level, color) => scaleDefs.raw.getColor(level, color).toGamut({ space: "p3", method: "clip" }),
 	},
 	mapped: {
 		name: "Gamut mapped (sRGB)",
@@ -64,6 +64,18 @@ const scales = {
 
 };
 
+// Restrict the visible scales via ?scales=id1,id2 (e.g. for demos or sharing).
+// Unknown ids are ignored; the URL order also defines display order.
+let only = new URLSearchParams(location.search).get("scales");
+const scales = only
+	? Object.fromEntries(
+		only.split(",")
+			.map(id => id.trim())
+			.filter(id => id in scaleDefs)
+			.map(id => [id, scaleDefs[id]]),
+	)
+	: scaleDefs;
+
 globalThis.app = createApp({
 	compilerOptions: {
 		isCustomElement (tag) {
@@ -76,10 +88,10 @@ globalThis.app = createApp({
 			color: null,
 			darkMode: false,
 			// Maps each selected scale id to its weight (0–100). Weights always sum to 100.
-			selected: {
-				clipped: 50,
-				colormix: 50,
-			},
+			// Defaults are dropped if their scale is hidden by the ?scales= URL param.
+			selected: Object.fromEntries(
+				Object.entries({ clipped: 50, colormix: 50 }).filter(([id]) => id in scales),
+			),
 		};
 	},
 
