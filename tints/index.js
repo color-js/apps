@@ -2,6 +2,20 @@ import { createApp } from "vue";
 import "color-elements/color-picker";
 import "color-elements/color-scale";
 
+// Preset base colors offered as clickable swatches above the picker.
+const swatches = {
+	red: "oklch(54% 0.24 25)",
+	orange: "oklch(74% 0.19 58)",
+	yellow: "oklch(88% 0.2 95)",
+	green: "oklch(70% 0.24 135)",
+	cyan: "oklch(69% 0.15 205)",
+	blue: "oklch(56% 0.24 260)",
+	indigo: "oklch(50% 0.27 275)",
+	purple: "oklch(57% 0.27 292)",
+	magenta: "oklch(60% 0.25 10)",
+	gray: "oklch(54% 0.04 250)",
+};
+
 const L = {
 	90: 0.97,
 	80: 0.88,
@@ -85,6 +99,7 @@ globalThis.app = createApp({
 
 	data () {
 		return {
+			swatches,
 			color: null,
 			darkMode: false,
 			// Maps each selected scale id to its weight (0–100). Weights always sum to 100.
@@ -188,6 +203,11 @@ globalThis.app = createApp({
 	methods: {
 		onColorChange (e) {
 			this.color = e.target.color;
+		},
+
+		// Apply a preset swatch by setting the picker's color; it then emits colorchange.
+		pickSwatch (value) {
+			this.$refs.input.color = value;
 		},
 
 		toggleScale (id) {

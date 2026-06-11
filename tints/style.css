@@ -40,6 +40,23 @@ body {
 
 
 
+.swatches {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4em;
+	margin-block: 0.5em;
+
+	button {
+		inline-size: 1.8em;
+		aspect-ratio: 1;
+		padding: 0;
+		border: 1px solid light-dark(hsl(0 0% 0% / 0.2), hsl(0 0% 100% / 0.3));
+		border-radius: 0.25em;
+		background: var(--swatch);
+		cursor: pointer;
+	}
+}
+
 .callout {
 	background: light-dark(var(--color-90), var(--color-10));
 	border: 1px solid light-dark(var(--color-80), var(--color-20));
