@@ -4,80 +4,83 @@
 }
 
 body {
-	display: flex;
-	align-items: flex-start;
-	justify-content: center;
 	box-sizing: border-box;
-	height: 100vh;
-	padding: 1em 2em;
+	min-height: 100vh;
 	margin: 0;
 	font: 100%/1.6 Helvetica Neue, sans-serif;
 	background: var(--transparency);
 }
 
 header {
-	align-items: center;
 	line-height: 1;
 	letter-spacing: -.05em;
 }
 
 main {
-	position: relative;
-	padding: 1.5em;
-	border-radius: .5em;
-	width: fit-content;
-	max-width: 90vw;
-	margin: 1em auto;
-	background: #f0f0f0;
-	box-shadow: .05em .05em .1em rgba(0,0,0,.2), 0 0 0 100vmax var(--color);
-	opacity: 0;
-
-	&:has(color-picker:defined) {
-		opacity: 1;
-		/* We add the 0.3s delay to let the `<color-picker>` components settle down. */
-		transition: opacity .25s .3s;
-  	}
+	box-sizing: border-box;
+	min-height: 100vh;
+	padding: 1.5em 2em 3em;
 }
 
-/* Discreet, flat add button pinned to the top-right corner of the panel */
+	/* The current color fills the whole page behind the floating cards
+	   (over the body's transparency checkerboard, so alpha shows through). */
+	main::before {
+		content: "";
+		position: fixed;
+		inset: 0;
+		z-index: -1;
+		background: var(--color);
+	}
+
+/* Discreet, flat add button pinned to the top-right corner of the page */
 .add {
-	position: absolute;
-	top: .5em;
-	right: .5em;
-	z-index: 2;
+	position: fixed;
+	top: .4em;
+	right: .4em;
+	z-index: 10;
 	padding: 0 .25em .1em;
 	border: none;
 	border-radius: .3em;
 	background: none;
-	color: rgba(0, 0, 0, .45);
-	font: 700 1.8em/1 Helvetica Neue, sans-serif;
+	color: rgba(0, 0, 0, .55);
+	font: 700 2em/1 Helvetica Neue, sans-serif;
 	cursor: pointer;
 }
 
 	.add:hover {
-		background: rgba(0, 0, 0, .08);
+		background: rgba(0, 0, 0, .12);
 		color: #000;
 	}
 
 .pickers {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 1.5em;
+	justify-content: center;
 	align-items: start;
+	gap: 2em;
+	margin-top: 1.5em;
+
+	opacity: 0;
+
+	&:has(color-picker:defined) {
+		opacity: 1;
+		/* The 0.3s delay lets the `<color-picker>` components settle down. */
+		transition: opacity .25s .3s;
+	}
 }
 
 	.picker {
-		/* Each picker keeps a fixed width and is its own framed card; they sit
+		/* Each picker is its own separate, fixed-width floating card; they sit
 		   side by side when there's room and wrap when there isn't. */
 		position: relative;
 		display: flex;
 		flex-direction: column;
 		flex: 0 0 auto;
 		width: 19em;
-		padding: 1em;
-		border: 1px solid hsl(220 10% 82%);
-		border-radius: .4em;
+		padding: 1.25em;
+		border-radius: .6em;
 		background: #fff;
+		box-shadow: 0 .15em .6em rgba(0, 0, 0, .3);
 	}
 
 	.picker .remove {
