@@ -17,25 +17,17 @@
 			<h1>Colour Picker</h1>
 		</header>
 
+		<button type="button" class="add" @click="addPicker" title="Add another color space" aria-label="Add another color space">+</button>
+
 		<div class="pickers">
-			<div class="picker" v-for="(picker, i) in pickers" :key="picker.id" :class="{ 'out-of-gamut': isOutOfGamut(picker.spaceId) }">
+			<div class="picker" v-for="picker in pickers" :key="picker.id" :class="{ 'out-of-gamut': isOutOfGamut(picker.spaceId) }">
 				<button v-if="pickers.length > 1" type="button" class="remove" @click="removePicker(picker.id)" title="Remove this color space" aria-label="Remove this color space">×</button>
 				<color-picker alpha @colorchange="updateColor($event, picker.id)"></color-picker>
 				<p class="out-of-gamut-warning" v-if="isOutOfGamut(picker.spaceId)">Color is out of {{ spaceName(picker.spaceId) }} gamut</p>
 			</div>
-			<button type="button" class="add" @click="addPicker" title="Add another color space" aria-label="Add another color space">+</button>
 		</div>
 
-		<fieldset>
-			<legend>Output <span class="precision autosize">(<input v-model="precision" type="number" min="0" max="20"> significant digits)</span></legend>
-			<label>Serialized color
-				<input class="color-css" :value="serialized_color" readonly />
-			</label>
-
-			<label>Displayed color
-				<input class="color-css" :value="css_color" readonly />
-			</label>
-		</fieldset>
+		<p class="out-of-gamut-warning device" v-if="outOfDeviceGamut">Color is out of device gamut</p>
 	</main>
 </body>
 </html>

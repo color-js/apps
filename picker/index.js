@@ -5,6 +5,17 @@ if (!globalThis.requestIdleCallback) {
 	globalThis.requestIdleCallback = globalThis.requestAnimationFrame;
 }
 
+// Widest color gamut the current screen can display.
+function detectDeviceGamut () {
+	if (matchMedia("(color-gamut: rec2020)").matches) {
+		return "rec2020";
+	}
+	if (matchMedia("(color-gamut: p3)").matches) {
+		return "p3";
+	}
+	return "srgb";
+}
+
 let app = createApp({
 	data () {
 		let ret = {
@@ -27,6 +38,7 @@ let app = createApp({
 		// The first picker is "primary": its space drives the page URL & title.
 		ret.pickers = [{id: 0, spaceId: ret.color.space.id}];
 		ret.nextId = 1;
+		ret.deviceGamut = detectDeviceGamut();
 
 		document.title = `${ret.color.space.name} color picker`;
 
@@ -41,10 +53,8 @@ let app = createApp({
 
 			return this.color.display({precision: this.precision}) + "";
 		},
-		serialized_color () {
-			// Serialize in the primary (first) picker's space.
-			let spaceId = this.pickers[0]?.spaceId ?? this.color.space.id;
-			return this.color.to(spaceId).toString({precision: this.precision});
+		outOfDeviceGamut () {
+			return !this.color.inGamut(this.deviceGamut, {epsilon: .00005});
 		},
 	},
 	methods: {
@@ -150,6 +160,13 @@ let app = createApp({
 		},
 	},
 	mounted () {
+		// Re-detect the device gamut if the window moves to another display.
+		for (let gamut of ["rec2020", "p3"]) {
+			matchMedia(`(color-gamut: ${gamut})`).addEventListener("change", () => {
+				this.deviceGamut = detectDeviceGamut();
+			});
+		}
+
 		this._locationSpaceId = this.pickers[0].spaceId;
 
 		this._syncing = true;

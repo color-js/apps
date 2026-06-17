@@ -22,9 +22,10 @@ header {
 }
 
 main {
+	position: relative;
 	padding: 1.5em;
 	border-radius: .5em;
-	width: 40em;
+	width: fit-content;
 	max-width: 90vw;
 	margin: 1em auto;
 	background: #f0f0f0;
@@ -38,6 +39,26 @@ main {
   	}
 }
 
+/* Discreet, flat add button pinned to the top-right corner of the panel */
+.add {
+	position: absolute;
+	top: .5em;
+	right: .5em;
+	z-index: 2;
+	padding: 0 .25em .1em;
+	border: none;
+	border-radius: .3em;
+	background: none;
+	color: rgba(0, 0, 0, .45);
+	font: 700 1.8em/1 Helvetica Neue, sans-serif;
+	cursor: pointer;
+}
+
+	.add:hover {
+		background: rgba(0, 0, 0, .08);
+		color: #000;
+	}
+
 .pickers {
 	display: flex;
 	flex-wrap: wrap;
@@ -46,46 +67,34 @@ main {
 }
 
 	.picker {
-		/* Render side by side when there's room, stack when there isn't */
+		/* Each picker keeps a fixed width and is its own framed card; they sit
+		   side by side when there's room and wrap when there isn't. */
 		position: relative;
 		display: flex;
 		flex-direction: column;
-		flex: 1 1 17em;
-		min-width: 0;
+		flex: 0 0 auto;
+		width: 19em;
+		padding: 1em;
+		border: 1px solid hsl(220 10% 82%);
+		border-radius: .4em;
+		background: #fff;
 	}
 
-	.pickers .add,
 	.picker .remove {
-		flex: 0 0 auto;
-		align-self: center;
+		/* Sits in the top-right corner of each card */
+		position: absolute;
+		top: -.6em;
+		right: -.6em;
+		z-index: 1;
+		inline-size: 1.5em;
+		block-size: 1.5em;
 		padding: 0;
 		border: 1px solid hsl(220 10% 70%);
 		border-radius: 50%;
 		background: #fff;
 		color: rgba(0, 0, 0, .6);
-		font: 700 1.2em/1 Helvetica Neue, sans-serif;
+		font: 700 1.1em/1 Helvetica Neue, sans-serif;
 		cursor: pointer;
-	}
-
-	.pickers .add {
-		inline-size: 1.8em;
-		block-size: 1.8em;
-		align-self: center;
-	}
-
-		.pickers .add:hover {
-			background: #f0f0f0;
-			color: #000;
-		}
-
-	.picker .remove {
-		/* Sits in the top-right corner of each picker */
-		position: absolute;
-		top: -.5em;
-		right: -.5em;
-		z-index: 1;
-		inline-size: 1.5em;
-		block-size: 1.5em;
 	}
 
 		.picker .remove:hover {
@@ -145,36 +154,10 @@ color-picker {
 	}
 
 	&::part(gamut) {
-		font-size: clamp(1rem, 2vw, 1.5rem);
+		/* The screen's gamut is surfaced once, app-wide, as the "out of device
+		   gamut" warning, so hide the per-picker gamut badges. */
+		display: none;
 	}
-}
-
-fieldset {
-	border: 1px solid hsl(220 10% 80%);
-	border-radius: .3em;
-	margin: 0;
-	margin-top: 1em;
-}
-
-label,
-legend {
-	display: block;
-	text-transform: uppercase;
-	font-size: smaller;
-	margin-top: 1em;
-	font-weight: bold;
-	color: rgba(0,0,0,.5);
-}
-
-input.color-css {
-	padding: .3em .5em .2em;
-	border: 1px solid rgba(0, 0, 0, 0.2);
-	border-radius: .3em;
-	box-shadow: 0 0.05em 0.2em rgba(0, 0, 0, 0.2) inset;
-	background: rgba(26, 26, 26, 0.05);
-	width: 100% !important;
-	box-sizing: border-box;
-	font: 150% Consolas, Monaco, monospace;
 }
 
 .out-of-gamut-warning {
@@ -190,9 +173,7 @@ input.color-css {
 		filter: invert() hue-rotate(-200deg);
 	}
 
-.precision input {
-	font: inherit;
-	color: inherit;
-	background: none;
-	border: none;
-}
+	.out-of-gamut-warning.device {
+		margin-top: 1em;
+		text-align: center;
+	}
