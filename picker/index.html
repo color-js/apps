@@ -18,8 +18,12 @@
 		</header>
 
 		<div class="pickers">
-			<color-picker alpha @colorchange="updateColor($event, true)" ref="picker"></color-picker>
-			<color-picker alpha @colorchange="updateColor($event, false)" ref="picker2"></color-picker>
+			<div class="picker" v-for="(picker, i) in pickers" :key="picker.id" :class="{ 'out-of-gamut': isOutOfGamut(picker.spaceId) }">
+				<button v-if="pickers.length > 1" type="button" class="remove" @click="removePicker(picker.id)" title="Remove this color space" aria-label="Remove this color space">×</button>
+				<color-picker alpha @colorchange="updateColor($event, picker.id)"></color-picker>
+				<p class="out-of-gamut-warning" v-if="isOutOfGamut(picker.spaceId)">Color is out of {{ spaceName(picker.spaceId) }} gamut</p>
+			</div>
+			<button type="button" class="add" @click="addPicker" title="Add another color space" aria-label="Add another color space">+</button>
 		</div>
 
 		<fieldset>
