@@ -38,6 +38,19 @@ main {
   	}
 }
 
+.pickers {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1.5em;
+	align-items: start;
+}
+
+	.pickers > color-picker {
+		/* Render side by side when there's room, stack when there isn't */
+		flex: 1 1 17em;
+		min-width: 0;
+	}
+
 color-picker {
 	/* Don't allow content to stretch the grid */
 	grid-template-columns: min-max(0, 1fr);
@@ -111,12 +124,7 @@ legend {
 	color: rgba(0,0,0,.5);
 }
 
-abbr {
-	text-transform: initial;
-}
-
-input.color-css,
-input.color-srgb {
+input.color-css {
 	padding: .3em .5em .2em;
 	border: 1px solid rgba(0, 0, 0, 0.2);
 	border-radius: .3em;
@@ -125,27 +133,6 @@ input.color-srgb {
 	width: 100% !important;
 	box-sizing: border-box;
 	font: 150% Consolas, Monaco, monospace;
-}
-
-.out-of-gamut input {
-	border-color: rgba(200, 0, 0, 0.5);
-}
-
-.out-of-gamut-warning {
-	margin-top: .4em;
-	color: #b00;
-	font-weight: bold;
-	font-size: smaller;
-	text-transform: initial;
-}
-
-	.out-of-gamut-warning::before {
-		content: "⚠️ ";
-		filter: invert() hue-rotate(-200deg);
-	}
-
-label:not(.out-of-gamut) .out-of-gamut-warning {
-	display: none;
 }
 
 .precision input {

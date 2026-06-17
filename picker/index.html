@@ -17,7 +17,10 @@
 			<h1>Colour Picker</h1>
 		</header>
 
-		<color-picker alpha @colorchange="color = $event.target.color" ref="picker"></color-picker>
+		<div class="pickers">
+			<color-picker alpha @colorchange="updateColor($event, true)" ref="picker"></color-picker>
+			<color-picker alpha @colorchange="updateColor($event, false)" ref="picker2"></color-picker>
+		</div>
 
 		<fieldset>
 			<legend>Output <span class="precision autosize">(<input v-model="precision" type="number" min="0" max="20"> significant digits)</span></legend>
@@ -27,12 +30,6 @@
 
 			<label>Displayed color
 				<input class="color-css" :value="css_color" readonly />
-			</label>
-
-			<label :class="!color.inGamut('srgb', {epsilon: .00005}) ? 'out-of-gamut' : ''">
-				<abbr>sRGB</abbr> Color
-				<input class="color-srgb" :value="serialized_color_srgb" readonly />
-				<div class="out-of-gamut-warning">Color is actually {{ serialized_color_srgb_oog }}, which is out of sRGB gamut; auto-corrected to sRGB boundary.</div>
 			</label>
 		</fieldset>
 	</main>
