@@ -4,39 +4,118 @@
 }
 
 body {
-	display: flex;
-	align-items: flex-start;
-	justify-content: center;
 	box-sizing: border-box;
-	height: 100vh;
-	padding: 1em 2em;
+	min-height: 100vh;
 	margin: 0;
 	font: 100%/1.6 Helvetica Neue, sans-serif;
 	background: var(--transparency);
 }
 
-header {
-	align-items: center;
-	line-height: 1;
-	letter-spacing: -.05em;
+main {
+	box-sizing: border-box;
+	min-height: 100vh;
+	padding: 1.5em 2em 3em;
 }
 
-main {
-	padding: 1.5em;
-	border-radius: .5em;
-	width: 40em;
-	max-width: 90vw;
-	margin: 1em auto;
-	background: #f0f0f0;
-	box-shadow: .05em .05em .1em rgba(0,0,0,.2), 0 0 0 100vmax var(--color);
+	/* The current color fills the whole page behind the floating cards
+	   (over the body's transparency checkerboard, so alpha shows through). */
+	main::before {
+		content: "";
+		position: fixed;
+		inset: 0;
+		z-index: -1;
+		background: var(--color);
+	}
+
+.pickers {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-items: start;
+	gap: 2em;
+	margin-top: 1.5em;
+
 	opacity: 0;
 
 	&:has(color-picker:defined) {
 		opacity: 1;
-		/* We add the 0.3s delay to let the `<color-picker>` components settle down. */
+		/* The 0.3s delay lets the `<color-picker>` components settle down. */
 		transition: opacity .25s .3s;
-  	}
+	}
 }
+
+	.picker {
+		/* Each picker is its own separate floating card at a comfortable width;
+		   they sit side by side when there's room and wrap when there isn't. */
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		flex: 0 0 auto;
+		box-sizing: border-box;
+		width: 40em;
+		max-width: 90vw;
+		padding: 1.5em;
+		border-radius: .6em;
+		background: #fff;
+		box-shadow: 0 .15em .6em rgba(0, 0, 0, .3);
+	}
+
+	/* Pin toggle + add/remove, in the picker's top-right corner, vertically
+	   centered on the space dropdown. The dropdown is narrowed (below) for them. */
+	.picker .tools {
+		position: absolute;
+		top: 1.5rem;
+		right: 1.5rem;
+		z-index: 1;
+		display: flex;
+		align-items: center;
+		gap: .25rem;
+		/* Match the dropdown height so the buttons center on it */
+		block-size: 4.5rem;
+	}
+
+		.picker .tools button {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			inline-size: 2.5rem;
+			block-size: 2.5rem;
+			padding: 0;
+			border: none;
+			border-radius: .3rem;
+			background: none;
+			color: rgba(0, 0, 0, .4);
+			font: 400 1.8rem/1 Helvetica Neue, sans-serif;
+			cursor: pointer;
+		}
+
+			.picker .tools button:hover {
+				background: rgba(0, 0, 0, .08);
+			}
+
+			.picker .tools .add:hover {
+				color: #000;
+			}
+
+			.picker .tools .remove:hover {
+				color: #b00;
+			}
+
+		/* Pin: faint when unpinned (follows pasted colors), solid when pinned */
+		.picker .tools .pin {
+			color: rgba(0, 0, 0, .25);
+		}
+
+			.picker .tools .pin.pinned {
+				color: rgba(0, 0, 0, .7);
+			}
+
+			.picker .tools .pin svg {
+				display: block;
+				inline-size: 1.4rem;
+				block-size: 1.4rem;
+				fill: currentColor;
+			}
 
 color-picker {
 	/* Don't allow content to stretch the grid */
@@ -44,7 +123,8 @@ color-picker {
 
 	&::part(color-space) {
 		box-sizing: content-box;
-		inline-size: calc(100% - .2em);
+		/* Leave room for the pin + add + remove buttons */
+		inline-size: calc(100% - 9.5rem);
 		padding: 0;
 		margin: 0;
 
@@ -90,45 +170,20 @@ color-picker {
 	}
 
 	&::part(gamut) {
-		font-size: clamp(1rem, 2vw, 1.5rem);
+		/* Hide the per-picker badges; a single one is shown below, app-wide. */
+		display: none;
 	}
 }
 
-fieldset {
-	border: 1px solid hsl(220 10% 80%);
-	border-radius: .3em;
-	margin: 0;
-	margin-top: 1em;
-}
-
-label,
-legend {
-	display: block;
-	text-transform: uppercase;
-	font-size: smaller;
-	margin-top: 1em;
-	font-weight: bold;
-	color: rgba(0,0,0,.5);
-}
-
-abbr {
-	text-transform: initial;
-}
-
-input.color-css,
-input.color-srgb {
-	padding: .3em .5em .2em;
-	border: 1px solid rgba(0, 0, 0, 0.2);
-	border-radius: .3em;
-	box-shadow: 0 0.05em 0.2em rgba(0, 0, 0, 0.2) inset;
-	background: rgba(26, 26, 26, 0.05);
-	width: 100% !important;
-	box-sizing: border-box;
-	font: 150% Consolas, Monaco, monospace;
-}
-
-.out-of-gamut input {
-	border-color: rgba(200, 0, 0, 0.5);
+/* One gamut badge for the whole app, pinned to the page's top-right corner
+   (driven by the first picker, which shares the color with all the others). */
+.picker:first-child color-picker::part(gamut) {
+	display: revert;
+	position: fixed;
+	top: .4rem;
+	right: .4rem;
+	z-index: 5;
+	font-size: clamp(1rem, 2vw, 1.5rem);
 }
 
 .out-of-gamut-warning {
@@ -143,14 +198,3 @@ input.color-srgb {
 		content: "⚠️ ";
 		filter: invert() hue-rotate(-200deg);
 	}
-
-label:not(.out-of-gamut) .out-of-gamut-warning {
-	display: none;
-}
-
-.precision input {
-	font: inherit;
-	color: inherit;
-	background: none;
-	border: none;
-}
