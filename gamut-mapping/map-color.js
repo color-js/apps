@@ -22,6 +22,12 @@ export default {
 			type: Object,
 			default: () => ({L: false, H: false}),
 		},
+		// Metric the cards are ordered by: one of "E2K", "EOK", "L", "H", or
+		// "default" (methods.js definition order). Also drives the rank badges.
+		sort: {
+			type: String,
+			default: "default",
+		},
 	},
 	emits: ["update:modelValue"],
 	data () {
@@ -120,6 +126,18 @@ export default {
 			}));
 		},
 
+		// Visible methods in display order: definition order when sort is
+		// "default", otherwise the ranked order.
+		displayMethods () {
+			if (this.sort === "default") {
+				return this.visibleMethods;
+			}
+
+			let visible = this.visibleMethods;
+			let ordered = this.ranking.filter(method => method in visible);
+			return Object.fromEntries(ordered.map(method => [method, visible[method]]));
+		},
+
 		minDeltas () {
 			let ret = {};
 			for (let method in this.mapped) {
@@ -137,11 +155,38 @@ export default {
 			return ret;
 		},
 
+		// All methods sorted best-first by the active metric (smallest |Δ| wins),
+		// ties broken by ΔEOK — or by ΔE2K when ΔEOK is itself the metric. The
+		// "default" sort still ranks by ΔE2K so the badges stay meaningful.
 		ranking () {
-			let deltaEs = Object.entries(this.mapped).map(([method, {deltas}]) => deltas.E2K);
-			deltaEs = deltaEs.map(e => this.toPrecision(e, 2));
-			deltaEs.sort((a, b) => a - b);
-			return deltaEs;
+			let primary = this.sort === "default" ? "E2K" : this.sort;
+			let secondary = primary === "EOK" ? "E2K" : "EOK";
+			let key = (method, c) => Math.abs(this.mapped[method].deltas[c]);
+
+			return Object.keys(this.mapped).sort((a, b) => {
+				return key(a, primary) - key(b, primary) || key(a, secondary) - key(b, secondary);
+			});
+		},
+
+		// Sorted unique ranks currently shown, so the top/bottom ranks can be
+		// highlighted by membership — robust to ties sharing a rank.
+		ranks () {
+			let ranks = Object.keys(this.visibleMethods).map(method => this.rank(method));
+			return [...new Set(ranks)].sort((a, b) => a - b);
+		},
+
+		// How many of the best/worst ranks to highlight: grows with the number of
+		// ranks as clamp(1, floor(N/3), 3), so top and bottom never overlap.
+		highlightCount () {
+			return Math.max(1, Math.min(Math.floor(this.ranks.length / 3), 3));
+		},
+
+		topRanks () {
+			return this.ranks.slice(0, this.highlightCount);
+		},
+
+		bottomRanks () {
+			return this.ranks.slice(-this.highlightCount);
 		},
 	},
 
@@ -149,9 +194,9 @@ export default {
 		toPrecision: Color.util.toPrecision,
 		abs: Math.abs,
 
-		// 1-based rank of a method by its ΔE2K, ties sharing the lowest rank.
+		// 1-based rank of a method in the active sort order.
 		rank (method) {
-			return this.ranking.findIndex(e => e === this.mapped[method]?.deltas.E2K) + 1;
+			return this.ranking.indexOf(method) + 1;
 		},
 
 		/**
@@ -210,7 +255,7 @@ export default {
 			<h2>Gamut mapped</h2>
 
 			<ol class="swatches">
-				<li v-for="(config, method) in visibleMethods" :id="'method-' + method" :data-ranking="rank(method)" :value="rank(method)">
+				<li v-for="(config, method) in displayMethods" :id="'method-' + method" :data-ranking="rank(method)" :value="rank(method)" :class="{top: topRanks.includes(rank(method)), bottom: bottomRanks.includes(rank(method))}">
 					<color-swatch size="large" :color="mapped[method].color"></color-swatch>
 					<h3>{{ config.label ?? method[0].toUpperCase() + method.slice(1) }}</h3>
 					<small v-if="config.description" class="description">{{ config.description }}</small>

@@ -23,6 +23,8 @@ let app = createApp({
 			lch: ["L", "C", "H"],
 			// Filter: hide gamut-mapping methods that don't preserve L resp. H.
 			hide: {L: false, H: false},
+			// Metric the methods are ordered by; "default" keeps definition order.
+			sort: "default",
 		};
 	},
 

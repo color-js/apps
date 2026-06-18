@@ -129,7 +129,7 @@ ol.swatches {
 		}
 
 		/* Rank in its own column beside the swatch, so it doesn't obscure the
-		   color being evaluated; medals for the top three. */
+		   color being evaluated. Best ranks are green, worst ranks red. */
 		&::before {
 			content: attr(data-ranking);
 			grid-column: 1;
@@ -141,20 +141,12 @@ ol.swatches {
 			color: hsl(220 10% 55%);
 		}
 
-		&:is([data-ranking="1"], [data-ranking="2"], [data-ranking="3"])::before {
-			font-size: 180%;
+		&.top::before {
+			color: var(--color-green-50, hsl(70 100% 32%));
 		}
 
-		&[data-ranking="1"]::before {
-			content: "🥇";
-		}
-
-		&[data-ranking="2"]::before {
-			content: "🥈";
-		}
-
-		&[data-ranking="3"]::before {
-			content: "🥉";
+		&.bottom::before {
+			color: var(--color-red-40, hsl(0 60% 45%));
 		}
 	}
 }
