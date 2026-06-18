@@ -223,7 +223,8 @@ dl.coords {
 		gap: .2em;
 	}
 
-	.delta-e {
+	.delta-e2k,
+	.delta-eok {
 		background: hsl(220 10% 50% / .08);
 		border: 1px solid hsl(220 10% 50% / 10%);
 		padding: 0 .3em;

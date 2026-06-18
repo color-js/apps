@@ -85,7 +85,10 @@ export default {
 			return Object.fromEntries(Object.entries(this.methods).map(([method, config]) => {
 				let mappedColor = config.compute(this.color);
 				let mappedColorLCH = mappedColor.to("oklch");
-				let deltas = {E: this.toPrecision(this.color.deltaE(mappedColor, { method: "2000" }), 2)};
+				let deltas = {
+					E2K: this.toPrecision(this.color.deltaE(mappedColor, { method: "2000" }), 2),
+					EOK: this.toPrecision(this.color.deltaE(mappedColor, { method: "OK" }), 2),
+				};
 
 				lch.forEach((c, i) => {
 					let delta = mappedColorLCH.coords[i] - this.colorLCH.coords[i];
@@ -135,7 +138,7 @@ export default {
 		},
 
 		ranking () {
-			let deltaEs = Object.entries(this.mapped).map(([method, {deltas}]) => deltas.E);
+			let deltaEs = Object.entries(this.mapped).map(([method, {deltas}]) => deltas.E2K);
 			deltaEs = deltaEs.map(e => this.toPrecision(e, 2));
 			deltaEs.sort((a, b) => a - b);
 			return deltaEs;
@@ -146,9 +149,9 @@ export default {
 		toPrecision: Color.util.toPrecision,
 		abs: Math.abs,
 
-		// 1-based rank of a method by its ΔE, ties sharing the lowest rank.
+		// 1-based rank of a method by its ΔE2K, ties sharing the lowest rank.
 		rank (method) {
-			return this.ranking.findIndex(e => e === this.mapped[method]?.deltas.E) + 1;
+			return this.ranking.findIndex(e => e === this.mapped[method]?.deltas.E2K) + 1;
 		},
 
 		/**
@@ -215,7 +218,7 @@ export default {
 						<div v-for="(delta, c) of mapped[method].deltas" :class="'delta-' + c.toLowerCase()">
 							<dt>Δ{{ c }}</dt>
 							<dd :class="{
-								positive: c !== 'E' && delta > 0,
+								positive: !c.startsWith('E') && delta > 0,
 								negative: delta < 0,
 								zero: delta === 0,
 								min: minDeltas[c] === abs(delta),
