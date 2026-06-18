@@ -9,7 +9,9 @@
 	<script>
 	{
 		let theme = localStorage.getItem("theme");
-		if (theme) {
+		// "auto" resolves from color lightness at render time, so only pin the
+		// fixed backgrounds here to avoid a flash of the wrong one.
+		if (theme && theme !== "auto") {
 			document.documentElement.dataset.theme = theme;
 		}
 	}

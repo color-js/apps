@@ -3,6 +3,10 @@
 
 	/* Follow the system light/dark preference; the switcher pins one below. */
 	color-scheme: light dark;
+
+	/* Smoothly cross-fade when the background switches (notably in auto mode,
+	   where it follows the first color's lightness). */
+	transition: background .4s;
 }
 
 /* Each switcher button sets the root's color-scheme + background. "mid" is a
@@ -390,15 +394,14 @@ button {
 /* Three swatch buttons pinned top-right: each previews and applies a page
    background. Active one gets a ring in the current text color. */
 .theme-switcher {
-	position: fixed;
+	position: absolute;
 	top: 1em;
 	right: 1em;
 	z-index: 10;
 	display: flex;
-	gap: 2px;
+	gap: .4em;
 	padding: 2px;
 	border-radius: .4em;
-	background: hsl(220 10% 50% / 25%);
 
 	button {
 		width: 1.5em;
@@ -410,6 +413,11 @@ button {
 		&.light { background: #fff; }
 		&.dark { background: hsl(220 15% 13%); }
 		&.mid { background: oklab(0.5 0 0); }
+
+		/* Auto previews all three at once: it adapts to the color. */
+		&.auto {
+			background: linear-gradient(135deg, #fff 33%, oklab(0.5 0 0) 33% 66%, hsl(220 15% 13%) 66%);
+		}
 
 		&[aria-pressed="true"] {
 			outline: 2px solid currentColor;

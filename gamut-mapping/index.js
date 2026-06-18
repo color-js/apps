@@ -32,11 +32,11 @@ let app = createApp({
 			// in the header. Hue > lightness > chroma by default.
 			errorWeights: {H: 8, L: 4, C: 1},
 
-			// Background switcher. `theme` is the pinned choice (null = follow
-			// system); the three buttons preview the backgrounds they apply.
-			theme: localStorage.getItem("theme"),
-			systemDark: matchMedia("(prefers-color-scheme: dark)").matches,
+			// Background switcher. `theme` is the user's choice; "auto" (the
+			// default) derives the background from the first color's lightness.
+			theme: localStorage.getItem("theme") ?? "auto",
 			themes: [
+				{id: "auto", label: "Auto background (match color lightness)"},
 				{id: "light", label: "Light background"},
 				{id: "mid", label: "Mid-gray background"},
 				{id: "dark", label: "Dark background"},
@@ -54,10 +54,31 @@ let app = createApp({
 	},
 
 	computed: {
-		// Which button reads as active: the pinned theme, or the system default
-		// when nothing is pinned yet.
-		selected () {
-			return this.theme ?? (this.systemDark ? "dark" : "light");
+		// The background actually applied to the page. When the user picks
+		// "auto", we choose one of the three backgrounds from the first color's
+		// lightness so colors sit on a matching surround: light colors on a light
+		// page, dark colors on a dark one, mid colors on mid gray.
+		background () {
+			if (this.theme !== "auto") {
+				return this.theme;
+			}
+
+			let L = this.firstLightness;
+			if (L === null) {
+				return "mid";
+			}
+
+			return L > 2 / 3 ? "light" : L > 1 / 3 ? "mid" : "dark";
+		},
+
+		// OKLch lightness (0–1) of the first color, or null if unparseable.
+		firstLightness () {
+			try {
+				return new Color(this.colors[0]).oklch.l;
+			}
+			catch {
+				return null;
+			}
 		},
 	},
 
@@ -91,18 +112,19 @@ let app = createApp({
 			deep: true,
 		},
 
-		// Pin the chosen background on <html> and remember it across visits.
+		// Remember the user's choice across visits.
 		theme (value) {
-			document.documentElement.dataset.theme = value;
 			localStorage.setItem("theme", value);
 		},
-	},
 
-	mounted () {
-		// Keep the unpinned default in sync with the OS preference.
-		matchMedia("(prefers-color-scheme: dark)").addEventListener("change", e => {
-			this.systemDark = e.matches;
-		});
+		// Apply the resolved background to <html> (immediately on mount too, so
+		// auto picks up the first color's lightness right away).
+		background: {
+			handler (value) {
+				document.documentElement.dataset.theme = value;
+			},
+			immediate: true,
+		},
 	},
 
 	components: {
