@@ -36,7 +36,10 @@ let app = createApp({
 
 		// Each picker is fixed to its own color space; they all share `color`.
 		// The first picker is "primary": its space drives the page URL & title.
-		ret.pickers = [{id: 0, spaceId: ret.color.space.id}];
+		// `pinned` controls what a pasted color does: pinned pickers convert it
+		// into their space, unpinned ones adopt the pasted color's space. The
+		// primary starts unpinned (free to follow), the rest start pinned.
+		ret.pickers = [{id: 0, spaceId: ret.color.space.id, pinned: false}];
 		ret.nextId = 1;
 		ret.deviceGamut = detectDeviceGamut();
 
@@ -87,24 +90,21 @@ let app = createApp({
 
 			let picker = event.target;
 			let newColor = picker.color;
+			let entry = this.pickers.find(p => p.id === id);
 
-			// A manually entered color in another space would change this picker's
-			// space. Confirm first; on "no", just convert it into the current space
-			// and leave the picker where it is.
+			// A pasted color in another space: pinned pickers convert it into their
+			// own space, unpinned ones adopt the pasted color's space.
 			if (newColor.space.id !== picker.spaceId) {
-				if (confirm(`Change the color space to ${newColor.space.name}?`)) {
-					picker.spaceId = newColor.space.id;
-				}
-				else {
+				if (entry?.pinned) {
 					// Re-fires colorchange (now in-space), which finishes the update.
 					picker.color = newColor.to(picker.spaceId);
 					return;
 				}
+				picker.spaceId = newColor.space.id;
 			}
 
 			// Keep our reactive copy of this picker's space in sync (covers both
-			// manual entry above and the picker's own space dropdown).
-			let entry = this.pickers.find(p => p.id === id);
+			// pasted colors above and the picker's own space dropdown).
 			if (entry && entry.spaceId !== picker.spaceId) {
 				entry.spaceId = picker.spaceId;
 				if (this.pickers[0] === entry) {
@@ -117,7 +117,7 @@ let app = createApp({
 		addPicker () {
 			let last = this.pickers[this.pickers.length - 1];
 			let spaceId = last ? last.spaceId : "srgb";
-			this.pickers.push({id: this.nextId++, spaceId});
+			this.pickers.push({id: this.nextId++, spaceId, pinned: true});
 
 			this.$nextTick(() => {
 				let els = this.pickerElements();

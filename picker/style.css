@@ -60,40 +60,62 @@ main {
 		box-shadow: 0 .15em .6em rgba(0, 0, 0, .3);
 	}
 
-	/* +/× button in the picker's top-right corner, aligned with the space
-	   dropdown. Sized as a comfortable touch target (~44px); the dropdown is
-	   narrowed (below) to make room for it. */
-	.picker .corner {
+	/* Pin toggle + add/remove, in the picker's top-right corner, vertically
+	   centered on the space dropdown. The dropdown is narrowed (below) for them. */
+	.picker .tools {
 		position: absolute;
-		/* Vertically center on the ~4.5rem-tall space dropdown */
-		top: calc(1.5rem + (4.5rem - 2.75rem) / 2);
+		top: 1.5rem;
 		right: 1.5rem;
 		z-index: 1;
 		display: flex;
 		align-items: center;
-		justify-content: center;
-		inline-size: 2.75rem;
-		block-size: 2.75rem;
-		padding: 0;
-		border: none;
-		border-radius: .3rem;
-		background: none;
-		color: rgba(0, 0, 0, .4);
-		font: 400 1.8rem/1 Helvetica Neue, sans-serif;
-		cursor: pointer;
+		gap: .25rem;
+		/* Match the dropdown height so the buttons center on it */
+		block-size: 4.5rem;
 	}
 
-		.picker .corner:hover {
-			background: rgba(0, 0, 0, .08);
+		.picker .tools button {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			inline-size: 2.5rem;
+			block-size: 2.5rem;
+			padding: 0;
+			border: none;
+			border-radius: .3rem;
+			background: none;
+			color: rgba(0, 0, 0, .4);
+			font: 400 1.8rem/1 Helvetica Neue, sans-serif;
+			cursor: pointer;
 		}
 
-		.picker .corner.add:hover {
-			color: #000;
+			.picker .tools button:hover {
+				background: rgba(0, 0, 0, .08);
+			}
+
+			.picker .tools .add:hover {
+				color: #000;
+			}
+
+			.picker .tools .remove:hover {
+				color: #b00;
+			}
+
+		/* Pin: faint when unpinned (follows pasted colors), solid when pinned */
+		.picker .tools .pin {
+			color: rgba(0, 0, 0, .25);
 		}
 
-		.picker .corner.remove:hover {
-			color: #b00;
-		}
+			.picker .tools .pin.pinned {
+				color: rgba(0, 0, 0, .7);
+			}
+
+			.picker .tools .pin svg {
+				display: block;
+				inline-size: 1.4rem;
+				block-size: 1.4rem;
+				fill: currentColor;
+			}
 
 color-picker {
 	/* Don't allow content to stretch the grid */
@@ -101,8 +123,8 @@ color-picker {
 
 	&::part(color-space) {
 		box-sizing: content-box;
-		/* Leave room for the +/× corner button */
-		inline-size: calc(100% - 5rem);
+		/* Leave room for the pin + add/remove buttons */
+		inline-size: calc(100% - 7.5rem);
 		padding: 0;
 		margin: 0;
 
@@ -148,10 +170,20 @@ color-picker {
 	}
 
 	&::part(gamut) {
-		/* The screen's gamut is surfaced once, app-wide, as the "out of device
-		   gamut" warning, so hide the per-picker gamut badges. */
+		/* Hide the per-picker badges; a single one is shown below, app-wide. */
 		display: none;
 	}
+}
+
+/* One gamut badge for the whole app, pinned to the page's top-right corner
+   (driven by the first picker, which shares the color with all the others). */
+.picker:first-child color-picker::part(gamut) {
+	display: revert;
+	position: fixed;
+	top: .4rem;
+	right: .4rem;
+	z-index: 5;
+	font-size: clamp(1rem, 2vw, 1.5rem);
 }
 
 .out-of-gamut-warning {
