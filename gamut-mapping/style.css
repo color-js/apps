@@ -8,9 +8,9 @@ body {
 	margin: 1em auto;
 	padding-inline: 1em;
 
-	@media (width > 70em) {
+	@media (width > 55em) {
 		display: grid;
-		grid-template-columns: auto 1fr;
+		grid-template-columns: 24em 1fr;
 		gap: 0em 2em;
 
 		> header,
@@ -64,62 +64,110 @@ input {
 	font: inherit;
 }
 
+.swatches .description {
+	display: block;
+	font-size: 70%;
+	color: hsl(220 10% 50%);
+	text-wrap: balance;
+}
+
+/* Browser rendering: a single labeled input, stacked in normal flow */
 dl.swatches {
-	display: grid;
-	gap: 1.5em;
-	grid-template-columns: repeat(auto-fill, minmax(15em, 1fr));
-	margin: 0;
-	margin-top: .5rem;
+	margin: .5rem 0 0;
 
 	> div {
 		position: relative;
 		display: grid;
-		grid-template-rows: subgrid;
-		grid-row-end: span 2;
 		gap: .5em;
-
-		&[data-ranking="1"],
-		&[data-ranking="2"],
-		&[data-ranking="3"] {
-			& > dt::before {
-				content: var(--award);
-				position: absolute;
-				top: 0;
-				right: 0;
-				font-size: 200%;
-			}
-		}
-
-		&[data-ranking="1"] {
-			--award: "🥇";
-		}
-
-		&[data-ranking="2"] {
-			--award: "🥈";
-		}
-
-		&[data-ranking="3"] {
-			--award: "🥉";
-		}
-	}
-
-	.description {
-		display: block;
-		font-size: 70%;
-		color: hsl(220 10% 50%);
-		text-wrap: balance;
-	}
-
-	dt {
-		margin-top: auto;
 	}
 
 	dd {
 		margin: 0;
 	}
+}
 
-	color-swatch {
-		width: 100%;
+/* Gamut mapped: a ranked list, each method laid out as swatch + details */
+ol.swatches {
+	list-style: none;
+	display: flex;
+	flex-direction: column;
+	gap: 1em;
+	margin: .5rem 0 0;
+	padding: 0;
+
+	> li {
+		position: relative;
+		display: grid;
+		grid-template-columns: 8em 1fr;
+		/* Three rows for the details, plus a flexible row that absorbs any slack up
+		   to min-height — so the swatch is tall on wide screens (short content) yet
+		   still fills 100% when taller content is what drives the height. */
+		grid-template-rows: auto auto auto 1fr;
+		min-height: 6em;
+		column-gap: 1em;
+		row-gap: .25em;
+
+		/* Fixed-width swatch spanning all rows. min-height: 0 stops its own height
+		   from inflating the detail rows, so the details stay tightly stacked; it
+		   then fills the full card height. */
+		> color-swatch {
+			grid-column: 1;
+			grid-row: 1 / -1;
+			min-height: 0;
+			height: 100%;
+			width: 100%;
+		}
+
+		> h3 {
+			grid-column: 2;
+			margin: 0;
+			font-size: 105%;
+		}
+
+		> .description,
+		> .deltas {
+			grid-column: 2;
+		}
+
+		/* Rank badge over the swatch; medals for the top three. */
+		&::before {
+			content: attr(data-ranking);
+			position: absolute;
+			z-index: 1;
+			top: .5em;
+			left: .5em;
+			min-width: 1.4em;
+			padding: 0 .3em;
+			border-radius: 1em;
+			background: hsl(220 10% 100% / .85);
+			box-shadow: 0 0 0 1px hsl(220 10% 50% / .2);
+			font-weight: bold;
+			font-size: 85%;
+			text-align: center;
+			color: hsl(220 10% 30%);
+		}
+
+		&:is([data-ranking="1"], [data-ranking="2"], [data-ranking="3"])::before {
+			top: .15em;
+			left: .15em;
+			background: none;
+			box-shadow: none;
+			padding: 0;
+			min-width: 0;
+			font-size: 220%;
+		}
+
+		&[data-ranking="1"]::before {
+			content: "🥇";
+		}
+
+		&[data-ranking="2"]::before {
+			content: "🥈";
+		}
+
+		&[data-ranking="3"]::before {
+			content: "🥉";
+		}
 	}
 }
 

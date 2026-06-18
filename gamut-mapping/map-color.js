@@ -146,6 +146,11 @@ export default {
 		toPrecision: Color.util.toPrecision,
 		abs: Math.abs,
 
+		// 1-based rank of a method by its ΔE, ties sharing the lowest rank.
+		rank (method) {
+			return this.ranking.findIndex(e => e === this.mapped[method]?.deltas.E) + 1;
+		},
+
 		/**
 		 * Push user edits back into the model value. We listen to `input` rather
 		 * than `colorchange` on purpose: the picker fires `input` only for genuine
@@ -201,27 +206,23 @@ export default {
 		<section class="gamut-mapped">
 			<h2>Gamut mapped</h2>
 
-			<dl class="swatches">
-				<div v-for="(config, method) in visibleMethods" :id="'method-' + method" data-ranking="ranking.findIndex(e => e === mapped[method]?.deltas.E) + 1">
-					<dt>
-						{{ config.label ?? method[0].toUpperCase() + method.slice(1) }}
-						<small v-if="config.description" class="description">{{ config.description }}</small>
-					</dt>
-					<dd>
-						<color-swatch size="large" :color="mapped[method].color"></color-swatch>
-						<dl class="deltas" v-if="!Object.values(mapped[method].deltas).every(d => d === 0)">
-							<div v-for="(delta, c) of mapped[method].deltas" :class="'delta-' + c.toLowerCase()">
-								<dt>Δ{{ c }}</dt>
-								<dd :class="{
-									positive: c !== 'E' && delta > 0,
-									negative: delta < 0,
-									zero: delta === 0,
-									min: minDeltas[c] === abs(delta),
-								}">{{ delta }}</dd>
-							</div>
-						</dl>
-					</dd>
-				</div>
-			</dl>
+			<ol class="swatches">
+				<li v-for="(config, method) in visibleMethods" :id="'method-' + method" :data-ranking="rank(method)" :value="rank(method)">
+					<color-swatch size="large" :color="mapped[method].color"></color-swatch>
+					<h3>{{ config.label ?? method[0].toUpperCase() + method.slice(1) }}</h3>
+					<small v-if="config.description" class="description">{{ config.description }}</small>
+					<dl class="deltas" v-if="!Object.values(mapped[method].deltas).every(d => d === 0)">
+						<div v-for="(delta, c) of mapped[method].deltas" :class="'delta-' + c.toLowerCase()">
+							<dt>Δ{{ c }}</dt>
+							<dd :class="{
+								positive: c !== 'E' && delta > 0,
+								negative: delta < 0,
+								zero: delta === 0,
+								min: minDeltas[c] === abs(delta),
+							}">{{ delta }}</dd>
+						</div>
+					</dl>
+				</li>
+			</ol>
 		</section>`,
 };
