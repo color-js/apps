@@ -1,2 +1,4 @@
+/gamut-mapping/gradients /gamut-mapping-gradients 301
+/gamut-mapping/gradients.html /gamut-mapping-gradients 301
 /picker/:space /picker/ 200
 /node_modules/htest.dev/* https://htest.dev/:splat

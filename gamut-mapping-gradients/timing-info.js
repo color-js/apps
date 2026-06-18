@@ -1,4 +1,4 @@
-import methods from "./methods.js";
+import methods from "../gamut-mapping/methods.js";
 import Color from "colorjs.io";
 
 export default {

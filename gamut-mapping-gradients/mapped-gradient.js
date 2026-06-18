@@ -1,4 +1,4 @@
-import methods from "./methods.js";
+import methods from "../gamut-mapping/methods.js";
 
 export default {
 	props: {
