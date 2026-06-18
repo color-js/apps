@@ -88,10 +88,18 @@ let app = createApp({
 			let picker = event.target;
 			let newColor = picker.color;
 
-			// Entering a color in another space makes this picker adopt that space;
-			// every other picker stays fixed to its own.
+			// A manually entered color in another space would change this picker's
+			// space. Confirm first; on "no", just convert it into the current space
+			// and leave the picker where it is.
 			if (newColor.space.id !== picker.spaceId) {
-				picker.spaceId = newColor.space.id;
+				if (confirm(`Change the color space to ${newColor.space.name}?`)) {
+					picker.spaceId = newColor.space.id;
+				}
+				else {
+					// Re-fires colorchange (now in-space), which finishes the update.
+					picker.color = newColor.to(picker.spaceId);
+					return;
+				}
 			}
 
 			// Keep our reactive copy of this picker's space in sync (covers both

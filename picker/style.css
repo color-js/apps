@@ -65,7 +65,8 @@ main {
 	   narrowed (below) to make room for it. */
 	.picker .corner {
 		position: absolute;
-		top: 1.5rem;
+		/* Vertically center on the ~4.5rem-tall space dropdown */
+		top: calc(1.5rem + (4.5rem - 2.75rem) / 2);
 		right: 1.5rem;
 		z-index: 1;
 		display: flex;
