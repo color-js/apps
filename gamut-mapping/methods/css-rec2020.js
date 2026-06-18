@@ -1,8 +1,8 @@
 export function compute (color) {
+	// CSS-map into rec2020; the out-of-gamut result is clipped to P3 by the registry.
 	return color
 		.clone()
-		.toGamut({ space: "rec2020", method: "css" })
-		.toGamut({ space: "p3", method: "clip" });
+		.toGamut({ space: "rec2020", method: "css" });
 }
 
 export default {

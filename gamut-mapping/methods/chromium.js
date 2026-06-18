@@ -117,11 +117,10 @@ export function compute (color) {
 	}
 
 	// Attenuate the ab coordinate by alpha.
-	return oklab.set({a: alpha * a, b: alpha * b})
 	// Implementation difference: The reference algorithm does not include a
-	// final clip, so some resulting colors may be outside of `rec2020`, and
-	// here we clip to p3 for comparison with other methods.
-		.toGamut({method: "clip", space: "p3"});
+	// final clip, so some resulting colors may be outside of `rec2020`. The
+	// out-of-gamut result is clipped to P3 by the registry's final step.
+	return oklab.set({a: alpha * a, b: alpha * b});
 }
 
 export default {

@@ -35,7 +35,6 @@ ColorSpace.register("hsl-p3", HSL_P3);
 
 export function compute (color) {
 	color = color.to("oklch");
-	color.coords[1] = Math.min(0.45, color.coords[1]);
 	let ret = color;
 	for (let i = 0; i < 5; i++) {
 		let hsl = ret.to("hsl-p3");

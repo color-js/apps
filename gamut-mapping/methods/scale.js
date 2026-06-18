@@ -1,9 +1,6 @@
 import Color from "colorjs.io";
 
 export function compute (color) {
-	// First, cap chroma to the known P3 maximum (0.37)
-	color = color.to("oklch").set({ c: c => Math.min(c, 0.37) });
-
 	// Make in gamut range symmetrical around 0 [-0.5, 0.5] instead of [0, 1]
 	let deltas = color.to("p3-linear").coords.map(c => c - .5);
 

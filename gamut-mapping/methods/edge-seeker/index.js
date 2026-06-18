@@ -20,8 +20,8 @@ export function compute (color) {
 	if (c > maxChroma) {
 		c = maxChroma;
 	}
-	// At this point it is safe to clip the values
-	return new Color("oklch", [l, c, h]).toGamut({ space: "p3", method: "clip" });
+	// Any residual out-of-gamut from the LUT approximation is clipped by the registry.
+	return new Color("oklch", [l, c, h]);
 }
 
 export default {

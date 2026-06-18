@@ -71,8 +71,8 @@ export function compute (color) {
 	oklab.a = c * a;
 	oklab.b = c * b;
 
-	// Convert back to P3 and clip.
-	return oklab.to('p3').toGamut({method: 'clip'});
+	// Convert back to P3; any residual out-of-gamut is clipped by the registry.
+	return oklab.to('p3');
 }
 
 export default {
