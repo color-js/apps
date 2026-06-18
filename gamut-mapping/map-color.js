@@ -83,14 +83,7 @@ export default {
 
 		mapped () {
 			return Object.fromEntries(Object.entries(this.methods).map(([method, config]) => {
-				let mappedColor;
-				if (config.compute) {
-					mappedColor = config.compute(this.color);
-				}
-				else {
-					mappedColor = this.color.clone().toGamut({ space: "p3", method });
-				}
-
+				let mappedColor = config.compute(this.color);
 				let mappedColorLCH = mappedColor.to("oklch");
 				let deltas = {E: this.toPrecision(this.color.deltaE(mappedColor, { method: "2000" }), 2)};
 

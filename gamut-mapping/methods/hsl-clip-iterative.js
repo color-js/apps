@@ -32,8 +32,8 @@ export const HSL_P3 = new ColorSpace({
 });
 
 ColorSpace.register("hsl-p3", HSL_P3);
-globalThis.Color = Color;
-export default function compute (color) {
+
+export function compute (color) {
 	color = color.to("oklch");
 	color.coords[1] = Math.min(0.45, color.coords[1]);
 	let ret = color;
@@ -59,3 +59,9 @@ export default function compute (color) {
 	}
 	return ret;
 }
+
+export default {
+	label: "HSL Clip Iterative",
+	description: "Iteratively reduce chroma in HSL space until the color is in gamut, up to 5 iterations.",
+	compute,
+};
