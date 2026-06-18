@@ -11,11 +11,6 @@ body {
 	background: var(--transparency);
 }
 
-header {
-	line-height: 1;
-	letter-spacing: -.05em;
-}
-
 main {
 	box-sizing: border-box;
 	min-height: 100vh;
@@ -70,14 +65,16 @@ main {
 }
 
 	.picker {
-		/* Each picker is its own separate, fixed-width floating card; they sit
-		   side by side when there's room and wrap when there isn't. */
+		/* Each picker is its own separate floating card at a comfortable width;
+		   they sit side by side when there's room and wrap when there isn't. */
 		position: relative;
 		display: flex;
 		flex-direction: column;
 		flex: 0 0 auto;
-		width: 19em;
-		padding: 1.25em;
+		box-sizing: border-box;
+		width: 40em;
+		max-width: 90vw;
+		padding: 1.5em;
 		border-radius: .6em;
 		background: #fff;
 		box-shadow: 0 .15em .6em rgba(0, 0, 0, .3);
