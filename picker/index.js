@@ -61,13 +61,22 @@ let app = createApp({
 		pickerElements () {
 			return [...document.querySelectorAll("color-picker")];
 		},
-		isOutOfGamut (spaceId) {
-			// inGamut() is always true for unbounded spaces (lab, lch, oklch…),
-			// so this only flags spaces that actually have a gamut (srgb, p3…).
-			return !this.color.inGamut(spaceId, {epsilon: .00005});
-		},
 		spaceName (spaceId) {
 			return Color.Space.get(spaceId).name;
+		},
+		// One gamut warning per picker: out-of-space takes priority, and only
+		// when the color *is* in this space's gamut do we fall back to flagging
+		// that it's out of the screen's gamut. Empty string => no warning.
+		gamutWarning (spaceId) {
+			// inGamut() is always true for unbounded spaces (lab, lch, oklch…),
+			// so this only flags spaces that actually have a gamut (srgb, p3…).
+			if (!this.color.inGamut(spaceId, {epsilon: .00005})) {
+				return `Color is out of ${this.spaceName(spaceId)} gamut`;
+			}
+			if (this.outOfDeviceGamut) {
+				return "Color is out of device gamut";
+			}
+			return "";
 		},
 		// Handle a colorchange coming from the picker with the given id.
 		updateColor (event, id) {

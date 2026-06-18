@@ -84,24 +84,24 @@ main {
 	}
 
 	.picker .remove {
-		/* Sits in the top-right corner of each card */
+		/* Discreet: tucked into the top-right padding above the space dropdown */
 		position: absolute;
-		top: -.6em;
-		right: -.6em;
+		top: .2em;
+		right: .2em;
 		z-index: 1;
-		inline-size: 1.5em;
-		block-size: 1.5em;
+		inline-size: 1.1em;
+		block-size: 1.1em;
 		padding: 0;
-		border: 1px solid hsl(220 10% 70%);
+		border: none;
 		border-radius: 50%;
-		background: #fff;
-		color: rgba(0, 0, 0, .6);
-		font: 700 1.1em/1 Helvetica Neue, sans-serif;
+		background: none;
+		color: rgba(0, 0, 0, .3);
+		font: 1em/1 Helvetica Neue, sans-serif;
 		cursor: pointer;
 	}
 
 		.picker .remove:hover {
-			border-color: rgba(200, 0, 0, .5);
+			background: rgba(0, 0, 0, .08);
 			color: #b00;
 		}
 
@@ -174,9 +174,4 @@ color-picker {
 	.out-of-gamut-warning::before {
 		content: "⚠️ ";
 		filter: invert() hue-rotate(-200deg);
-	}
-
-	.out-of-gamut-warning.device {
-		margin-top: 1em;
-		text-align: center;
 	}
