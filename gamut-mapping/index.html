@@ -34,13 +34,21 @@
 			<label><input type="checkbox" v-model="hide.H"> ΔH &gt; ε</label>
 			<label>Sort by:
 				<select v-model="sort">
-					<option value="default">Default</option>
+					<option value="error">Error</option>
 					<option value="E2K">ΔE2K</option>
 					<option value="EOK">ΔEOK</option>
 					<option value="L">|ΔL|</option>
 					<option value="H">|ΔH|</option>
 				</select>
 			</label>
+		</p>
+		<p class="error-formula" role="group" aria-label="Error formula weights">
+			<span class="name">Error</span> =
+			<label title="Lightness weight"><input type="number" min="0" step="1" v-model.number="errorWeights.L"> |Δ<sub>L</sub>|</label>
+			<span class="op">+</span>
+			<label title="Chroma weight"><input type="number" min="0" step="1" v-model.number="errorWeights.C"> |Δ<sub>C</sub>|</label>
+			<span class="op">+</span>
+			<label title="Hue weight"><input type="number" min="0" step="1" v-model.number="errorWeights.H"> |Δ<sub>H</sub>|</label>
 		</p>
 	</header>
 

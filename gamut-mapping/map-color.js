@@ -22,14 +22,23 @@ export default {
 			type: Object,
 			default: () => ({L: false, H: false}),
 		},
-		// Metric the cards are ordered by: one of "E2K", "EOK", "L", "H", or
-		// "default" (methods.js definition order). Also drives the rank badges.
+		// Metric the cards are ordered by: one of "error", "E2K", "EOK", "L", or
+		// "H". Also drives the rank badges.
 		sort: {
 			type: String,
-			default: "default",
+			default: "error",
 		},
 	},
 	emits: ["update:modelValue"],
+	// Per-axis weights for the Error metric (a weighted sum of the absolute OKLCh
+	// deltas). App-wide config, not per-card, so it's injected rather than passed
+	// as a prop. Defaults encode hue > lightness > chroma; the header's live
+	// formula edits the same object, which is how the metric explains itself.
+	inject: {
+		errorWeights: {
+			default: () => ({H: 4, L: 2, C: 1}),
+		},
+	},
 	data () {
 		// The space the picker opens in. We seed it from the input color so the
 		// picker shows the color in its own space rather than the registry's
@@ -47,6 +56,9 @@ export default {
 		return {
 			methods,
 			initialSpace: space,
+			// The signed axes (direction matters), as opposed to the magnitude
+			// metrics E2K/EOK/error. Used by the template to decide ± coloring.
+			lch,
 		};
 	},
 
@@ -90,34 +102,46 @@ export default {
 		mapped () {
 			return Object.fromEntries(Object.entries(this.methods).map(([method, config]) => {
 				let mappedColor = config.compute(this.color);
-				let mappedColorLCH = mappedColor.to("oklch");
+				let [L1, C1, h1] = this.colorLCH.coords;
+				let [L2, C2, h2] = mappedColor.to("oklch").coords;
+
+				// Raw OKLCh differences, computed once for both the error and the
+				// displayed deltas. Δh is wrapped to the shortest signed arc, in degrees.
+				let ΔL = L2 - L1;
+				let ΔC = C2 - C1;
+				let Δh = ((h2 - h1 + 540) % 360) - 180;
+
+				// ΔH turns that hue angle into a perceptual distance: the chord
+				// 2√(C₁C₂)·sin(Δh/2), which scales with the chroma it spans and fades
+				// toward black/white (×4·L·(1−L)) where hue is invisible. C=0 ⇒ no hue.
+				let meanL = (L1 + L2) / 2;
+				let hueFade = 4 * meanL * (1 - meanL);
+				let ΔH = C1 && C2 ? hueFade * 2 * Math.sqrt(C1 * C2) * Math.sin((Δh / 2) * Math.PI / 180) : 0;
+
+				// Error: weighted sum of the absolute OKLCh deltas — hue > lightness >
+				// chroma (errorWeights). Deliberately L1, not Euclidean: ΔEOK already
+				// gives the straight-line OKLab distance, so this is a different lens.
+				// `|| 0` keeps a half-typed (empty) weight input from poisoning it.
+				let w = this.errorWeights;
+				let error = (w.L || 0) * Math.abs(ΔL) + (w.C || 0) * Math.abs(ΔC) + (w.H || 0) * Math.abs(ΔH);
+
 				let deltas = {
+					error: this.toPrecision(error, 2),
 					E2K: this.toPrecision(this.color.deltaE(mappedColor, { method: "2000" }), 2),
 					EOK: this.toPrecision(this.color.deltaE(mappedColor, { method: "OK" }), 2),
+					// Signed values for display (direction matters); the best/worst
+					// highlighting compares their magnitudes (see `extremes`).
+					// L in percentage points; hue as the signed shortest arc in degrees.
+					L: this.toPrecision(ΔL * 100, 2),
+					C: this.toPrecision(ΔC, 2),
+					H: this.toPrecision(Δh, 2),
 				};
-
-				lch.forEach((c, i) => {
-					let delta = mappedColorLCH.coords[i] - this.colorLCH.coords[i];
-
-					if (c === "L") {
-						// L is percentage
-						delta *= 100;
-					}
-					else if (c === "H") {
-						// Hue is angular, so we need to normalize it
-						delta = ((delta % 360) + 720) % 360;
-						delta = Math.min(360 - delta, delta);
-					}
-
-					delta = this.toPrecision(delta, 2);
-					deltas[c] = delta;
-				});
 
 				return [method, {color: mappedColor, deltas}];
 			}));
 		},
 
-		// Methods left after applying the hide filter. Rankings/minDeltas still
+		// Methods left after applying the hide filter. Ranking/extremes still
 		// consider all methods — this is purely a display filter.
 		visibleMethods () {
 			return Object.fromEntries(Object.entries(this.methods).filter(([method]) => {
@@ -126,40 +150,31 @@ export default {
 			}));
 		},
 
-		// Visible methods in display order: definition order when sort is
-		// "default", otherwise the ranked order.
+		// Visible methods in ranked (best-first) display order.
 		displayMethods () {
-			if (this.sort === "default") {
-				return this.visibleMethods;
-			}
-
 			let visible = this.visibleMethods;
 			let ordered = this.ranking.filter(method => method in visible);
 			return Object.fromEntries(ordered.map(method => [method, visible[method]]));
 		},
 
-		minDeltas () {
-			let ret = {};
+		// Per-coordinate smallest and largest |Δ| across all methods, so each
+		// delta column can highlight just its best (min) and worst (max) value.
+		extremes () {
+			let min = {}, max = {};
 			for (let method in this.mapped) {
-				let {deltas} = this.mapped[method];
-
-				for (let c in deltas) {
-					let delta = Math.abs(deltas[c]);
-					let minDelta = ret[c];
-
-					if (!minDelta || minDelta >= delta) {
-						ret[c] = delta;
-					}
+				for (let [c, value] of Object.entries(this.mapped[method].deltas)) {
+					let delta = Math.abs(value);
+					min[c] = c in min ? Math.min(min[c], delta) : delta;
+					max[c] = c in max ? Math.max(max[c], delta) : delta;
 				}
 			}
-			return ret;
+			return {min, max};
 		},
 
 		// All methods sorted best-first by the active metric (smallest |Δ| wins),
-		// ties broken by ΔEOK — or by ΔE2K when ΔEOK is itself the metric. The
-		// "default" sort still ranks by ΔE2K so the badges stay meaningful.
+		// ties broken by ΔEOK — or by ΔE2K when ΔEOK is itself the metric.
 		ranking () {
-			let primary = this.sort === "default" ? "E2K" : this.sort;
+			let primary = this.sort;
 			let secondary = primary === "EOK" ? "E2K" : "EOK";
 			let key = (method, c) => Math.abs(this.mapped[method].deltas[c]);
 
@@ -261,12 +276,11 @@ export default {
 					<small v-if="config.description" class="description">{{ config.description }}</small>
 					<dl class="deltas" v-if="!Object.values(mapped[method].deltas).every(d => d === 0)">
 						<div v-for="(delta, c) of mapped[method].deltas" :class="'delta-' + c.toLowerCase()">
-							<dt>Δ{{ c }}</dt>
+							<dt>{{ c === 'error' ? 'Error' : 'Δ' + c }}</dt>
 							<dd :class="{
-								positive: !c.startsWith('E') && delta > 0,
-								negative: delta < 0,
-								zero: delta === 0,
-								min: minDeltas[c] === abs(delta),
+								positive: lch.includes(c) && delta > 0,
+								min: extremes.min[c] === abs(delta),
+								max: extremes.max[c] === abs(delta),
 							}">{{ delta }}</dd>
 						</div>
 					</dl>

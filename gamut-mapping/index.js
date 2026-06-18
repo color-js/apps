@@ -21,10 +21,17 @@ let app = createApp({
 			params,
 			Color,
 			lch: ["L", "C", "H"],
+
 			// Filter: hide gamut-mapping methods that don't preserve L resp. H.
 			hide: {L: false, H: false},
-			// Metric the methods are ordered by; "default" keeps definition order.
-			sort: "default",
+
+			// Metric the methods are ordered by.
+			sort: "error",
+
+			// Per-axis weights for the Error metric, live-editable via the formula
+			// in the header. Hue > lightness > chroma by default.
+			errorWeights: {H: 8, L: 4, C: 1},
+
 			// Background switcher. `theme` is the pinned choice (null = follow
 			// system); the three buttons preview the backgrounds they apply.
 			theme: localStorage.getItem("theme"),
@@ -34,6 +41,15 @@ let app = createApp({
 				{id: "mid", label: "Mid-gray background"},
 				{id: "dark", label: "Dark background"},
 			],
+		};
+	},
+
+	// Share the Error weights with every <map-color> without prop-drilling. We
+	// only ever mutate the object's properties (never reassign it), so injecting
+	// the reactive object directly stays reactive.
+	provide () {
+		return {
+			errorWeights: this.errorWeights,
 		};
 	},
 

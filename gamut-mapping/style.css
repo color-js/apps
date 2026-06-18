@@ -81,6 +81,44 @@ h2 {
 	font-size: 150%;
 }
 
+/* The Error formula doubles as its own explanation: each coefficient is a live
+   input, so editing it both retunes the metric and shows what the metric does. */
+.error-formula {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-items: baseline;
+	gap: .1em .4em;
+	margin-top: .5em;
+	font-family: var(--font-mono);
+
+	.name {
+		font-weight: bold;
+	}
+
+	label {
+		display: inline-flex;
+		align-items: baseline;
+		gap: .15em;
+	}
+
+	input {
+		/* Hug the digits, but keep a floor so a single-digit weight (and its
+		   spinner) doesn't get cramped. */
+		field-sizing: content;
+		min-width: 2ch;
+		text-align: center;
+		padding: .05em .2em;
+		border: 1px solid light-dark(hsl(220 10% 75%), hsl(220 10% 40%));
+		border-radius: .25em;
+		background: light-dark(#fff, hsl(220 10% 18%));
+	}
+
+	.op {
+		opacity: .5;
+	}
+}
+
 input {
 	font: inherit;
 }
@@ -237,7 +275,8 @@ dl.coords {
 	}
 
 	.delta-e2k,
-	.delta-eok {
+	.delta-eok,
+	.delta-error {
 		background: light-dark(hsl(220 10% 50% / 8%), hsl(220 10% 80% / 12%));
 		border: 1px solid light-dark(hsl(220 10% 50% / 10%), hsl(220 10% 80% / 18%));
 		padding: 0 .3em;
@@ -266,23 +305,18 @@ dl.deltas {
 	font-size: 90%;
 
 	dd {
-		&.negative,
-		&.positive {
-			color: var(--color-red-40, light-dark(hsl(0 60% 30%), hsl(0 80% 66%)));
+		/* Sign only; the color now marks just the best/worst value per column. */
+		&.positive::before {
+			content: "+";
 		}
 
-		&.positive {
-			&::before {
-				content: "+";
-			}
+		/* Worst value in the column red, best value green (best wins ties). */
+		&.max {
+			color: var(--color-red-40, light-dark(hsl(0 60% 30%), hsl(0 80% 66%)));
 		}
 
 		&.min {
 			color: var(--color-green-50, light-dark(hsl(70 100% 32%), hsl(75 80% 60%)));
-		}
-
-		&.zero {
-			color: var(--color-green-40, light-dark(hsl(85 100% 28%), hsl(85 70% 55%)));
 		}
 	}
 }
