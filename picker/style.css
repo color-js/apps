@@ -27,26 +27,6 @@ main {
 		background: var(--color);
 	}
 
-/* Discreet, flat add button pinned to the top-right corner of the page */
-.add {
-	position: fixed;
-	top: .4em;
-	right: .4em;
-	z-index: 10;
-	padding: 0 .25em .1em;
-	border: none;
-	border-radius: .3em;
-	background: none;
-	color: rgba(0, 0, 0, .55);
-	font: 700 2em/1 Helvetica Neue, sans-serif;
-	cursor: pointer;
-}
-
-	.add:hover {
-		background: rgba(0, 0, 0, .12);
-		color: #000;
-	}
-
 .pickers {
 	display: flex;
 	flex-wrap: wrap;
@@ -80,25 +60,37 @@ main {
 		box-shadow: 0 .15em .6em rgba(0, 0, 0, .3);
 	}
 
-	.picker .remove {
-		/* Discreet: tucked into the top-right padding above the space dropdown */
+	/* +/× button in the picker's top-right corner, aligned with the space
+	   dropdown. Sized as a comfortable touch target (~44px); the dropdown is
+	   narrowed (below) to make room for it. */
+	.picker .corner {
 		position: absolute;
-		top: .2em;
-		right: .2em;
+		top: 1.5rem;
+		right: 1.5rem;
 		z-index: 1;
-		inline-size: 1.1em;
-		block-size: 1.1em;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		inline-size: 2.75rem;
+		block-size: 2.75rem;
 		padding: 0;
 		border: none;
-		border-radius: 50%;
+		border-radius: .3rem;
 		background: none;
-		color: rgba(0, 0, 0, .3);
-		font: 1em/1 Helvetica Neue, sans-serif;
+		color: rgba(0, 0, 0, .4);
+		font: 400 1.8rem/1 Helvetica Neue, sans-serif;
 		cursor: pointer;
 	}
 
-		.picker .remove:hover {
+		.picker .corner:hover {
 			background: rgba(0, 0, 0, .08);
+		}
+
+		.picker .corner.add:hover {
+			color: #000;
+		}
+
+		.picker .corner.remove:hover {
 			color: #b00;
 		}
 
@@ -108,7 +100,8 @@ color-picker {
 
 	&::part(color-space) {
 		box-sizing: content-box;
-		inline-size: calc(100% - .2em);
+		/* Leave room for the +/× corner button */
+		inline-size: calc(100% - 5rem);
 		padding: 0;
 		margin: 0;
 
