@@ -75,6 +75,20 @@ let app = createApp({
 		pickerElements () {
 			return [...document.querySelectorAll("color-picker")];
 		},
+		// The swatch serializes its value gamut-mapped (via .display()). We want
+		// the swatch preview mapped but the text box to show the true color, so
+		// after each sync we overwrite the text box with the un-mapped value.
+		showRawValues () {
+			for (let el of this.pickerElements()) {
+				let swatch = el.shadowRoot?.querySelector("color-swatch");
+				if (swatch && el.color) {
+					let raw = el.color.toString({inGamut: false});
+					if (swatch.value !== raw) {
+						swatch.value = raw;
+					}
+				}
+			}
+		},
 		spaceName (spaceId) {
 			return Color.Space.get(spaceId).name;
 		},
@@ -88,7 +102,7 @@ let app = createApp({
 				return `Color is out of ${this.spaceName(spaceId)} gamut`;
 			}
 			if (this.outOfDeviceGamut) {
-				return "Color is out of device gamut";
+				return "Color is out of device gamut, showing approximation";
 			}
 			return "";
 		},
@@ -142,6 +156,7 @@ let app = createApp({
 				el.color = this.color.to(spaceId);
 				queueMicrotask(() => {
 					this._syncing = false;
+					this.showRawValues();
 				});
 			});
 		},
@@ -184,6 +199,9 @@ let app = createApp({
 			}
 			this._syncing = false;
 
+			// Runs after the pickers' deferred updated() (which sets the mapped value).
+			queueMicrotask(() => this.showRawValues());
+
 			requestIdleCallback(() => {
 				localStorage.picker_color = JSON.stringify(this.color);
 			});
@@ -213,6 +231,7 @@ let app = createApp({
 		// (microtask), emitting a colorchange. Keep the guard up until it settles.
 		queueMicrotask(() => {
 			this._syncing = false;
+			this.showRawValues();
 		});
 	},
 	compilerOptions: {
