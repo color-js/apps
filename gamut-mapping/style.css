@@ -96,9 +96,8 @@ ol.swatches {
 	padding: 0;
 
 	> li {
-		position: relative;
 		display: grid;
-		grid-template-columns: 8em 1fr;
+		grid-template-columns: 2em 8em 1fr;
 		/* Three rows for the details, plus a flexible row that absorbs any slack up
 		   to min-height — so the swatch is tall on wide screens (short content) yet
 		   still fills 100% when taller content is what drives the height. */
@@ -111,7 +110,7 @@ ol.swatches {
 		   from inflating the detail rows, so the details stay tightly stacked; it
 		   then fills the full card height. */
 		> color-swatch {
-			grid-column: 1;
+			grid-column: 2;
 			grid-row: 1 / -1;
 			min-height: 0;
 			height: 100%;
@@ -119,42 +118,31 @@ ol.swatches {
 		}
 
 		> h3 {
-			grid-column: 2;
+			grid-column: 3;
 			margin: 0;
 			font-size: 105%;
 		}
 
 		> .description,
 		> .deltas {
-			grid-column: 2;
+			grid-column: 3;
 		}
 
-		/* Rank badge over the swatch; medals for the top three. */
+		/* Rank in its own column beside the swatch, so it doesn't obscure the
+		   color being evaluated; medals for the top three. */
 		&::before {
 			content: attr(data-ranking);
-			position: absolute;
-			z-index: 1;
-			top: .5em;
-			left: .5em;
-			min-width: 1.4em;
-			padding: 0 .3em;
-			border-radius: 1em;
-			background: hsl(220 10% 100% / .85);
-			box-shadow: 0 0 0 1px hsl(220 10% 50% / .2);
+			grid-column: 1;
+			grid-row: 1 / -1;
+			align-self: center;
+			justify-self: center;
 			font-weight: bold;
-			font-size: 85%;
-			text-align: center;
-			color: hsl(220 10% 30%);
+			font-size: 105%;
+			color: hsl(220 10% 55%);
 		}
 
 		&:is([data-ranking="1"], [data-ranking="2"], [data-ranking="3"])::before {
-			top: .15em;
-			left: .15em;
-			background: none;
-			box-shadow: none;
-			padding: 0;
-			min-width: 0;
-			font-size: 220%;
+			font-size: 180%;
 		}
 
 		&[data-ranking="1"]::before {
