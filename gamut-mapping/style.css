@@ -57,7 +57,7 @@ body > header {
 
 	h1 {
 		font-size: calc(200% + 2vh + 2vw);
-		margin-bottom: 0;
+		margin-bottom: 1rem;
 		line-height: 1.1;
 	}
 
@@ -65,7 +65,7 @@ body > header {
 		display: flex;
 		flex-wrap: wrap;
 		justify-content: center;
-		gap: .2em 1em;
+		gap: .2em 2em;
 
 		label {
 			display: inline-flex;
@@ -89,8 +89,6 @@ h2 {
 	justify-content: center;
 	align-items: baseline;
 	gap: .1em .4em;
-	margin-top: .5em;
-	font-family: var(--font-mono);
 
 	.name {
 		font-weight: bold;

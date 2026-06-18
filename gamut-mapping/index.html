@@ -22,15 +22,14 @@
 </head>
 <body>
 	<div class="theme-switcher" role="group" aria-label="Background">
-		<button v-for="t in themes" type="button" :class="['swatch', t.id]" :aria-pressed="selected === t.id" :aria-label="t.label" :title="t.label" @click="theme = t.id"></button>
+		<button v-for="t in themes" type="button" :class="['swatch', t.id]" :aria-pressed="theme === t.id" :aria-label="t.label" :title="t.label" @click="theme = t.id"></button>
 	</div>
 
 	<header>
 		<h1>Gamut Mapping Playground</h1>
 		<div class="filters">
-			Hide:
-			<label><input type="checkbox" v-model="hide.L"> ΔL &gt; ε</label>
-			<label><input type="checkbox" v-model="hide.H"> ΔH &gt; ε</label>
+			<label><input type="checkbox" v-model="hide.L">Hide |ΔL| &gt; ε</label>
+			<label><input type="checkbox" v-model="hide.H">Hide |ΔH| &gt; ε</label>
 			<label class="sort">Sort by:
 				<select v-model="sort">
 					<option value="error">Error</option>
@@ -41,12 +40,12 @@
 				</select>
 			</label>
 			<div class="error-formula" role="group" aria-label="Error formula weights">
-				<span class="name">Error</span> =
-				<label title="Lightness weight"><input type="number" min="0" step="1" v-model.number="errorWeights.L"> |Δ<sub>L</sub>|</label>
+				<span class="name">Error:</span>
+				<label title="Lightness weight"><input type="number" min="0" step="1" v-model.number="errorWeights.L"> |ΔL|</label>
 				<span class="op">+</span>
-				<label title="Chroma weight"><input type="number" min="0" step="1" v-model.number="errorWeights.C"> |Δ<sub>C</sub>|</label>
+				<label title="Chroma weight"><input type="number" min="0" step="1" v-model.number="errorWeights.C"> |ΔC|</label>
 				<span class="op">+</span>
-				<label title="Hue weight"><input type="number" min="0" step="1" v-model.number="errorWeights.H"> |Δ<sub>H</sub>|</label>
+				<label title="Hue weight"><input type="number" min="0" step="1" v-model.number="errorWeights.H"> |ΔH|</label>
 			</div>
 		</div>
 
