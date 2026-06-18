@@ -123,8 +123,8 @@ color-picker {
 
 	&::part(color-space) {
 		box-sizing: content-box;
-		/* Leave room for the pin + add/remove buttons */
-		inline-size: calc(100% - 7.5rem);
+		/* Leave room for the pin + add + remove buttons */
+		inline-size: calc(100% - 9.5rem);
 		padding: 0;
 		margin: 0;
 

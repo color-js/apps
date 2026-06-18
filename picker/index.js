@@ -114,14 +114,15 @@ let app = createApp({
 
 			this.color = newColor;
 		},
-		addPicker () {
-			let last = this.pickers[this.pickers.length - 1];
-			let spaceId = last ? last.spaceId : "srgb";
-			this.pickers.push({id: this.nextId++, spaceId, pinned: true});
+		addPicker (afterId) {
+			let index = this.pickers.findIndex(p => p.id === afterId);
+			let source = this.pickers[index] ?? this.pickers[this.pickers.length - 1];
+			let spaceId = source ? source.spaceId : "srgb";
+			let newIndex = index >= 0 ? index + 1 : this.pickers.length;
+			this.pickers.splice(newIndex, 0, {id: this.nextId++, spaceId, pinned: true});
 
 			this.$nextTick(() => {
-				let els = this.pickerElements();
-				let el = els[els.length - 1];
+				let el = this.pickerElements()[newIndex];
 				if (!el) {
 					return;
 				}
