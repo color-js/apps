@@ -5,20 +5,13 @@ import MapColor from "./map-color.js";
 
 globalThis.Color = Color;
 
-// Gamut mapping is all about colors that overshoot their gamut, so OKLCh's
-// default chroma range (0–0.4) is too tight for the input picker — the default
-// color alone has chroma 0.8. Widen it to 0–1 so saturated inputs are
-// representable on the chroma slider. refRange only drives slider bounds; it
-// has no effect on any color math.
-Color.spaces.oklch.coords.c.refRange = [0, 1];
-
 const favicon = document.querySelector('link[rel="shortcut icon"]');
 
 let app = createApp({
 	data () {
 		let params = new URLSearchParams(location.search);
 		let urlColors = params.getAll("color").filter(Boolean);
-		let defaultValue = "oklch(90% .8 250)";
+		let defaultValue = "oklch(90% 0.4 255)";
 		let colors = urlColors.length > 0 ? urlColors : [defaultValue];
 
 		return {
