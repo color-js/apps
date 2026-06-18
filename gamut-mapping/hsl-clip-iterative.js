@@ -47,7 +47,7 @@ export default function compute (color) {
 			s = 0;
 		}
 		else {
-			console.log("Settled at iteration", i);
+			// console.log("Settled at iteration", i);
 			return ret;
 		}
 
