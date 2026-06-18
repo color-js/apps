@@ -28,19 +28,30 @@ let app = createApp({
 			ret.color = new Color(o);
 		}
 
-		let spaceId = location.pathname.match(/\/picker\/([\w-]*)/)?.[1] || new URL(location).searchParams.get("space");
+		// The URL encodes every picker's color space (e.g. /picker/oklch+p3) so
+		// the whole picker configuration can be restored on load.
+		let raw = location.pathname.match(/\/picker\/([^/?#]+)/)?.[1]
+			?? new URL(location).searchParams.get("space") ?? "";
+		let spaceIds = raw.split(/[+ ]/).map(s => s.trim()).filter(id => {
+			try { return !!Color.Space.get(id); }
+			catch { return false; }
+		});
 
-		if (spaceId && spaceId !== ret.color.space.id) {
-			ret.color = ret.color.to(spaceId, {inGamut: true});
+		if (spaceIds.length === 0) {
+			spaceIds = [ret.color.space.id];
 		}
 
 		// Each picker is fixed to its own color space; they all share `color`.
-		// The first picker is "primary": its space drives the page URL & title.
-		// `pinned` controls what a pasted color does: pinned pickers convert it
-		// into their space, unpinned ones adopt the pasted color's space. The
-		// primary starts unpinned (free to follow), the rest start pinned.
-		ret.pickers = [{id: 0, spaceId: ret.color.space.id, pinned: false}];
-		ret.nextId = 1;
+		// The first picker is "primary": the color is expressed in its space and
+		// it drives the page title. `pinned` controls what a pasted color does:
+		// pinned pickers convert it into their space, unpinned ones adopt the
+		// pasted color's space. The primary starts unpinned, the rest start pinned.
+		if (spaceIds[0] !== ret.color.space.id) {
+			ret.color = ret.color.to(spaceIds[0], {inGamut: true});
+		}
+
+		ret.pickers = spaceIds.map((spaceId, i) => ({id: i, spaceId, pinned: i !== 0}));
+		ret.nextId = spaceIds.length;
 		ret.deviceGamut = detectDeviceGamut();
 
 		document.title = `${ret.color.space.name} color picker`;
@@ -107,9 +118,7 @@ let app = createApp({
 			// pasted colors above and the picker's own space dropdown).
 			if (entry && entry.spaceId !== picker.spaceId) {
 				entry.spaceId = picker.spaceId;
-				if (this.pickers[0] === entry) {
-					this.updateLocation();
-				}
+				this.updateLocation();
 			}
 
 			this.color = newColor;
@@ -120,6 +129,7 @@ let app = createApp({
 			let spaceId = source ? source.spaceId : "srgb";
 			let newIndex = index >= 0 ? index + 1 : this.pickers.length;
 			this.pickers.splice(newIndex, 0, {id: this.nextId++, spaceId, pinned: true});
+			this.updateLocation();
 
 			this.$nextTick(() => {
 				let el = this.pickerElements()[newIndex];
@@ -140,24 +150,26 @@ let app = createApp({
 				return;
 			}
 
-			let wasFirst = this.pickers[0].id === id;
 			this.pickers = this.pickers.filter(p => p.id !== id);
-
-			if (wasFirst) {
-				// The new first picker becomes primary.
-				this.updateLocation();
-			}
+			this.updateLocation();
 		},
+		// Encode every picker's space in the URL (e.g. /picker/oklch+p3) and keep
+		// the title in sync with the primary (first) picker.
 		updateLocation () {
-			let spaceId = this.pickers[0]?.spaceId;
-			if (!spaceId || spaceId === this._locationSpaceId) {
+			let spaces = this.pickers.map(p => p.spaceId).join("+");
+			if (spaces === this._locationSpaces) {
 				return;
 			}
 
-			this._locationSpaceId = spaceId;
-			document.title = `${Color.Space.get(spaceId).name} color picker`;
+			this._locationSpaces = spaces;
+
+			let primary = this.pickers[0];
+			if (primary) {
+				document.title = `${Color.Space.get(primary.spaceId).name} color picker`;
+			}
+
 			let url = new URL(location);
-			url.pathname = url.pathname.replace(/\/picker\/[\w-]*/, `/picker/${spaceId}`);
+			url.pathname = url.pathname.replace(/\/picker\/[^/?#]*/, `/picker/${spaces}`);
 			history.pushState(null, "", url.href);
 		},
 	},
@@ -185,7 +197,7 @@ let app = createApp({
 			});
 		}
 
-		this._locationSpaceId = this.pickers[0].spaceId;
+		this._locationSpaces = this.pickers.map(p => p.spaceId).join("+");
 
 		this._syncing = true;
 		let els = this.pickerElements();
