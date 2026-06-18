@@ -39,6 +39,19 @@ body > header {
 		margin-bottom: 0;
 		line-height: 1.1;
 	}
+
+	.filters {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: .2em 1em;
+
+		label {
+			display: inline-flex;
+			align-items: center;
+			gap: .3em;
+		}
+	}
 }
 
 h2 {

@@ -28,6 +28,8 @@ let app = createApp({
 			params,
 			Color,
 			lch: ["L", "C", "H"],
+			// Filter: hide gamut-mapping methods that don't preserve L resp. H.
+			hide: {L: false, H: false},
 		};
 	},
 

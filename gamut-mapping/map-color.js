@@ -5,9 +5,23 @@ import "color-elements/color-picker";
 const lch = ["L", "C", "H"];
 let spacesToShow = [Color.spaces.oklch, Color.spaces.p3, Color.spaces["p3-linear"]];
 
+// Per-coordinate tolerance for the "preserves L/H" filter: 1 ppm of each
+// coordinate's full range. ΔL is stored in percentage points (L range 0–100),
+// ΔH in degrees (range 0–360).
+const epsilon = {
+	L: 100 / 1e6, // 1e-4 percentage points (= 1e-6 in 0–1 L)
+	H: 360 / 1e6, // 3.6e-4°
+};
+
 export default {
 	props: {
 		modelValue: String,
+		// Which coordinates to filter on: hide methods whose |Δ| exceeds the
+		// per-coordinate epsilon for any enabled coordinate.
+		hide: {
+			type: Object,
+			default: () => ({L: false, H: false}),
+		},
 	},
 	emits: ["update:modelValue"],
 	data () {
@@ -101,6 +115,15 @@ export default {
 			}));
 		},
 
+		// Methods left after applying the hide filter. Rankings/minDeltas still
+		// consider all methods — this is purely a display filter.
+		visibleMethods () {
+			return Object.fromEntries(Object.entries(this.methods).filter(([method]) => {
+				let {deltas} = this.mapped[method];
+				return lch.every(c => !this.hide[c] || Math.abs(deltas[c]) <= epsilon[c]);
+			}));
+		},
+
 		minDeltas () {
 			let ret = {};
 			for (let method in this.mapped) {
@@ -186,7 +209,7 @@ export default {
 			<h2>Gamut mapped</h2>
 
 			<dl class="swatches">
-				<div v-for="(config, method) in methods" :id="'method-' + method" data-ranking="ranking.findIndex(e => e === mapped[method]?.deltas.E) + 1">
+				<div v-for="(config, method) in visibleMethods" :id="'method-' + method" data-ranking="ranking.findIndex(e => e === mapped[method]?.deltas.E) + 1">
 					<dt>
 						{{ config.label ?? method[0].toUpperCase() + method.slice(1) }}
 						<small v-if="config.description" class="description">{{ config.description }}</small>
