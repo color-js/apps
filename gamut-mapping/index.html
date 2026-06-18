@@ -3,7 +3,17 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="color-scheme" content="light dark">
 	<title>Gamut Mapping Experiments</title>
+	<!-- Pin the saved background before render to avoid a flash of the wrong one. -->
+	<script>
+	{
+		let theme = localStorage.getItem("theme");
+		if (theme) {
+			document.documentElement.dataset.theme = theme;
+		}
+	}
+	</script>
 	<link rel="stylesheet" href="style.css" />
 	<link rel="shortcut icon" />
 	<script src="../importmap.js"></script>
@@ -11,6 +21,10 @@
 	<script type="module" src="index.js"></script>
 </head>
 <body>
+	<div class="theme-switcher" role="group" aria-label="Background">
+		<button v-for="t in themes" type="button" :class="['swatch', t.id]" :aria-pressed="selected === t.id" :aria-label="t.label" :title="t.label" @click="theme = t.id"></button>
+	</div>
+
 	<header>
 		<h1>Gamut Mapping Playground</h1>
 		<p>Use keyboard arrow keys to increment/decrement, share by copying the URL</p>

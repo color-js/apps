@@ -25,10 +25,24 @@ let app = createApp({
 			hide: {L: false, H: false},
 			// Metric the methods are ordered by; "default" keeps definition order.
 			sort: "default",
+			// Background switcher. `theme` is the pinned choice (null = follow
+			// system); the three buttons preview the backgrounds they apply.
+			theme: localStorage.getItem("theme"),
+			systemDark: matchMedia("(prefers-color-scheme: dark)").matches,
+			themes: [
+				{id: "light", label: "Light background"},
+				{id: "mid", label: "Mid-gray background"},
+				{id: "dark", label: "Dark background"},
+			],
 		};
 	},
 
 	computed: {
+		// Which button reads as active: the pinned theme, or the system default
+		// when nothing is pinned yet.
+		selected () {
+			return this.theme ?? (this.systemDark ? "dark" : "light");
+		},
 	},
 
 	methods: {
@@ -60,6 +74,19 @@ let app = createApp({
 			immediate: true,
 			deep: true,
 		},
+
+		// Pin the chosen background on <html> and remember it across visits.
+		theme (value) {
+			document.documentElement.dataset.theme = value;
+			localStorage.setItem("theme", value);
+		},
+	},
+
+	mounted () {
+		// Keep the unpinned default in sync with the OS preference.
+		matchMedia("(prefers-color-scheme: dark)").addEventListener("change", e => {
+			this.systemDark = e.matches;
+		});
 	},
 
 	components: {
