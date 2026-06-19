@@ -227,7 +227,7 @@ export function compute (color) {
 }
 
 export default {
-	label: "Raytrace",
-	description: "Uses ray tracing to find a color with reduced chroma on the RGB surface.",
+	label: "Ray Trace",
+	description: "CSS Color 4 - Ray Trace: Uses ray tracing to find a color with reduced chroma on the RGB surface.",
 	compute,
 };

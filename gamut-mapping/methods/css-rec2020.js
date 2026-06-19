@@ -6,7 +6,7 @@ export function compute (color) {
 }
 
 export default {
-	label: "CSS Rec2020",
-	description: "CSS Color 4 gamut mapping to rec2020, then Naïve clipping to the P3 gamut.",
+	label: "MINDE Rec2020",
+	description: "CSS Color 4 - Binary Search with Local MINDE to rec2020, then Naïve clipping to the P3 gamut.",
 	compute,
 };

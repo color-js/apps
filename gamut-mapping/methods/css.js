@@ -3,7 +3,7 @@ export function compute (color) {
 }
 
 export default {
-	label: "CSS",
-	description: "CSS Color 4 gamut mapping method.",
+	label: "MINDE",
+	description: "CSS Color 4 - Binary Search with Local MINDE",
 	compute,
 };

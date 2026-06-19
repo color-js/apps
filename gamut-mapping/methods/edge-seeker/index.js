@@ -25,7 +25,7 @@ export function compute (color) {
 }
 
 export default {
-	label: "Edge Seeker",
-	description: "Using a LUT to detect edges of the gamut and reduce chroma accordingly.",
+	label: "EdgeSeeker",
+	description: "CSS Color 4 - EdgeSeeker: Using a LUT to detect edges of the gamut and reduce chroma accordingly.",
 	compute,
 };
