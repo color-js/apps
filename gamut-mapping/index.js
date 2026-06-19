@@ -2,7 +2,7 @@ import { createApp } from "vue";
 import Color from "colorjs.io";
 import methods from "./methods.js";
 import MapColor from "./map-color.js";
-import stats from "./map.js";
+import stats from "./stats.js";
 
 globalThis.Color = Color;
 

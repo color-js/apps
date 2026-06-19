@@ -1,6 +1,7 @@
 import Color from "colorjs.io";
 import methods from "./methods.js";
-import stats, { mapColor, average, MIN_RUNS } from "./map.js";
+import { mapColor } from "./map.js";
+import stats, { average, MIN_RUNS } from "./stats.js";
 import "color-elements/color-picker";
 
 const lch = ["L", "C", "H"];

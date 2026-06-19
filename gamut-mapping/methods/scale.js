@@ -19,4 +19,5 @@ export default {
 	label: "Scale",
 	description: "Using a midpoint of 0.5, scale the color to fit within the linear P3 gamut.",
 	compute,
+	converge: [1, 2, 3, 4],
 };

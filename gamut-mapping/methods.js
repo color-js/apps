@@ -4,19 +4,18 @@
 import clip, { compute as clipToGamut } from "./methods/clip.js";
 import css from "./methods/css.js";
 import cssRec2020 from "./methods/css-rec2020.js";
-import scaleLH from "./methods/scale-lh.js";
 import scale from "./methods/scale.js";
 import chromium from "./methods/chromium.js";
 import bjorn from "./methods/bjorn.js";
 import raytrace from "./methods/raytrace.js";
 import edgeSeeker from "./methods/edge-seeker/index.js";
 import hslClipIterative from "./methods/hsl-clip-iterative.js";
+import { time } from "./stats.js";
 
 const methods = {
 	"clip": clip,
 	"css": css,
 	"css-rec2020": cssRec2020,
-	"scale-lh": scaleLH,
 	"scale": scale,
 	"chromium": chromium,
 	"bjorn": bjorn,
@@ -45,6 +44,72 @@ function normalize (compute) {
 	};
 }
 
-export default Object.fromEntries(
-	Object.entries(methods).map(([id, method]) => [id, { ...method, compute: normalize(method.compute) }]),
+// ── Converge ────────────────────────────────────────────────────────────────
+// Expand a method's `converge` array (iteration counts) into a family that
+// alternately re-runs compute (c) and restores the original L,H (p):
+//   i=1 → c    i=2 → c p c    i=3 → c p c p    i=4 → c p c p c
+
+// Restore the original L,H onto a mapped color (chroma kept; out-of-gamut
+// results are clipped by normalize downstream).
+function restoreLH (mapped, original) {
+	let {l, h} = original.to("oklch");
+	return mapped.set({"oklch.l": l, "oklch.h": h});
+}
+
+// The color after n converge iterations (n ≥ 2; see the c/p sketch above).
+function iterate (compute, color, n) {
+	let result = compute(color);
+	for (let k = 0; k < n; k++) {
+		result = k % 2 === 0 ? restoreLH(result, color) : compute(result);
+	}
+	return result;
+}
+
+// Variant label: Scale, Scale LH, Scale LH 3, Scale LH 4, … (the number is i).
+function label (base, i) {
+	if (i === 1) {
+		return base;
+	}
+	return i === 2 ? `${base} LH` : `${base} LH ${i}`;
+}
+
+// Variant description: base text plus what the extra iterations do.
+function describe (base, i) {
+	if (i === 1) {
+		return base;
+	}
+	let rounds = Math.floor(i / 2);
+	let suffix = `restore the original L and H and re-run the mapping${rounds > 1 ? ` over ${rounds} rounds` : ""}`;
+	if (i % 2 === 1) {
+		suffix += ", and finally restore L and H once more (chroma clipped into gamut)";
+	}
+	return `${base} Then ${suffix}.`;
+}
+
+// One registry entry per iteration count. Every base run is timed under the
+// base id, so its totals cover the whole family.
+function converge (id, method) {
+	let {converge: counts, ...config} = method;
+	let raw = method.compute;
+	let base = color => time(id, () => raw(color));
+	return counts.map(i => {
+		let entry = {...config, label: label(method.label, i), description: describe(method.description, i)};
+		if (i === 1) {
+			// Iteration 1 is the base method itself: keep its id, and let mapColor
+			// time it (going through `base` here would double-count).
+			return [id, {...entry, compute: normalize(raw)}];
+		}
+		let slug = entry.label.toLowerCase().replaceAll(" ", "-");
+		return [slug, {...entry, compute: normalize(color => iterate(base, color, i))}];
+	});
+}
+
+// Build the registry: a method with a `converge` array expands into its
+// iteration variants; the rest just get normalized. (mapColor times the runs.)
+const entries = Object.entries(methods).flatMap(([id, method]) =>
+	method.converge
+		? converge(id, method)
+		: [[id, { ...method, compute: normalize(method.compute) }]],
 );
+
+export default Object.fromEntries(entries);
