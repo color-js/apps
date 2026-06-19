@@ -1,4 +1,3 @@
-import Color from "colorjs.io";
 import { multiplyMatrices, multiply_v3_m3x3 } from "colorjs.io/src/util.js";
 import oklab from "colorjs.io/src/spaces/oklab.js";
 import p3linear from "colorjs.io/src/spaces/p3-linear.js";
@@ -72,31 +71,10 @@ function firstRoot (a, b, c, d, lo, hi) {
 	return best;
 }
 
-// Smallest t > 0 where a channel turns, i.e. the first positive root of its
-// derivative D·t² + 2B·t + A = 0, or Infinity if it stays monotonic for all t > 0.
+// Smallest t > 0 where a channel turns: the first positive root of its derivative
+// D·t² + 2B·t + A, i.e. firstRoot's quadratic branch.
 function firstTurn (D, B, A) {
-	if (Math.abs(D) < 1e-15) {
-		// Linear derivative: 2B·t + A = 0.
-		if (Math.abs(B) < 1e-15) {
-			return Infinity;
-		}
-		let t = -A / (2 * B);
-		return t > 1e-12 ? t : Infinity;
-	}
-	let disc = B * B - D * A;
-	if (disc < 0) {
-		return Infinity;
-	}
-	let s = Math.sqrt(disc);
-	let t0 = (-B - s) / D, t1 = (-B + s) / D;
-	let best = Infinity;
-	if (t0 > 1e-12) {
-		best = t0;
-	}
-	if (t1 > 1e-12 && t1 < best) {
-		best = t1;
-	}
-	return best;
+	return firstRoot(0, D, 2 * B, A, 1e-12, Infinity);
 }
 
 let hueCache = new Map(); // H → hue-only structure (see getHueData)
@@ -132,14 +110,12 @@ function getHueData (H) {
 	// such t is where the gamut is first left downward, whatever the lightness.
 	let tLower = Infinity;
 	let turn = []; // first turning point of each channel in t-space (Infinity if monotonic)
-	let rising = []; // does the channel start increasing? (Pᵢ′(0) = 3Aᵢ > 0)
 	for (let i = 0; i < 3; i++) {
 		tLower = Math.min(tLower, firstRoot(D[i], 3 * B[i], 3 * A[i], 1, 1e-9, Infinity));
 		turn[i] = firstTurn(D[i], B[i], A[i]);
-		rising[i] = A[i] > 0;
 	}
 
-	let data = {A, B, D, tLower, turn, rising};
+	let data = {A, B, D, tLower, turn};
 	hueCache.set(H, data);
 	return data;
 }
@@ -153,7 +129,7 @@ export function compute (color) {
 		return color;
 	}
 
-	let {A, B, D, tLower, turn, rising} = getHueData(H);
+	let {A, B, D, tLower, turn} = getHueData(H);
 
 	// Work in t = c/L. The cap starts at the input chroma and the (hue-only) lower
 	// exit; the white bound below can only pull it lower.
@@ -169,7 +145,7 @@ export function compute (color) {
 		// only reach the white bound if it's rising and not still below it at maxT —
 		// otherwise skip the solve. (Its black bound, if any, is already in tLower.)
 		if (turn[i] > maxT) {
-			if (!rising[i]) {
+			if (A[i] <= 0) {
 				continue;
 			}
 			let PmaxT = ((D[i] * maxT + 3 * B[i]) * maxT + 3 * A[i]) * maxT + 1;

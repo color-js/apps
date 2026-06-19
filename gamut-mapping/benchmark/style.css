@@ -8,15 +8,36 @@
 body {
 	font: 100%/1.5 system-ui;
 	margin: 0;
-	padding: 0 0 3em;
+	/* Column layout so the fields can flex to fill the viewport below the header. */
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
 }
 
 button, input, select {
 	font: inherit;
 }
 
+/* Title block and the grid form sit side by side when there's room; the form
+   drops below the titles on narrow viewports. run/view-controls always span a
+   full row of their own. */
 header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: start;
+	gap: 0.5em 2em;
 	padding: 1em 1.5em 0;
+}
+
+header hgroup {
+	flex: 1 1 22em;
+	min-width: min(100%, 22em);
+	margin: 0;
+}
+
+header .run-controls,
+header .view-controls {
+	flex-basis: 100%;
 }
 
 header h1 {
@@ -31,13 +52,22 @@ header h1 {
 
 .run-controls {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	gap: 0.75em;
 }
 
 .run-controls progress {
 	flex: 1;
+	height: 1em;
 	max-width: 20em;
+}
+
+/* Reserve width so the trailing Pause/Resume/Done button doesn't shift as the
+   counts and timer change. */
+.run-controls #status {
+	min-width: 20em;
+	font-variant-numeric: tabular-nums;
 }
 
 .view-controls {
@@ -48,19 +78,40 @@ header h1 {
 	font: 0.85rem var(--font-mono);
 }
 
-/* Grid setup form: hue/lightness ranges + steps. Plain GET, reloads with new
-   URL params (see setupRangeForm). */
+/* Grid setup. Translucent panel sized to its content so it sits compactly rather
+   than spanning the viewport. Each field is a column — a small label over a larger
+   value. System font; monospace is reserved for the data (stats etc.). */
 .range-form {
+	margin: 0.6em 0;
 	display: flex;
 	flex-wrap: wrap;
-	align-items: baseline;
-	gap: 0.25em 1em;
-	margin: 0.6em 0;
-	padding-block: .5em .7em;
+	align-items: end;
+	gap: 0.5em 1.25em;
+	/* Translucent panel around the whole form. */
+	padding-block: 0.5em 0.7em;
 	padding-inline: 1em;
+	border-radius: 0.2em;
 	background: light-dark(hsl(220 10% 90% / 0.85), hsl(220 15% 13% / 0.85));
-	border-radius: .2em;
 
+	/* Each fieldset is a bordered group of one axis's fields, labelled by its legend. */
+	fieldset {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0.25em 0.8em;
+		margin: 0;
+		padding: 0.15em 0.7em 0.4em;
+		border: 1px solid light-dark(hsl(220 10% 78%), hsl(220 12% 34%));
+		border-radius: 0.2em;
+	}
+
+	legend {
+		padding-inline: 0.3em;
+		font-weight: bold;
+		color: light-dark(hsl(0 0% 40%), hsl(0 0% 62%));
+	}
+
+	/* One field: a small label above a larger value. */
 	label {
 		display: flex;
 		flex-flow: column;
@@ -75,8 +126,21 @@ header h1 {
 		font-size: 125%;
 	}
 
+	/* The grid size lives inside the Go button, under its label. */
 	button {
-		align-self: flex-end;
+		display: flex;
+		flex-flow: column;
+		align-items: center;
+		gap: 0.1em;
+		padding: 0.25em 0.7em;
+		line-height: 1.15;
+	}
+
+	.colors-count {
+		font-size: 75%;
+		font-weight: normal;
+		color: light-dark(hsl(0 0% 45%), hsl(0 0% 58%));
+		font-variant-numeric: tabular-nums;
 	}
 }
 
@@ -110,6 +174,11 @@ header h1 {
 	gap: 0.4em 0.9em;
 }
 
+/* Resting state: show only the prompt until a patch is hovered. */
+.inspector:not(.active) .inspect-gmas {
+	display: none;
+}
+
 .inspect-gma {
 	display: flex;
 	flex-flow: column;
@@ -132,12 +201,17 @@ header h1 {
 
 /* ── GMA rows ──────────────────────────────────────────────────────────────── */
 
+/* Fills the viewport below the header (body is a flex column). Rows share the
+   height equally (1fr) but never shrink below the gutter's content, so colors
+   are as large as the space allows and the page scrolls only when it must. */
 .fields {
+	flex: 1;
 	display: grid;
 	grid-template-columns: minmax(7em, 11em) 1fr;
+	grid-auto-rows: minmax(min-content, 1fr);
 	gap: 0.6em 1em;
-	align-items: center;
-	padding-inline: 1.5em;
+	align-items: stretch;
+	padding: 0 1.5em 1.5em;
 }
 
 .gutter {
@@ -172,6 +246,18 @@ header h1 {
 	font-variant-numeric: tabular-nums;
 }
 
+/* Best (lowest) / worst (highest) value in each stat column, highlighted
+   independently per metric — regardless of the active sort. */
+.gutter .stats dd.best {
+	color: var(--color-green-50, light-dark(hsl(140 60% 32%), hsl(140 55% 62%)));
+	font-weight: bold;
+}
+
+.gutter .stats dd.worst {
+	color: var(--color-red-40, light-dark(hsl(0 65% 40%), hsl(0 80% 70%)));
+	font-weight: bold;
+}
+
 /* Slowdown vs the fastest GMA, on its own line so it doesn't crowd the gutter. */
 .gutter .slower {
 	display: block;
@@ -191,11 +277,15 @@ header h1 {
 
 .field-wrap {
 	min-width: 0;
+	height: 100%;
 }
 
+/* The table fills its row; rows divide that height, so the field grows with the
+   available space and densifies (thinner rows) as the sweep adds more. */
 .field {
 	table-layout: fixed;
 	width: 100%;
+	height: 100%;
 	border-collapse: collapse;
 	/* Patches are unit-less colored cells; isolate layout/paint per field. */
 	contain: content;
@@ -204,7 +294,6 @@ header h1 {
 .field td {
 	padding: 0;
 	border: 0;
-	height: var(--row-h, 4px);
 }
 
 /* NOTE: at full resolution (~36k cells/field) add content-visibility tuning here
