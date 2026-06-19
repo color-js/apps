@@ -10,6 +10,7 @@ import bjorn from "./methods/bjorn.js";
 import raytrace from "./methods/raytrace.js";
 import edgeSeeker from "./methods/edge-seeker/index.js";
 import hslClipIterative from "./methods/hsl-clip-iterative.js";
+import scaleGray from "./methods/scale-gray.js";
 import { time } from "./stats.js";
 
 const methods = {
@@ -22,6 +23,7 @@ const methods = {
 	"raytrace": raytrace,
 	"edge-seeker": edgeSeeker,
 	"hsl-clip-iterative max 5": hslClipIterative,
+	"scale-gray": scaleGray,
 };
 
 // The maximum OkLCh chroma we feed any method, roughly the widest chroma of the
