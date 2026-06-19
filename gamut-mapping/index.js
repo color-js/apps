@@ -136,6 +136,19 @@ let app = createApp({
 	components: {
 		"map-color": MapColor,
 	},
-}).mount(document.body);
+});
 
-globalThis.app = app;
+// color-swatch and color-picker register themselves asynchronously (their
+// define() awaits dependencies before customElements.define). If we mount before
+// they're upgraded, Vue's first patch sets :color — a Color *object* — as an
+// attribute instead of a property, and the swatch (color reflects from property
+// only) ignores it, so swatches stay blank until a re-render re-patches them.
+// createApp() doesn't render — only mount() does — so we gate just the mount on
+// the elements being defined. Done with .then() rather than top-level await to
+// steer clear of WebKit bug 242740 (TLA mishandled under concurrent imports).
+Promise.all([
+	customElements.whenDefined("color-swatch"),
+	customElements.whenDefined("color-picker"),
+]).then(() => {
+	globalThis.app = app.mount(document.body);
+});
