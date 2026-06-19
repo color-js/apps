@@ -1,5 +1,5 @@
 import Color from "colorjs.io";
-import { WHITES } from "https://colorjs.io/src/adapt.js";
+import { WHITES } from "colorjs.io/src/adapt.js";
 import * as util from "colorjs.io/src/util.js";
 import { constrain as constrainAngle } from "colorjs.io/src/angles.js";
 
