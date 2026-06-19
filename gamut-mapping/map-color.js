@@ -218,12 +218,10 @@ export default {
 		// ranks by average run time (fastest first) and reads from the shared
 		// stats rather than the per-color deltas.
 		ranking () {
-			let primary = this.sort;
-			let secondary = primary === "EOK" ? "E2K" : "EOK";
-			let key = (method, c) => c === "time" ? (this.times[method] ?? Infinity) : Math.abs(this.mapped[method].deltas[c]);
-
+			let secondary = this.sort === "EOK" ? "E2K" : "EOK";
 			return Object.keys(this.mapped).sort((a, b) => {
-				return key(a, primary) - key(b, primary) || key(a, secondary) - key(b, secondary);
+				return this.metric(a, this.sort) - this.metric(b, this.sort)
+					|| this.metric(a, secondary) - this.metric(b, secondary);
 			});
 		},
 
@@ -264,9 +262,23 @@ export default {
 			return stats.methods[method]?.runs ?? 0;
 		},
 
-		// 1-based rank of a method in the active sort order.
+		// A method's value on metric `c` (smaller = better). "time" reads the
+		// shared running average; every other metric reads the per-color delta
+		// magnitude. `ranking` and `rank` go through here so they agree on what
+		// "the metric" is.
+		metric (method, c) {
+			return c === "time" ? (this.times[method] ?? Infinity) : Math.abs(this.mapped[method].deltas[c]);
+		},
+
+		// 1-based rank on the active metric, competition-style: methods that tie
+		// on the metric share a rank, and the next distinct value skips the gap
+		// (e.g. three GMAs at rank 1 → the next starts at rank 4). `ranking`
+		// decides display order within a tie, but the rank reflects only standing
+		// on the metric, so equal values rank equal.
 		rank (method) {
-			return this.ranking.indexOf(method) + 1;
+			let value = this.metric(method, this.sort);
+			let ahead = Object.keys(this.mapped).filter(m => this.metric(m, this.sort) < value).length;
+			return ahead + 1;
 		},
 
 		/**
