@@ -46,5 +46,5 @@ export default {
 	label: "HSL Clip",
 	description: "Clip HSL saturation (in HSL-P3).",
 	compute,
-	converge: [2, 5],
+	converge: [1, 2],
 };

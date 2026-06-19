@@ -9,7 +9,7 @@ import chromium from "./methods/chromium.js";
 import bjorn from "./methods/bjorn.js";
 import raytrace from "./methods/raytrace.js";
 import edgeSeeker from "./methods/edge-seeker/index.js";
-import hslClipIterative from "./methods/hsl-clip-iterative.js";
+import hslClip from "./methods/hsl-clip.js";
 import scaleGray from "./methods/scale-gray.js";
 import { time } from "./stats.js";
 
@@ -22,7 +22,7 @@ const methods = {
 	"bjorn": bjorn,
 	"raytrace": raytrace,
 	"edge-seeker": edgeSeeker,
-	"hsl-clip-iterative max 5": hslClipIterative,
+	"hsl-clip": hslClip,
 	"scale-gray": scaleGray,
 };
 
