@@ -1,0 +1,300 @@
+:root {
+	color-scheme: light dark;
+}
+
+body {
+	margin: 0;
+	min-height: 100vh;
+	font: 300 1rem/1.5 system-ui, sans-serif;
+	background: light-dark(#fff, #1a1a1a);
+	color: light-dark(#000, #fff);
+}
+
+/* Two columns: the cube viewport and the editor sidebar. */
+.app {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(18rem, 26rem);
+	gap: 2rem;
+	align-items: start;
+	min-height: 100vh;
+	padding: 2rem;
+	box-sizing: border-box;
+}
+
+/* Cube + its controls, stacked and centered in the left column. */
+.viewport {
+	display: grid;
+	justify-items: center;
+	gap: 2rem;
+	align-content: center;
+	min-height: calc(100vh - 4rem);
+}
+
+/* Establishes the 3D viewing context for the cube inside it. The cube's axes and
+   labels extend ~90px past its box and rotation spills further, so we reserve a
+   centered area big enough that the controls below clear the cube's visual extent. */
+.scene {
+	perspective: 1200px;
+	display: grid;
+	place-items: center;
+	min-block-size: 36rem;
+}
+
+/*
+ * RGB cube diagram.
+ *
+ * The cube's orientation is an accumulated rotation matrix set inline as `transform`
+ * (with `--billboard` as its inverse); each R/G/B slider jogs it around that color axis.
+ * Points are <color-swatch class="point"> children positioned by --r / --g / --b
+ * (channels in 0–1): a point's place in the cube *is* its color. The channels are
+ * the color's coordinates in the cube's current RGB space, computed in JS — so a
+ * point lands outside the wireframe exactly when its color is out of that gamut.
+ */
+.rgb-cube {
+	/* Knobs */
+	--size: 300px;
+	--edge-width: 2px;
+	--axis-width: 4px;
+	--axis-over: calc(var(--size) * 0.3); /* how far axes extend past the cube */
+
+	position: relative;
+	width: var(--size);
+	height: var(--size);
+	transform-style: preserve-3d;
+	/* `transform` (the accumulated orientation) and `--billboard` (its inverse, so
+	   points/labels face the camera) are set inline from JS via cubeStyle. */
+
+	/* Sits inside the perspective established by its parent */
+	& :is(.edge, .axis, .label, .point) {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+	}
+
+	/* The 12 wireframe edges. Each is a thin bar along one axis at a fixed position,
+	   filled with a gradient (endpoints --c0/--c1 set per edge in JS) that runs between
+	   the two corner colors the edge joins. --pr/--pg/--pb are the edge's two fixed
+	   channels; the third spans the bar's length. */
+	.edge.r {
+		width: var(--size);
+		height: var(--edge-width);
+		margin: calc(var(--edge-width) / -2) calc(var(--size) / -2);
+		background: linear-gradient(to right, var(--c0), var(--c1));
+		transform: translate3d(
+			0,
+			calc((0.5 - var(--pg)) * var(--size)),
+			calc((var(--pb) - 0.5) * var(--size))
+		);
+	}
+	.edge.g {
+		width: var(--edge-width);
+		height: var(--size);
+		margin: calc(var(--size) / -2) calc(var(--edge-width) / -2);
+		/* g = 0 at the bottom (+y), g = 1 at the top (−y) */
+		background: linear-gradient(to top, var(--c0), var(--c1));
+		transform: translate3d(
+			calc((var(--pr) - 0.5) * var(--size)),
+			0,
+			calc((var(--pb) - 0.5) * var(--size))
+		);
+	}
+	.edge.b {
+		width: var(--size);
+		height: var(--edge-width);
+		margin: calc(var(--edge-width) / -2) calc(var(--size) / -2);
+		background: linear-gradient(to right, var(--c0), var(--c1));
+		/* Rotated into the depth plane; −90° so the bar's +x maps to +z (b = 1). */
+		transform: translate3d(
+			calc((var(--pr) - 0.5) * var(--size)),
+			calc((0.5 - var(--pg)) * var(--size)),
+			0
+		) rotateY(-90deg);
+	}
+
+	/* The three colored axes radiating from the black (0,0,0) corner. Each is anchored
+	   at the origin and extends past the cube by --axis-over, with an arrowhead at the
+	   tip — so they read as a coordinate triad distinct from the wireframe edges.
+	   Self-centered with a negative margin so any rotation happens about the bar's center;
+	   the center is offset by --axis-over/2 toward the tip to keep the origin end fixed. */
+	.axis {
+		/* Black at the origin → the space's primary at the cube face (--size along the
+		   bar), staying primary through the overshoot to the arrowhead. */
+		background: linear-gradient(var(--grad-dir, to right), black, var(--primary) var(--size));
+		margin: calc(var(--cross) / -2) calc(var(--length) / -2);
+		width: var(--length);
+		height: var(--cross);
+		--cross: var(--axis-width);
+		--length: calc(var(--size) + var(--axis-over));
+	}
+	.axis.r {
+		--primary: color(var(--space-css) 1 0 0);
+		transform: translate3d(calc(var(--axis-over) / 2), calc(var(--size) / 2), calc(var(--size) / -2));
+	}
+	.axis.g {
+		--primary: color(var(--space-css) 0 1 0);
+		--grad-dir: to top; /* g = 0 at the bottom, g = 1 at the top */
+		width: var(--axis-width);
+		height: var(--length);
+		margin: calc(var(--length) / -2) calc(var(--axis-width) / -2);
+		transform: translate3d(calc(var(--size) / -2), calc(var(--axis-over) / -2), calc(var(--size) / -2));
+	}
+	.axis.b {
+		--primary: color(var(--space-css) 0 0 1);
+		transform: translate3d(calc(var(--size) / -2), calc(var(--size) / 2), calc(var(--axis-over) / 2)) rotateY(90deg);
+	}
+
+	/* Arrowhead at each axis tip (a flat CSS triangle, coplanar with the bar) */
+	.axis::after {
+		content: "";
+		position: absolute;
+		width: 0;
+		height: 0;
+	}
+	.axis.r::after, .axis.b::after {
+		top: 50%;
+		right: 0;
+		translate: 100% -50%;
+		border-block: calc(var(--axis-width) * 1.6) solid transparent;
+		border-left: calc(var(--axis-width) * 2.6) solid var(--primary);
+	}
+	.axis.g::after {
+		top: 0;
+		left: 50%;
+		translate: -50% -100%;
+		border-inline: calc(var(--axis-width) * 1.6) solid transparent;
+		border-bottom: calc(var(--axis-width) * 2.6) solid var(--primary);
+	}
+
+	/* R / G / B labels, billboarded so they stay upright, placed just past each tip.
+	   The −50% −50% self-centering is the `translate` property (applied last, in screen
+	   space) so each label centers on its tip regardless of its own size. */
+	.label {
+		margin: 0;
+		font: 700 calc(var(--size) * 0.1) / 1 system-ui, sans-serif;
+		color: var(--axis-color);
+		translate: -50% -50%;
+		transform: translate3d(var(--x), var(--y), var(--z)) var(--billboard);
+	}
+	.label.r {
+		--axis-color: red;
+		--x: calc(var(--size) / 2 + var(--axis-over) + 0.7em);
+		--y: calc(var(--size) / 2);
+		--z: calc(var(--size) / -2);
+	}
+	.label.g {
+		--axis-color: green;
+		--x: calc(var(--size) / -2);
+		--y: calc(var(--size) / -2 - var(--axis-over) - 0.7em);
+		--z: calc(var(--size) / -2);
+	}
+	.label.b {
+		--axis-color: blue;
+		--x: calc(var(--size) / -2);
+		--y: calc(var(--size) / 2);
+		--z: calc(var(--size) / 2 + var(--axis-over) + 0.7em);
+	}
+
+	/* Points are <color-swatch> dots. Each sits at the cube coordinate matching its
+	   color's channels (--r/--g/--b, 0–1) and is billboarded so it stays a circle as
+	   the cube turns. The −50% −50% self-centering is the `translate` property (applied
+	   last, in screen space), so the dot centers on its coordinate by its own size —
+	   independent of the 3D placement and billboard. */
+	.point {
+		--swatch-style: dot;
+		/* Compact mode moves the color label into a hover tooltip, so the swatch's
+		   layout box is just the dot. Otherwise the inline label widens the box and
+		   the centering offset knocks the dot off its coordinate. */
+		--details-style: compact;
+		margin: 0;
+		translate: -50% -50%;
+		transform:
+			translate3d(
+				calc((var(--r) - 0.5) * var(--size)),
+				calc((0.5 - var(--g)) * var(--size)),
+				calc((var(--b) - 0.5) * var(--size))
+			)
+			var(--billboard);
+	}
+}
+
+/* Space picker + rotation sliders, sitting under the cube. */
+.cube-controls {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: 1.5rem 2rem;
+}
+.cube-controls .space {
+	display: flex;
+	align-items: center;
+	gap: 0.5em;
+	font-weight: 500;
+}
+
+/* One slider per color axis, tinted to its axis so the mapping is self-evident. */
+.rotation {
+	display: flex;
+	gap: 1.5rem;
+}
+.rotation label {
+	display: flex;
+	align-items: center;
+	gap: 0.4em;
+	font-weight: 700;
+	color: var(--axis-color);
+}
+.rotation input {
+	accent-color: var(--axis-color);
+	cursor: pointer;
+	inline-size: 7rem;
+}
+.rotation .r { --axis-color: red; }
+.rotation .g { --axis-color: green; }
+.rotation .b { --axis-color: blue; }
+
+/* Editor sidebar: one color-picker per color, with delete + add controls. */
+.editor {
+	display: grid;
+	gap: 1rem;
+	align-content: start;
+}
+.editor .colors {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	gap: 1.5rem;
+}
+.editor .colors li {
+	display: grid;
+	grid-template-columns: 1fr auto;
+	gap: 0.5rem;
+	align-items: start;
+}
+.editor .delete {
+	border: none;
+	background: none;
+	cursor: pointer;
+	font-size: 1.2rem;
+	line-height: 1;
+	color: inherit;
+	opacity: 0.6;
+}
+.editor .delete:hover:not(:disabled) {
+	opacity: 1;
+}
+.editor .delete:disabled {
+	opacity: 0.2;
+	cursor: not-allowed;
+}
+.editor .add {
+	justify-self: start;
+	padding: 0.4em 0.8em;
+	cursor: pointer;
+	border: 1px solid currentColor;
+	border-radius: 0.4em;
+	background: none;
+	color: inherit;
+	font: inherit;
+}

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<title>RGB Cube</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:," />
+<script src="../importmap.js"></script>
+<script type="module" src="index.js"></script>
+</head>
+<body>
+
+<main id="app" class="app">
+	<div class="viewport">
+		<div class="scene">
+			<div class="rgb-cube" :style="cubeStyle">
+				<!-- 12 gradient wireframe edges, each between the two corners it joins. -->
+				<div v-for="(e, i) in edges" :key="i" class="edge" :class="e.axis" :style="e.style"></div>
+
+				<div class="axis r"></div>
+				<div class="axis g"></div>
+				<div class="axis b"></div>
+
+				<div class="label r">R</div>
+				<div class="label g">G</div>
+				<div class="label b">B</div>
+
+				<!-- One dot per color, positioned by its channels in the cube's space. -->
+				<color-swatch
+					v-for="p in points"
+					:key="p.i"
+					class="point"
+					gamuts="none"
+					:color="p.value"
+					:style="{ '--r': p.coords[0], '--g': p.coords[1], '--b': p.coords[2] }"
+				>{{ p.value }}</color-swatch>
+			</div>
+		</div>
+
+		<div class="cube-controls">
+			<label class="space">
+				Space
+				<space-picker
+					:spaces.prop="rgbSpaces"
+					:value.prop="space"
+					@input="space = $event.target.value"
+				></space-picker>
+			</label>
+
+			<!-- Each slider jogs the cube around its color axis: drag to spin, release
+			     to recenter. The slider's color is the axis it turns around. -->
+			<div class="rotation" role="group" aria-label="Rotate around each axis">
+				<label class="r">R <input type="range" min="-180" max="180" value="0" @input="rotate('r', +$event.target.value)" @change="resetRotation('r', $event)" aria-label="Rotate around R axis"></label>
+				<label class="g">G <input type="range" min="-180" max="180" value="0" @input="rotate('g', +$event.target.value)" @change="resetRotation('g', $event)" aria-label="Rotate around G axis"></label>
+				<label class="b">B <input type="range" min="-180" max="180" value="0" @input="rotate('b', +$event.target.value)" @change="resetRotation('b', $event)" aria-label="Rotate around B axis"></label>
+			</div>
+		</div>
+	</div>
+
+	<aside class="editor">
+		<ul class="colors">
+			<li v-for="(color, i) in colors" :key="i">
+				<color-picker
+					:color="color"
+					@input="onPickerInput(i, $event)"
+				></color-picker>
+				<button
+					class="delete"
+					@click="colors.splice(i, 1)"
+					:disabled="colors.length === 1"
+					aria-label="Delete color"
+					title="Delete color"
+				>✕</button>
+			</li>
+		</ul>
+		<button class="add" @click="addColor">+ Add color</button>
+	</aside>
+</main>
+
+</body>
+</html>
