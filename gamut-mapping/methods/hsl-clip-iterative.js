@@ -33,34 +33,18 @@ export const HSL_P3 = new ColorSpace({
 
 ColorSpace.register("hsl-p3", HSL_P3);
 
+// One atomic clip: clamp HSL-P3 saturation into [0, 100] and return. Iterating
+// this and restoring the original L,H between steps is the converge harness's
+// job (see methods.js), so the method itself stays a single operation.
 export function compute (color) {
-	color = color.to("oklch");
-	let ret = color;
-	for (let i = 0; i < 5; i++) {
-		let hsl = ret.to("hsl-p3");
-		let s = hsl.coords[1];
-		if (s > 100) {
-			s = 100;
-		}
-		else if (s < 0) {
-			s = 0;
-		}
-		else {
-			// console.log("Settled at iteration", i);
-			return ret;
-		}
-
-		hsl.coords[1] = Math.max(0, Math.min(hsl.coords[1], 100));
-		ret = hsl.to("oklch").set({
-			l: color.l,
-			h: color.h,
-		});
-	}
-	return ret;
+	let hsl = color.to("hsl-p3");
+	hsl.coords[1] = Math.max(0, Math.min(hsl.coords[1], 100));
+	return hsl.to("oklch");
 }
 
 export default {
-	label: "HSL Clip Iterative",
-	description: "Iteratively reduce chroma in HSL space until the color is in gamut, up to 5 iterations.",
+	label: "HSL Clip",
+	description: "Clip HSL saturation (in HSL-P3).",
 	compute,
+	converge: [2, 5],
 };
