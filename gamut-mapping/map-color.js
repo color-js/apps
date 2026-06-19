@@ -242,8 +242,11 @@ export default {
 			return this.ranks.slice(0, this.highlightCount);
 		},
 
+		// Worst ranks, minus any already counted among the best: when every method
+		// ties (a single shared rank), that rank is the top, so nothing is bottom
+		// and all swatches read as green rather than red.
 		bottomRanks () {
-			return this.ranks.slice(-this.highlightCount);
+			return this.ranks.slice(-this.highlightCount).filter(rank => !this.topRanks.includes(rank));
 		},
 	},
 
