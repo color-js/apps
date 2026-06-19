@@ -302,14 +302,22 @@ function renderStats () {
 	let valid = keys.filter(Number.isFinite);
 	let best = Math.min(...valid), worst = Math.max(...valid);
 
+	// Fastest GMA, to annotate the rest with their slowdown relative to it.
+	let times = gmas.map(g => average(g.id));
+	let minTime = Math.min(...times.filter(t => t !== null));
+
 	gmas.forEach((g, i) => {
 		let s = summaries[i];
 		g.statEls.avg.textContent = s ? prec(s.avg, 3) : "—";
 		g.statEls.min.textContent = s ? prec(s.min, 3) : "—";
 		g.statEls.max.textContent = s ? prec(s.max, 3) : "—";
 		g.statEls.median.textContent = s ? prec(s.median, 3) : "—";
-		let t = average(g.id);
+		let t = times[i];
 		g.statEls.time.textContent = t !== null ? formatTime(t) : "—";
+		// Annotate everything but the fastest with how much slower it is.
+		if (t !== null && t > minTime) {
+			g.statEls.time.append(" ", el("small", {class: "slower"}, `(${prec(t / minTime, 2)}× slower)`));
+		}
 
 		// Best/worst on the active sort key (skip "worst" when everything ties).
 		g.gutter.classList.toggle("best", keys[i] === best);
