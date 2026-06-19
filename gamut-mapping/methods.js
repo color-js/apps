@@ -11,6 +11,7 @@ import raytrace from "./methods/raytrace.js";
 import edgeSeeker from "./methods/edge-seeker/index.js";
 import hslClip from "./methods/hsl-clip.js";
 import scaleGray from "./methods/scale-gray.js";
+import oklchCubic from "./methods/oklch-cubic.js";
 import { time } from "./stats.js";
 
 const methods = {
@@ -24,6 +25,7 @@ const methods = {
 	"edge-seeker": edgeSeeker,
 	"hsl-clip": hslClip,
 	"scale-gray": scaleGray,
+	"oklch-cubic": oklchCubic,
 };
 
 // The maximum OkLCh chroma we feed any method, roughly the widest chroma of the
