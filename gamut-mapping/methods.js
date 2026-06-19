@@ -95,25 +95,42 @@ function describe (base, i) {
 function converge (id, method) {
 	let {converge: counts, ...config} = method;
 	let raw = method.compute;
-	let base = color => time(id, () => raw(color));
+	let timed = color => time(id, () => raw(color));
 	return counts.map(i => {
-		let entry = {...config, label: label(method.label, i), description: describe(method.description, i)};
+		// `base` (the family-root id) and `iteration` make the family relationship
+		// explicit, so consumers can group variants or pick one per base.
+		let entry = {...config, base: id, iteration: i, label: label(method.label, i), description: describe(method.description, i)};
 		if (i === 1) {
 			// Iteration 1 is the base method itself: keep its id, and let mapColor
-			// time it (going through `base` here would double-count).
+			// time it (going through `timed` here would double-count).
 			return [id, {...entry, compute: normalize(raw)}];
 		}
 		let slug = entry.label.toLowerCase().replaceAll(" ", "-");
-		return [slug, {...entry, compute: normalize(color => iterate(base, color, i))}];
+		return [slug, {...entry, compute: normalize(color => iterate(timed, color, i))}];
 	});
 }
 
 // Build the registry: a method with a `converge` array expands into its
-// iteration variants; the rest just get normalized. (mapColor times the runs.)
+// iteration variants; the rest just get normalized (and tagged as their own
+// single-iteration family, so grouping needs no special-casing). mapColor times
+// the runs.
 const entries = Object.entries(methods).flatMap(([id, method]) =>
 	method.converge
 		? converge(id, method)
-		: [[id, { ...method, compute: normalize(method.compute) }]],
+		: [[id, { ...method, base: id, iteration: 1, compute: normalize(method.compute) }]],
 );
 
-export default Object.fromEntries(entries);
+const registry = Object.fromEntries(entries);
+
+export default registry;
+
+// One representative per base GMA — its highest-iteration variant — for the
+// benchmark, which tests each GMA once (e.g. Scale LH 3, not Scale / Scale LH).
+export const representatives = Object.fromEntries(
+	Object.values(Object.entries(registry).reduce((best, [id, m]) => {
+		if (!best[m.base] || m.iteration > best[m.base][1].iteration) {
+			best[m.base] = [id, m];
+		}
+		return best;
+	}, {})),
+);

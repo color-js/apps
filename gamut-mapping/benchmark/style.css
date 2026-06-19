@@ -1,0 +1,173 @@
+:root {
+	--font-mono: Consolas, Inconsolata, Monaco, monospace;
+
+	/* Follow the system light/dark preference. */
+	color-scheme: light dark;
+}
+
+body {
+	font: 100%/1.5 system-ui;
+	margin: 0;
+	padding: 0 0 3em;
+}
+
+header {
+	padding: 1em 1.5em 0;
+}
+
+header h1 {
+	margin: 0;
+	font-size: 1.5rem;
+}
+
+.intro {
+	max-width: 60ch;
+	color: light-dark(hsl(0 0% 35%), hsl(0 0% 65%));
+	font-size: 0.9rem;
+}
+
+.run-controls {
+	display: flex;
+	align-items: center;
+	gap: 0.75em;
+	font: 0.85rem var(--font-mono);
+}
+
+.run-controls progress {
+	flex: 1;
+	max-width: 20em;
+}
+
+.view-controls {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25em 1.5em;
+	margin-top: 0.6em;
+	font: 0.85rem var(--font-mono);
+}
+
+.view-controls select {
+	font: inherit;
+}
+
+/* ── Inspector: all GMAs for the hovered patch ─────────────────────────────── */
+
+.inspector {
+	position: sticky;
+	top: 0;
+	z-index: 1;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5em 1.5em;
+	margin-block: 1em;
+	padding: 0.5em 1.5em;
+	background: light-dark(hsl(0 0% 100% / 0.85), hsl(220 15% 13% / 0.85));
+	backdrop-filter: blur(8px);
+	border-block: 1px solid light-dark(hsl(0 0% 88%), hsl(0 0% 25%));
+	font: 0.8rem var(--font-mono);
+}
+
+.inspector .coords {
+	font-weight: bold;
+	min-width: 20ch;
+}
+
+.inspect-gmas {
+	flex: 1;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4em 0.9em;
+}
+
+.inspect-gma {
+	display: flex;
+	flex-flow: column;
+	flex: 1;
+	gap: 0.35em;
+
+	.gname {
+		color: light-dark(hsl(0 0% 35%), hsl(0 0% 65%));
+	}
+
+	.gerr {
+		font-variant-numeric: tabular-nums;
+	}
+}
+
+.inspector .swatch {
+	height: 2em;
+	border-radius: 3px;
+}
+
+/* ── GMA rows ──────────────────────────────────────────────────────────────── */
+
+.fields {
+	display: grid;
+	grid-template-columns: minmax(7em, 11em) 1fr;
+	gap: 0.6em 1em;
+	align-items: center;
+	padding-inline: 1.5em;
+}
+
+.gutter {
+	font: 0.78rem/1.3 var(--font-mono);
+	border-inline-start: 3px solid transparent;
+	padding-inline-start: 0.5em;
+}
+
+.gutter h2 {
+	margin: 0 0 0.2em;
+	font-size: 0.9rem;
+}
+
+.gutter .stats {
+	display: grid;
+	grid-template-columns: auto auto;
+	gap: 0 0.6em;
+	margin: 0;
+}
+
+.gutter .stats div {
+	display: contents;
+}
+
+.gutter .stats dt {
+	color: light-dark(hsl(0 0% 45%), hsl(0 0% 55%));
+}
+
+.gutter .stats dd {
+	margin: 0;
+	text-align: end;
+	font-variant-numeric: tabular-nums;
+}
+
+/* Lowest / highest average Error across GMAs. */
+.gutter.best {
+	border-inline-start-color: var(--color-green-50, light-dark(hsl(140 55% 35%), hsl(140 55% 60%)));
+}
+
+.gutter.worst {
+	border-inline-start-color: var(--color-red-40, light-dark(hsl(0 60% 45%), hsl(0 80% 68%)));
+}
+
+.field-wrap {
+	min-width: 0;
+}
+
+.field {
+	table-layout: fixed;
+	width: 100%;
+	border-collapse: collapse;
+	/* Patches are unit-less colored cells; isolate layout/paint per field. */
+	contain: content;
+}
+
+.field td {
+	padding: 0;
+	border: 0;
+	height: var(--row-h, 4px);
+}
+
+/* NOTE: at full resolution (~36k cells/field) add content-visibility tuning here
+   to skip offscreen rows — irrelevant at the coarse MVP grid. */

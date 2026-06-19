@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="color-scheme" content="light dark">
+	<title>GMA Benchmark</title>
+	<link rel="stylesheet" href="style.css">
+	<link rel="icon" href="data:," />
+	<script src="../../importmap.js"></script>
+	<script type="module" src="index.js"></script>
+</head>
+<body>
+	<header>
+		<h1>Gamut Mapping Benchmark</h1>
+		<p class="intro">
+			Each row is one GMA mapping a dense field of out-of-gamut OKLCh colors
+			(hue&nbsp;→ across, lightness&nbsp;↓ down, chroma fixed at 0.4). Hover any
+			patch to compare every GMA for that input color.
+		</p>
+		<div class="run-controls">
+			<button id="restart" type="button">Restart</button>
+			<progress id="progress" value="0" max="1"></progress>
+			<span id="status"></span>
+		</div>
+		<div class="view-controls" id="view-controls"></div>
+	</header>
+
+	<aside id="inspector" class="inspector"></aside>
+
+	<div id="fields" class="fields"></div>
+</body>
+</html>

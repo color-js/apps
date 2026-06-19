@@ -1,12 +1,13 @@
 import methods from "./methods.js";
 import stats, { time } from "./stats.js";
 
-// Map a color through every method, timing each. Writes reactive state, so
-// call from an effect, not a computed.
-export function mapColor (color) {
+// Map a color through every method in `methodSet` (the full registry by
+// default), timing each. Writes reactive state, so call from an effect, not a
+// computed. The benchmark passes a reduced set (one variant per base GMA).
+export function mapColor (color, methodSet = methods) {
 	let colors = {};
-	for (let id in methods) {
-		colors[id] = time(id, () => methods[id].compute(color));
+	for (let id in methodSet) {
+		colors[id] = time(id, () => methodSet[id].compute(color));
 	}
 	stats.totalColors++;
 	return colors;
