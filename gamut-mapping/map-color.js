@@ -244,7 +244,7 @@ export default {
 						<small class="description">The color as displayed directly by the browser.</small>
 					</dt>
 					<dd>
-						<color-picker :space.attr="initialSpace" :color="colorInput" @input="onInput" alpha></color-picker>
+						<color-picker :space.attr="initialSpace" :color="colorInput" @input="onInput"></color-picker>
 						<details class="space-coords">
 							<summary>Raw coordinates</summary>
 							<dl class="space-coords">
