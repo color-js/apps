@@ -72,14 +72,12 @@ function solveCubic (a, b, c, d) {
 	}
 }
 
-export function compute (color) {
-	let [L, C, H] = color.to("oklch").coords;
+let QABDCache = new Map(); // H → [Q, A, B, D] (see getQABD)
 
-	// Achromatic (or NaN chroma) is always in gamut: nothing to reduce.
-	if (!(C > 0)) {
-		return color;
+function getQABD (H) {
+	if (QABDCache.has(H)) {
+		return QABDCache.get(H);
 	}
-
 	let rad = H * Math.PI / 180;
 
 	// At fixed L and H, each linear-P3 channel is *exactly* cubic in chroma c:
@@ -94,6 +92,21 @@ export function compute (color) {
 	let B = multiply_v3_m3x3(Q.map(q => q * q), lmsToRGB);
 	let D = multiply_v3_m3x3(Q.map(q => q ** 3), lmsToRGB);
 
+	QABDCache.set(H, [Q, A, B, D]);
+	return [Q, A, B, D];
+}
+
+export function compute (color) {
+	color = color.to("oklch");
+	let [L, C, H] = color.coords;
+
+	// Achromatic (or NaN chroma) is always in gamut: nothing to reduce.
+	if (!(C > 0)) {
+		return color;
+	}
+
+	let [Q, A, B, D] = getQABD(H);
+
 	// Max in-gamut chroma = the first chroma (≤ C) at which any channel reaches a
 	// gamut bound, scanning up from gray (c = 0, in gamut). We avoid solving all
 	// six cubics: each channel's derivative f'(c) = 3D·c² + 6LB·c + 3L²A is a
@@ -105,7 +118,9 @@ export function compute (color) {
 	// Cardano solves/color vs 6, and identical to the exhaustive result).
 	let maxC = C;
 	for (let i = 0; i < 3; i++) {
-		let a = D[i], b = 3 * L * B[i], lin = 3 * L * L * A[i];
+		let a = D[i];
+		let b = 3 * L * B[i];
+		let lin = 3 * L * L * A[i];
 
 		// Monotonic on (0, maxC]? (No root of f' in range.)
 		let monotonic = true;
