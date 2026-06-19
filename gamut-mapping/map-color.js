@@ -1,6 +1,6 @@
 import Color from "colorjs.io";
 import methods from "./methods.js";
-import { mapColor } from "./map.js";
+import { mapColor, getDeltas, defaultWeights } from "./map.js";
 import stats, { average, MIN_RUNS } from "./stats.js";
 import "color-elements/color-picker";
 
@@ -38,7 +38,7 @@ export default {
 	// formula edits the same object, which is how the metric explains itself.
 	inject: {
 		errorWeights: {
-			default: () => ({H: 4, L: 2, C: 1}),
+			default: () => ({...defaultWeights}),
 		},
 	},
 	data () {
@@ -126,42 +126,10 @@ export default {
 		// including on Error-weight retunes, which is cheap since the GMAs
 		// themselves don't re-run here.
 		mapped () {
-			let [L1, C1, h1] = this.colorLCH.coords;
+			let oklch = this.colorLCH.coords;
 			return Object.fromEntries(Object.entries(this.mappedColors).map(([method, mappedColor]) => {
-				let [L2, C2, h2] = mappedColor.to("oklch").coords;
-
-				// Raw OKLCh differences, computed once for both the error and the
-				// displayed deltas. Δh is wrapped to the shortest signed arc, in degrees.
-				let ΔL = L2 - L1;
-				let ΔC = C2 - C1;
-				let Δh = ((h2 - h1 + 540) % 360) - 180;
-
-				// ΔH turns that hue angle into a perceptual distance: the chord
-				// 2√(C₁C₂)·sin(Δh/2), which scales with the chroma it spans and fades
-				// toward black/white (×4·L·(1−L)) where hue is invisible. C=0 ⇒ no hue.
-				let meanL = (L1 + L2) / 2;
-				let hueFade = 4 * meanL * (1 - meanL);
-				let ΔH = C1 && C2 ? hueFade * 2 * Math.sqrt(C1 * C2) * Math.sin((Δh / 2) * Math.PI / 180) : 0;
-
-				// Error: weighted sum of the absolute OKLCh deltas — hue > lightness >
-				// chroma (errorWeights). Deliberately L1, not Euclidean: ΔEOK already
-				// gives the straight-line OKLab distance, so this is a different lens.
-				// `|| 0` keeps a half-typed (empty) weight input from poisoning it.
-				let w = this.errorWeights;
-				let error = (w.L || 0) * Math.abs(ΔL) + (w.C || 0) * Math.abs(ΔC) + (w.H || 0) * Math.abs(ΔH);
-
-				let deltas = {
-					error: this.toPrecision(error, 2),
-					E2K: this.toPrecision(this.color.deltaE(mappedColor, { method: "2000" }), 2),
-					EOK: this.toPrecision(this.color.deltaE(mappedColor, { method: "OK" }), 2),
-					// Signed values for display (direction matters); the best/worst
-					// highlighting compares their magnitudes (see `extremes`).
-					// L in percentage points; hue as the signed shortest arc in degrees.
-					L: this.toPrecision(ΔL * 100, 2),
-					C: this.toPrecision(ΔC, 2),
-					H: this.toPrecision(Δh, 2),
-				};
-
+				let raw = getDeltas(this.color, mappedColor, oklch, this.errorWeights);
+				let deltas = Object.fromEntries(Object.entries(raw).map(([c, value]) => [c, this.toPrecision(value, 2)]));
 				return [method, {color: mappedColor, deltas}];
 			}));
 		},

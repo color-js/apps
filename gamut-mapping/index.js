@@ -2,6 +2,7 @@ import { createApp } from "vue";
 import Color from "colorjs.io";
 import methods from "./methods.js";
 import MapColor from "./map-color.js";
+import { defaultWeights } from "./map.js";
 import stats from "./stats.js";
 
 globalThis.Color = Color;
@@ -30,8 +31,8 @@ let app = createApp({
 			sort: "error",
 
 			// Per-axis weights for the Error metric, live-editable via the formula
-			// in the header. Hue > lightness > chroma by default.
-			errorWeights: {H: 8, L: 4, C: 1},
+			// in the header. Copied so edits stay local to this app instance.
+			errorWeights: {...defaultWeights},
 
 			// Background switcher. `theme` is the user's choice; "auto" (the
 			// default) derives the background from the first color's lightness.
