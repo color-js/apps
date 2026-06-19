@@ -69,9 +69,10 @@ export default {
 	watch: {
 		// Re-map on color change (not weight retunes). mapColor writes stats, so it
 		// lives in an effect, not a computed (which would invalidate itself).
+		// In-gamut colors need no mapping, so skip the methods entirely.
 		color: {
 			handler (color) {
-				this.mappedColors = mapColor(color);
+				this.mappedColors = this.inGamut ? {} : mapColor(color);
 			},
 			immediate: true,
 		},
@@ -101,6 +102,12 @@ export default {
 		},
 		colorLCH () {
 			return this.color.to("oklch");
+		},
+
+		// Whether the input is already within the target (P3) gamut. When it is,
+		// every method is a no-op, so we skip the mapping and hide the results.
+		inGamut () {
+			return this.color.inGamut("p3");
 		},
 
 		spaces () {
@@ -317,9 +324,11 @@ export default {
 		<section class="gamut-mapped" :style="{'--timing-progress': timingProgress}">
 			<h2>Gamut mapped</h2>
 
-			<ol class="swatches">
+			<p v-if="inGamut" class="in-gamut">Color is already in the P3 gamut.</p>
+
+			<ol v-else class="swatches">
 				<li v-for="(config, method) in displayMethods" :id="'method-' + method" :data-ranking="rank(method)" :value="rank(method)" :class="{top: topRanks.includes(rank(method)), bottom: bottomRanks.includes(rank(method))}">
-					<color-swatch size="large" :color="mapped[method].color"></color-swatch>
+					<color-swatch size="large" gamuts="none" :color="mapped[method].color"></color-swatch>
 					<h3>{{ config.label ?? method[0].toUpperCase() + method.slice(1) }}</h3>
 					<small v-if="config.description" class="description">{{ config.description }}</small>
 					<dl class="deltas" v-if="!Object.values(mapped[method].deltas).every(d => d === 0)">

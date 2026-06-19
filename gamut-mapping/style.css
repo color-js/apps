@@ -359,6 +359,13 @@ dl.deltas {
 }
 
 .gamut-mapped {
+	/* Shown in place of the method list when the input needs no mapping. */
+	.in-gamut {
+		margin: .5rem 0 0;
+		font-style: italic;
+		opacity: .6;
+	}
+
 	color-swatch {
 		font-size: 90%;
 
