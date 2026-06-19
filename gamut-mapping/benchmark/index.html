@@ -15,9 +15,30 @@
 		<h1>Gamut Mapping Benchmark</h1>
 		<p class="intro">
 			Each row is one GMA mapping a dense field of out-of-gamut OKLCh colors
-			(hue&nbsp;→ across, lightness&nbsp;↓ down, chroma fixed at 0.4). Hover any
-			patch to compare every GMA for that input color.
+			(hue&nbsp;→ across, lightness&nbsp;↓ down, chroma fixed at 0.4).
 		</p>
+
+		<form class="range-form">
+			<label>
+				Hue °
+				<input name="h" value="0-359" size="7" pattern="\s*[\d.]+\s*-\s*[\d.]+\s*" title="min-max in degrees">
+			</label>
+			<label>
+				H step
+				<input name="hs" type="number" min="0" step="any" value="1">
+			</label>
+			<label>
+				Lightness
+				<input name="l" value="0.01-0.99" size="7" pattern="\s*[\d.]+\s*-\s*[\d.]+\s*" title="min-max, 0–1">
+			</label>
+			<label>
+				L step
+				<input name="ls" type="number" min="0" step="any" value="0.01">
+			</label>
+			<button type="submit">Go</button>
+			<span class="colors-count"></span>
+		</form>
+
 		<div class="run-controls">
 			<button id="restart" type="button">Restart</button>
 			<progress id="progress" value="0" max="1"></progress>

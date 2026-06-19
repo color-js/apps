@@ -11,6 +11,10 @@ body {
 	padding: 0 0 3em;
 }
 
+button, input, select {
+	font: inherit;
+}
+
 header {
 	padding: 1em 1.5em 0;
 }
@@ -21,7 +25,6 @@ header h1 {
 }
 
 .intro {
-	max-width: 60ch;
 	color: light-dark(hsl(0 0% 35%), hsl(0 0% 65%));
 	font-size: 0.9rem;
 }
@@ -30,7 +33,6 @@ header h1 {
 	display: flex;
 	align-items: center;
 	gap: 0.75em;
-	font: 0.85rem var(--font-mono);
 }
 
 .run-controls progress {
@@ -46,8 +48,36 @@ header h1 {
 	font: 0.85rem var(--font-mono);
 }
 
-.view-controls select {
-	font: inherit;
+/* Grid setup form: hue/lightness ranges + steps. Plain GET, reloads with new
+   URL params (see setupRangeForm). */
+.range-form {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.25em 1em;
+	margin: 0.6em 0;
+	padding-block: .5em .7em;
+	padding-inline: 1em;
+	background: light-dark(hsl(220 10% 90% / 0.85), hsl(220 15% 13% / 0.85));
+	border-radius: .2em;
+
+	label {
+		display: flex;
+		flex-flow: column;
+		align-items: baseline;
+		gap: 0.3em;
+		font-size: 80%;
+	}
+
+	input {
+		min-width: 3em;
+		field-sizing: content;
+		font-size: 125%;
+	}
+
+	button {
+		align-self: flex-end;
+	}
 }
 
 /* ── Inspector: all GMAs for the hovered patch ─────────────────────────────── */

@@ -347,6 +347,25 @@ function buildControls () {
 	);
 }
 
+let form = document.querySelector(".range-form");
+form.h.value = `${hueMin}-${hueMax}`;
+form.hs.value = hueStep;
+form.l.value = `${prec(lMin, 4)}-${prec(lMax, 4)}`;
+form.ls.value = lStep;
+
+form.addEventListener("input", () => {
+	// TODO calculate number of colors and print it out in .colors-count
+});
+
+form.addEventListener("submit", () => {
+	for (let field of form.elements) {
+		if (field.name && field.value === field.defaultValue) {
+			// Prevent field from being submitted
+			field.disabled = true;
+		}
+	}
+});
+
 // ── Init ─────────────────────────────────────────────────────────────────────
 
 document.querySelector("#restart").addEventListener("click", run);
