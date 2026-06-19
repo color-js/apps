@@ -2,7 +2,10 @@ node_modules/
 importmap.js
 .claude
 
-# Ignore generated HTML files
+# Ignore generated HTML files, but keep hand-authored app pages (index.html etc.)
+# at any nesting depth. client_modules has its own .gitignore (*), so its bundled
+# HTML stays ignored regardless of these.
 *.html
 !*.tpl.html
 !*/*.html
+!*/*/*.html
