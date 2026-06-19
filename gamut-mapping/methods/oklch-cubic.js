@@ -3,32 +3,6 @@ import { multiplyMatrices, multiply_v3_m3x3 } from "colorjs.io/src/util.js";
 import oklab from "colorjs.io/src/spaces/oklab.js";
 import p3linear from "colorjs.io/src/spaces/p3-linear.js";
 
-// ─── TEMPORARY ───────────────────────────────────────────────────────────────
-// Spaces expose their matrices as `space.M.<name>` only from the next color.js
-// release (PR merged, not yet published). These `??=` writes create/fill `.M` on
-// the current release and become no-ops once it ships, so the code below already
-// references the native mechanism.
-// TODO(upgrade): delete this whole block after bumping color.js — nothing else
-// changes, the `oklab.M.*` / `p3linear.M.*` references resolve natively.
-oklab.M ??= {};
-oklab.M.LabtoLMS ??= [
-	[1,  0.3963377773761749,  0.2158037573099136],
-	[1, -0.1055613458156586, -0.0638541728258133],
-	[1, -0.0894841775298119, -1.2914855480194092],
-];
-oklab.M.LMStoXYZ ??= [
-	[ 1.2268798758459243, -0.5578149944602171,  0.2813910456659647],
-	[-0.0405757452148008,  1.1122868032803170, -0.0717110580655164],
-	[-0.0763729366746601, -0.4214933324022432,  1.5869240198367816],
-];
-p3linear.M ??= {};
-p3linear.M.fromXYZ ??= [
-	[ 2.493496911941425,   -0.9313836179191239, -0.40271078445071684],
-	[-0.8294889695615747,   1.7626640603183463,  0.023624685841943577],
-	[ 0.03584583024378447, -0.07617238926804182, 0.9568845240076872],
-];
-// ─── end TEMPORARY ───────────────────────────────────────────────────────────
-
 const oklabToLMS = oklab.M.LabtoLMS;                                  // OKLab → LMS'
 const lmsToRGB = multiplyMatrices(p3linear.M.fromXYZ, oklab.M.LMStoXYZ); // LMS³ → linear P3
 
