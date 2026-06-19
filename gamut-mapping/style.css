@@ -37,6 +37,7 @@ body {
 		display: grid;
 		grid-template-columns: 24em 1fr;
 		gap: 0em 2em;
+		align-items: start;
 
 		> header,
 		.color {
@@ -150,21 +151,28 @@ dl.swatches {
 /* Gamut mapped: a ranked list, each method laid out as swatch + details */
 ol.swatches {
 	list-style: none;
-	display: flex;
-	flex-direction: column;
+	/* One grid for the whole method list so every row can share the same column
+	   tracks via subgrid: rank, swatch, then one column per delta metric, and a
+	   trailing fraction that soaks up the slack. Each metric column is `auto`, so
+	   it sizes to that metric's widest value across all methods — chips line up in
+	   tidy columns and hold their place as values change (the column width is set
+	   by the global max, not the current row), without forcing every metric to
+	   the same awkward width. */
+	display: grid;
+	grid-template-columns: 2em 8em repeat(7, minmax(auto, 1fr));
 	gap: 1em;
 	margin: .5rem 0 0;
 	padding: 0;
 
 	> li {
 		display: grid;
-		grid-template-columns: 2em 8em 1fr;
+		grid-column: 1 / -1;
+		grid-template-columns: subgrid;
 		/* Three rows for the details, plus a flexible row that absorbs any slack up
 		   to min-height — so the swatch is tall on wide screens (short content) yet
 		   still fills 100% when taller content is what drives the height. */
 		grid-template-rows: auto auto auto 1fr;
 		min-height: 6em;
-		column-gap: 1em;
 		row-gap: .25em;
 
 		/* Fixed-width swatch spanning all rows. min-height: 0 stops its own height
@@ -179,14 +187,14 @@ ol.swatches {
 		}
 
 		> h3 {
-			grid-column: 3;
+			grid-column: 3 / -1;
 			margin: 0;
 			font-size: 105%;
 		}
 
 		> .description,
 		> .deltas {
-			grid-column: 3;
+			grid-column: 3 / -1;
 		}
 
 		/* Rank in its own column beside the swatch, so it doesn't obscure the
@@ -262,14 +270,8 @@ dl.space-coords {
 
 dl.deltas,
 dl.coords {
-	display: flex;
-	gap: .1em;
 	margin: 0;
 	align-items: baseline;
-
-	&:has(> div) {
-		gap: .4em;
-	}
 
 	> div {
 		display: flex;
@@ -278,7 +280,8 @@ dl.coords {
 
 	.delta-e2k,
 	.delta-eok,
-	.delta-error {
+	.delta-error,
+	.delta-time {
 		background: light-dark(hsl(220 10% 50% / 8%), hsl(220 10% 80% / 12%));
 		border: 1px solid light-dark(hsl(220 10% 50% / 10%), hsl(220 10% 80% / 18%));
 		padding: 0 .3em;
@@ -300,7 +303,24 @@ dl.coords {
 	}
 }
 
+/* Raw coordinates: a simple inline run of label/value pairs. */
+dl.coords {
+	display: flex;
+	gap: .1em;
+
+	&:has(> div) {
+		gap: .4em;
+	}
+}
+
+/* Deltas: a subgrid so each metric lands in the shared column its method's row
+   inherits from ol.swatches — chips line up across methods and stay put. */
 dl.deltas {
+	display: grid;
+	grid-template-columns: subgrid;
+	/* Each chip hugs its content and sits at the column's start, instead of
+	   stretching to fill the (1fr) column it shares. */
+	justify-items: start;
 	border-top: 1px solid light-dark(hsl(220 10% 80%), hsl(220 10% 38%));
 	padding-top: .4em;
 	margin-top: .8em;
@@ -323,6 +343,15 @@ dl.deltas {
 	}
 }
 
+/* Average time fades and sharpens in as the sample grows (--timing-progress 0→1),
+   so it's visibly tentative until enough runs accumulate. */
+.delta-time {
+	--p: var(--timing-progress, 1);
+	opacity: calc(.15 + .85 * var(--p));
+	filter: blur(calc((1 - var(--p)) * 2px));
+	transition: opacity .4s, filter .4s;
+}
+
 .rendering {
 	.swatches > div > dt {
 		margin-top: 1.1em;
@@ -339,10 +368,6 @@ dl.deltas {
 		&::part(details) {
 			display: none;
 		}
-	}
-
-	.deltas {
-		justify-content: space-between;
 	}
 }
 

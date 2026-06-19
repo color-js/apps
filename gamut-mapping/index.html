@@ -39,6 +39,7 @@
 					<option value="EOK">ΔEOK</option>
 					<option value="L">|ΔL|</option>
 					<option value="H">|ΔH|</option>
+					<option value="time">Δt ({{ totalColors.toLocaleString() }} runs)</option>
 				</select>
 			</label>
 			<div class="error-formula" role="group" aria-label="Error formula weights">
@@ -72,6 +73,7 @@
 	</button>
 	<footer>
 		<p class="note">Input colors are pre-clamped to chroma 0.4 before mapping, so every method starts from the same color.</p>
+		<p class="note">{{ totalColors.toLocaleString() }} colors gamut mapped this session.</p>
 	</footer>
 </body>
 </html>

@@ -2,6 +2,7 @@ import { createApp } from "vue";
 import Color from "colorjs.io";
 import methods from "./methods.js";
 import MapColor from "./map-color.js";
+import stats from "./map.js";
 
 globalThis.Color = Color;
 
@@ -69,6 +70,11 @@ let app = createApp({
 			}
 
 			return L > 2 / 3 ? "light" : L > 1 / 3 ? "mid" : "dark";
+		},
+
+		// Running total of colors gamut mapped across all cards, for the footer.
+		totalColors () {
+			return stats.totalColors;
 		},
 
 		// OKLch lightness (0–1) of the first color, or null if unparseable.

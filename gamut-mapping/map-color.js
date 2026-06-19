@@ -1,5 +1,6 @@
 import Color from "colorjs.io";
 import methods from "./methods.js";
+import stats, { mapColor, average, MIN_RUNS } from "./map.js";
 import "color-elements/color-picker";
 
 const lch = ["L", "C", "H"];
@@ -59,7 +60,20 @@ export default {
 			// The signed axes (direction matters), as opposed to the magnitude
 			// metrics E2K/EOK/error. Used by the template to decide ± coloring.
 			lch,
+			// Mapped colors keyed by method, refreshed by the `color` watcher.
+			mappedColors: {},
 		};
+	},
+
+	watch: {
+		// Re-map on color change (not weight retunes). mapColor writes stats, so it
+		// lives in an effect, not a computed (which would invalidate itself).
+		color: {
+			handler (color) {
+				this.mappedColors = mapColor(color);
+			},
+			immediate: true,
+		},
 	},
 
 	computed: {
@@ -99,10 +113,13 @@ export default {
 			});
 		},
 
+		// Derive the per-method deltas from the mapped colors (produced by the
+		// `color` watcher) and the input color. Re-runs when either changes —
+		// including on Error-weight retunes, which is cheap since the GMAs
+		// themselves don't re-run here.
 		mapped () {
-			return Object.fromEntries(Object.entries(this.methods).map(([method, config]) => {
-				let mappedColor = config.compute(this.color);
-				let [L1, C1, h1] = this.colorLCH.coords;
+			let [L1, C1, h1] = this.colorLCH.coords;
+			return Object.fromEntries(Object.entries(this.mappedColors).map(([method, mappedColor]) => {
 				let [L2, C2, h2] = mappedColor.to("oklch").coords;
 
 				// Raw OKLCh differences, computed once for both the error and the
@@ -141,6 +158,23 @@ export default {
 			}));
 		},
 
+		// 0→1 as runs approach MIN_RUNS; drives the times' blur/fade-in.
+		timingProgress () {
+			return Math.min(stats.totalColors / MIN_RUNS, 1);
+		},
+
+		// Average run time (ms) per method.
+		times () {
+			return Object.fromEntries(Object.keys(this.methods).map(method => [method, average(method)]));
+		},
+
+		// Fastest and slowest average time across methods, so the best (min) time
+		// can be colored green and the worst (max) red, mirroring the deltas.
+		timeExtremes () {
+			let values = Object.values(this.times).filter(t => t != null);
+			return {min: Math.min(...values), max: Math.max(...values)};
+		},
+
 		// Methods left after applying the hide filter. Ranking/extremes still
 		// consider all methods — this is purely a display filter.
 		visibleMethods () {
@@ -171,12 +205,14 @@ export default {
 			return {min, max};
 		},
 
-		// All methods sorted best-first by the active metric (smallest |Δ| wins),
-		// ties broken by ΔEOK — or by ΔE2K when ΔEOK is itself the metric.
+		// All methods sorted best-first by the active metric (smallest value wins),
+		// ties broken by ΔEOK — or by ΔE2K when ΔEOK is itself the metric. "time"
+		// ranks by average run time (fastest first) and reads from the shared
+		// stats rather than the per-color deltas.
 		ranking () {
 			let primary = this.sort;
 			let secondary = primary === "EOK" ? "E2K" : "EOK";
-			let key = (method, c) => Math.abs(this.mapped[method].deltas[c]);
+			let key = (method, c) => c === "time" ? (this.times[method] ?? Infinity) : Math.abs(this.mapped[method].deltas[c]);
 
 			return Object.keys(this.mapped).sort((a, b) => {
 				return key(a, primary) - key(b, primary) || key(a, secondary) - key(b, secondary);
@@ -208,6 +244,17 @@ export default {
 	methods: {
 		toPrecision: Color.util.toPrecision,
 		abs: Math.abs,
+
+		// Format a millisecond duration compactly: microseconds under 1 ms (GMAs
+		// are mostly sub-millisecond), milliseconds otherwise.
+		formatTime (ms) {
+			return ms < 1 ? `${this.toPrecision(ms * 1000, 3)} µs` : `${this.toPrecision(ms, 3)} ms`;
+		},
+
+		// How many times a method has run, for the average's tooltip.
+		runs (method) {
+			return stats.methods[method]?.runs ?? 0;
+		},
 
 		// 1-based rank of a method in the active sort order.
 		rank (method) {
@@ -266,7 +313,7 @@ export default {
 			</dl>
 		</section>
 
-		<section class="gamut-mapped">
+		<section class="gamut-mapped" :style="{'--timing-progress': timingProgress}">
 			<h2>Gamut mapped</h2>
 
 			<ol class="swatches">
@@ -282,6 +329,10 @@ export default {
 								min: extremes.min[c] === abs(delta),
 								max: extremes.max[c] === abs(delta),
 							}">{{ delta }}</dd>
+						</div>
+						<div v-if="times[method] != null" class="delta-time" :title="runs(method).toLocaleString() + ' runs'">
+							<dt>Δt</dt>
+							<dd :class="{min: timeExtremes.min === times[method], max: timeExtremes.max === times[method]}">{{ formatTime(times[method]) }}</dd>
 						</div>
 					</dl>
 				</li>
