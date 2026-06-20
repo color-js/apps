@@ -39,11 +39,13 @@ const MAX_CHROMA = 0.4;
 // result is still out of gamut. A method that returns an out-of-gamut color
 // implicitly consents to this clip; it keeps the reported deltas honest, since
 // they're measured against the color the browser can actually display rather
-// than an out-of-gamut value the swatch would silently clip.
+// than an out-of-gamut value the swatch would silently clip. Additionally,
+// ensure all colors are normalized such that the return space matches the input space.
 function normalize (compute) {
 	return (color) => {
+		let space = color.space;
 		let input = color.to("oklch").set({ c: c => Math.min(c, MAX_CHROMA) });
-		let result = compute(input);
+		let result = compute(input).to(space);
 		return result.inGamut("p3") ? result : clipToGamut(result);
 	};
 }
