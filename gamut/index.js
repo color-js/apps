@@ -1,5 +1,5 @@
 import { createApp } from "vue";
-import { ColorSpace, inGamut, spaces } from "colorjs.io/fn";
+import { ColorSpace, inGamut, parse, to, spaces } from "colorjs.io/fn";
 import "color-elements/color-picker";
 
 // The fn API doesn't auto-register spaces in the global ColorSpace registry —
@@ -7,6 +7,9 @@ import "color-elements/color-picker";
 for (let space of Object.values(spaces)) {
 	ColorSpace.register(space);
 }
+
+const urlColor = new URLSearchParams(location.search).get("color");
+const [L0, C0, H0] = to(parse(urlColor ?? "oklch(0.5 0.2 240)"), "oklch").coords;
 
 const MAX_CHROMA = 0.4;
 const LAYERS = 80;             // concentric layers — chroma resolution = MAX_CHROMA / LAYERS
@@ -54,9 +57,9 @@ globalThis.app = createApp({
 
 	data () {
 		return {
-			lightness: 0.5,
-			markerC: 0.2,
-			markerH: 240,
+			lightness: L0,
+			markerC: C0 || 0,
+			markerH: H0 || 0,
 			maxChroma: MAX_CHROMA,
 			dragging: false,
 			// (c, h) snapshot at pointerdown, used to lock the constrained axis
