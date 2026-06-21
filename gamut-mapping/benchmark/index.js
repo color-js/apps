@@ -80,6 +80,7 @@ let view = {sort: "time", metric: "error"};
 
 let fields = document.querySelector("#fields");
 let inspector = document.querySelector("#inspector");
+let coords = inspector.querySelector(".coords"); // hovered patch's coordinates
 let progress = document.querySelector("#progress");
 let statusEl = document.querySelector("#status");
 
@@ -155,30 +156,23 @@ function buildUI () {
 	buildInspector();
 }
 
-// Resting prompt shown until a patch is hovered.
-const INSPECT_PROMPT = "Hover a patch to inspect";
-
-// The hovered patch's coordinates + one mapped-color swatch per GMA. The input
-// itself isn't shown: it's out of gamut, so the browser's rendering of it is
-// wrong. Swatches are plain divs — we only ever set their background.
+// Fill the inspector's per-GMA list — one swatch we tint to that GMA's mapped
+// color plus an error readout. The shell (coords + list container) lives in the
+// HTML; only these data-driven rows are built here. Swatches are plain divs: the
+// input is out of gamut, so we never render it, only the mapped result.
 function buildInspector () {
-	let coords = el("span", {class: "coords"}, INSPECT_PROMPT);
-	let list = el("div", {class: "inspect-gmas"});
-
-	for (let g of gmas) {
+	let list = inspector.querySelector(".inspect-gmas");
+	list.replaceChildren(...gmas.map(g => {
 		g.inspectSwatch = el("div", {class: "swatch"});
 		g.inspectErr = el("span", {class: "gerr"}, "");
-		list.append(el("div", {class: "inspect-gma"},
+		return el("div", {class: "inspect-gma"},
 			g.inspectSwatch,
 			el("span", {class: "gname"}, g.config.label ?? g.id),
 			g.inspectErr,
-		));
-	}
-
-	inspector.replaceChildren(coords, list);
+		);
+	}));
 	// Resting state: just the prompt, not the (data-less) GMA list.
 	inspector.classList.remove("active");
-	inspector._coords = coords;
 }
 
 // ── Inspector: all GMAs for one patch ────────────────────────────────────────
@@ -189,7 +183,7 @@ function inspect (l, h) {
 	let color = new Color("oklch", [l, CHROMA, h]);
 	let oklch = [l, CHROMA, h];
 	inspector.classList.add("active");
-	inspector._coords.textContent = `oklch(${prec(l, 3)} ${CHROMA} ${h})`;
+	coords.textContent = `oklch(${prec(l, 3)} ${CHROMA} ${h})`;
 
 	for (let g of gmas) {
 		let mapped = g.config.compute(color);
@@ -211,10 +205,10 @@ fields.addEventListener("pointerover", e => {
 	}
 });
 
-// Back to the resting prompt (no GMA list) when the pointer leaves the fields.
+// Collapse the per-GMA list when the pointer leaves the fields, but keep the
+// last-hovered coordinates so the inspector still reads what you last inspected.
 fields.addEventListener("pointerleave", () => {
 	inspector.classList.remove("active");
-	inspector._coords.textContent = INSPECT_PROMPT;
 });
 
 // ── Sweep ────────────────────────────────────────────────────────────────────
