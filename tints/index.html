@@ -28,6 +28,13 @@
 				</label>
 				<code v-if="!scale.isCombo" class="scale-id" title="Use as a ?scales= value in the URL">{{ scale.id }}</code>
 			</h3>
+			<div v-if="paramDefs[scale.id]" class="params">
+				<label v-for="param in paramDefs[scale.id]" :key="param.name">
+					{{ param.label }}
+					<input type="range" :min="param.min" :max="param.max" :step="param.step" v-model.number="paramValues[scale.id][param.name]">
+					<output>{{ paramValues[scale.id][param.name] }}</output>
+				</label>
+			</div>
 			<color-scale space="oklch" :colors.prop="scale.tints"></color-scale>
 			<div class="callout">
 				<div class="h2">Heading</div>

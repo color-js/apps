@@ -105,6 +105,26 @@ body {
 	}
 }
 
+.params {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.3em 1em;
+	margin-block: 0.4em;
+	font-size: 0.8em;
+
+	label {
+		display: flex;
+		align-items: center;
+		gap: 0.4em;
+	}
+
+	output {
+		min-width: 2em;
+		text-align: end;
+		font-variant-numeric: tabular-nums;
+	}
+}
+
 .scale.combo {
 	border-block-start: 3px solid light-dark(hsl(0 0% 80%), hsl(0 0% 30%));
 	padding-block-start: 1em;

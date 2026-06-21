@@ -37,6 +37,16 @@ function debounce(fn, delay) {
 	};
 }
 
+/**
+ * The tunable numeric params a scale exposes, as `{ name: {min, max, default, step?} }`.
+ * Everything on a scale def besides `name` and `getColor` is treated as a param.
+ * @param {object} scale
+ */
+function getParams (scale) {
+	let { name, getColor, ...params } = scale;
+	return params;
+}
+
 const scaleDefs = {
 	raw: {
 		name: "Raw",
@@ -113,6 +123,22 @@ const scales = only
 	)
 	: scaleDefs;
 
+// Slider descriptors per scale, derived from each scale's param defs. Only scales that
+// expose params get an entry; `paramValues` (in data) holds the live, editable values.
+const paramDefs = Object.fromEntries(
+	Object.entries(scales)
+		.map(([id, scale]) => [
+			id,
+			Object.entries(getParams(scale)).map(([name, def]) => ({
+				name,
+				label: name.replace(/_/g, " "),
+				step: 0.01,
+				...def,
+			})),
+		])
+		.filter(([, defs]) => defs.length > 0),
+);
+
 globalThis.app = createApp({
 	compilerOptions: {
 		isCustomElement (tag) {
@@ -123,6 +149,15 @@ globalThis.app = createApp({
 	data () {
 		return {
 			swatches,
+			paramDefs,
+			// Live param values, keyed `scaleId.paramName`. Bound to the sliders and read by
+			// getColor via `this` (each scale's getColor runs with its own values as `this`).
+			paramValues: Object.fromEntries(
+				Object.entries(paramDefs).map(([id, defs]) => [
+					id,
+					Object.fromEntries(defs.map(def => [def.name, def.default])),
+				]),
+			),
 			initialColor,
 			color: null,
 			darkMode: false,
@@ -144,8 +179,10 @@ globalThis.app = createApp({
 				let tints = {};
 				let cssVars = {};
 
+				// Run getColor with this scale's live param values as `this`, so a param-driven
+				// scale can read them as `this.paramName`. Param-free scales ignore `this`.
 				for (let level in L) {
-					tints[level] = scale.getColor(level, this.color.clone());
+					tints[level] = scale.getColor.call(this.paramValues[id], level, this.color.clone());
 					cssVars["--color-" + level] = tints[level].display();
 				}
 
