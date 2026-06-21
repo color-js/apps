@@ -28,6 +28,10 @@ const L = {
 	10: 0.2,
 };
 
+function progress(n, min, max) {
+	return (n - min) / (max - min);
+}
+
 /** Returns a version of `fn` that delays running until `delay` ms have passed without another call. */
 function debounce(fn, delay) {
 	let timer;
@@ -89,6 +93,21 @@ const scaleDefs = {
 			color.set("l", L[level]);
 			return color.to("oklch");
 		},
+	},
+	pow: {
+		name: "Power curve",
+		getColor (level, color) {
+			color = color.clone().to("oklch");
+			let l = color.get("oklch.l");
+			let targetL = L[level];
+			color.set("l", targetL);
+			let x = Math.max(progress(targetL, l, 0), progress(targetL, l, 1));
+			let exp = l < targetL ? this.exp_lighter : this.exp_darker;
+			color.set("c", c => c * (1 - x ** exp));
+			return color;
+		},
+		exp_lighter: {min: 0.5, max: 3, default: 1},
+		exp_darker: {min: 0.5, max: 3, default: 2},
 	},
 	colormix: {
 		name: "color-mix()",
