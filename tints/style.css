@@ -83,6 +83,15 @@ body {
 	flex-wrap: wrap;
 }
 
+.scale-id {
+	font-size: 0.75em;
+	font-weight: normal;
+	color: GrayText;
+	background: light-dark(hsl(0 0% 0% / 0.06), hsl(0 0% 100% / 0.12));
+	padding: 0.15em 0.4em;
+	border-radius: 0.25em;
+}
+
 .weight-slider {
 	display: flex;
 	align-items: center;

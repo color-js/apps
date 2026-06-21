@@ -26,6 +26,7 @@
 					<input type="range" min="0" max="100" :value="normalizedWeights[scale.id]" @input="setWeight(scale.id, $event.target.valueAsNumber)">
 					<output>{{ normalizedWeights[scale.id] }}%</output>
 				</label>
+				<code v-if="!scale.isCombo" class="scale-id" title="Use as a ?scales= value in the URL">{{ scale.id }}</code>
 			</h3>
 			<color-scale space="oklch" :colors.prop="scale.tints"></color-scale>
 			<div class="callout">
