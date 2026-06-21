@@ -137,7 +137,7 @@ globalThis.app = createApp({
 
 				for (let level in L) {
 					tints[level] = scale.getColor(level, this.color.clone());
-					cssVars["--color-" + level] = tints[level].toString();
+					cssVars["--color-" + level] = tints[level].display();
 				}
 
 				return { id, name: scale.name, tints, cssVars };

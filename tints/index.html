@@ -11,7 +11,7 @@
 <body>
 	<section id="params">
 	<label><input type="checkbox" switch v-model="darkMode"> Dark mode</label>
-	<color-picker ref="input" id="input" gamut="p3" space="oklch" :color="initialColor" @colorchange="onColorChange"></color-picker>
+	<color-picker ref="input" id="input" space="oklch-p3" :color="initialColor" @colorchange="onColorChange"></color-picker>
 	<div class="swatches">
 		<button v-for="(value, name) in swatches" :key="name" :style="{ '--swatch': value }" :title="name" @click="pickSwatch(value)"></button>
 	</div>
