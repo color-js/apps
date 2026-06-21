@@ -78,9 +78,15 @@ const scaleDefs = {
 
 };
 
+const params = new URLSearchParams(location.search);
+
+// Set the base color via ?color=… (e.g. ?color=oklch(70% 0.16 205)), falling back
+// to the picker's default when absent. Any CSS color the picker understands works.
+const initialColor = params.get("color") || "oklch(70% 0.16 205)";
+
 // Restrict the visible scales via ?scales=id1,id2 (e.g. for demos or sharing).
 // Unknown ids are ignored; the URL order also defines display order.
-let only = new URLSearchParams(location.search).get("scales");
+let only = params.get("scales");
 const scales = only
 	? Object.fromEntries(
 		only.split(",")
@@ -100,6 +106,7 @@ globalThis.app = createApp({
 	data () {
 		return {
 			swatches,
+			initialColor,
 			color: null,
 			darkMode: false,
 			// Maps each selected scale id to its weight (0–100). Weights always sum to 100.
