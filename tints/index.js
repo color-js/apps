@@ -63,6 +63,14 @@ const scaleDefs = {
 			return color.toGamut({ space: "p3", method: "oklch.c" });
 		},
 	},
+	oklchp3: {
+		name: "Using (oklch-P3)",
+		getColor: (level, color) => {
+			color = color.to("oklch-p3");
+			color.set("l", L[level]);
+			return color.to("oklch");
+		},
+	},
 	colormix: {
 		name: "color-mix()",
 		getColor: (level, color) => {
