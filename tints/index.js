@@ -28,6 +28,15 @@ const L = {
 	10: 0.2,
 };
 
+/** Returns a version of `fn` that delays running until `delay` ms have passed without another call. */
+function debounce(fn, delay) {
+	let timer;
+	return (...args) => {
+		clearTimeout(timer);
+		timer = setTimeout(() => fn(...args), delay);
+	};
+}
+
 const scaleDefs = {
 	raw: {
 		name: "Raw",
@@ -261,5 +270,17 @@ globalThis.app = createApp({
 		darkMode (value) {
 			document.documentElement.style.colorScheme = value ? "dark" : "";
 		},
+
+		// Reflect the current color in the URL (?color=…) so refreshing or sharing keeps it.
+		// Debounced and using replaceState so dragging the picker doesn't spam history.
+		color: debounce(color => {
+			if (!color) {
+				return;
+			}
+
+			let params = new URLSearchParams(location.search);
+			params.set("color", color.toString());
+			history.replaceState(null, "", "?" + params);
+		}, 300),
 	},
 }).mount(document.body);
