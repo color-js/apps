@@ -124,8 +124,20 @@ export function compute (color) {
 	color = color.to("oklch");
 	let [L, C, H] = color.coords;
 
-	// Achromatic (or NaN chroma) is always in gamut: nothing to reduce.
-	if (!(C > 0)) {
+	// Return early for achromatic colors or white/black
+	let isBlack = L <= 0;
+	let isWhite = L >= 1;
+	let isGray = C <= 0 || C === null;
+
+	if (isBlack || isWhite || isGray) {
+		if (isBlack) {
+			color.coords[0] = 0;
+		}
+		else if (isWhite) {
+			color.coords[0] = 1;
+		}
+
+		color.coords[1] = 0;
 		return color;
 	}
 
