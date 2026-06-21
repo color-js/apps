@@ -19,11 +19,12 @@ export function compute (color) {
 	let midpoint = new Color("oklch", [lch[0], 0, 0]).to("p3-linear").coords[0];
 
 	// For each out-of-gamut channel, the fraction (0–1) we must lerp it toward the
-	// midpoint to pull it back to the boundary. In-gamut channels need none.
-	let maxP = Math.max(0, ...p3.map(c => {
-		// Naturally returns 0 for in-gamut channels
-		return progress(clamp(0, c, 1), c, midpoint);
-	}));
+	// midpoint to pull it back to the boundary. In-gamut channels naturally yield 0
+	// (their numerator is 0); a channel exactly at the midpoint needs no pull either,
+	// and guarding it avoids progress()'s 1/(midpoint − c) blowing up to ∞/NaN —
+	// which happens at degenerate L≈0/1, where the converge re-runs feed near-gray
+	// colors (all channels on the midpoint) back in.
+	let maxP = Math.max(0, ...p3.map(c => c === midpoint ? 0 : progress(clamp(0, c, 1), c, midpoint)));
 
 	let scaledCoords = p3.map(c => lerp(maxP, c, midpoint));
 
