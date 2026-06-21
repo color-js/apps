@@ -10,8 +10,12 @@ body {
 	margin: 0;
 	/* Column layout so the fields can flex to fill the viewport below the header. */
 	min-height: 100vh;
-	display: flex;
-	flex-direction: column;
+	display: grid;
+	grid-template-columns: minmax(7em, 11em) 1fr;
+
+	> * {
+		grid-column: 1 / -1;
+	}
 }
 
 button, input, select {
@@ -150,21 +154,38 @@ header h1 {
 	position: sticky;
 	top: 0;
 	z-index: 1;
-	display: flex;
-	flex-wrap: wrap;
+	display: grid;
+	grid-template-columns: subgrid;
+
 	align-items: center;
-	gap: 0.5em 1.5em;
+	gap: 0.5em 2em;
 	margin-block: 1em;
 	padding: 0.5em 1.5em;
 	background: light-dark(hsl(0 0% 100% / 0.85), hsl(220 15% 13% / 0.85));
 	backdrop-filter: blur(8px);
 	border-block: 1px solid light-dark(hsl(0 0% 88%), hsl(0 0% 25%));
 	font: 0.8rem var(--font-mono);
-}
 
-.inspector .coords {
-	font-weight: bold;
-	min-width: 20ch;
+	.coords {
+		font-weight: bold;
+
+		&:empty {
+			opacity: .5;
+			font-style: italic;
+
+			&::before {
+				content: "Hover a patch to inspect it";
+				text-wrap: balance;
+			}
+		}
+	}
+
+	.swatch {
+		width: 100%;
+		height: 2em;
+		border-radius: 3px;
+		background: repeating-linear-gradient(-45deg, transparent 0 3px, rgb(0 0 0 / 0.1) 0 5px);
+	}
 }
 
 .inspect-gmas {
@@ -174,14 +195,11 @@ header h1 {
 	gap: 0.4em 0.9em;
 }
 
-/* Resting state: show only the prompt until a patch is hovered. */
-.inspector:not(.active) .inspect-gmas {
-	display: none;
-}
 
 .inspect-gma {
 	display: flex;
-	flex-flow: column;
+	flex-wrap: wrap;
+	justify-content: space-between;
 	flex: 1;
 	gap: 0.35em;
 
@@ -191,12 +209,8 @@ header h1 {
 
 	.gerr {
 		font-variant-numeric: tabular-nums;
+		font-weight: bold;
 	}
-}
-
-.inspector .swatch {
-	height: 2em;
-	border-radius: 3px;
 }
 
 /* ── GMA rows ──────────────────────────────────────────────────────────────── */
@@ -205,9 +219,10 @@ header h1 {
    height equally (1fr) but never shrink below the gutter's content, so colors
    are as large as the space allows and the page scrolls only when it must. */
 .fields {
+	grid-column: 1 / -1;
 	flex: 1;
 	display: grid;
-	grid-template-columns: minmax(7em, 11em) 1fr;
+	grid-template-columns: subgrid;
 	grid-auto-rows: minmax(min-content, 1fr);
 	gap: 0.6em 1em;
 	align-items: stretch;
