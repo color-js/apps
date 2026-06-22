@@ -99,7 +99,8 @@ function raytrace_box (start, end, bmin = [0, 0, 0], bmax = [1, 1, 1]) {
 		direction.push(d);
 
 		// Non parallel cases
-		if (Math.abs(d) > 1e-15) {
+		// 1e-12 for 64 bit and 1e-6 for 32 bit
+		if (Math.abs(d) > 1e-12) {
 			const inv_d = 1 / d;
 			const t1 = (bn - a) * inv_d;
 			const t2 = (bx - a) * inv_d;
@@ -151,11 +152,9 @@ function trace (orig) {
 	// Calculate bounds to adjust the anchor closer to the gamut surface.
 	// Assume an RGB range between 0 - 1, but this could be different depending on the RGB max luminance,
 	// and could be calculated to be different depending on needs.
-	// This is desgined to work with any perceptual space, and some are more senstive to evaluating
-	// too close to the surface. OkLCh likely doesn't need a 1e-6 offset, but we keep it for completeness
-	// in case anyone desires to use this with a different perceptual space. 1e-6 is also quite generous
-	// in a 64 bit double and could likely be smaller.
-	let low = 1e-6;
+	// This is desgined to work with any perceptual space, but value should be picked to be reasonable
+	// the unit type: 1e-6 for 32 bit or 1e-12 for 64 bit.
+	let low = 1e-12;
 	let high = 1 - low;
 
 	// Cast a ray from the zero chroma color to the target color.
