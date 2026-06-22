@@ -77,12 +77,10 @@ function firstTurn (D, B, A) {
 	return firstRoot(0, D, 2 * B, A, 1e-12, Infinity);
 }
 
-let hueCache = new Map(); // H → hue-only structure (see getHueData)
-
-function getHueData (H) {
-	if (hueCache.has(H)) {
-		return hueCache.get(H);
-	}
+// The per-hue cubic structure, computed fresh on every call. Caching is layered
+// on top (getHueData) rather than baked in here, so the no-cache variant can
+// reuse this directly to measure the hue setup without amortization.
+export function computeHueData (H) {
 	let rad = H * Math.PI / 180;
 
 	// At fixed L and H, each linear-P3 channel is *exactly* cubic in chroma c:
@@ -102,8 +100,9 @@ function getHueData (H) {
 	//   Pᵢ(t) = 1 + 3Aᵢ·t + 3Bᵢ·t² + Dᵢ·t³
 	//
 	// so Pᵢ — hence the lower-gamut exit and the monotonicity structure — depends
-	// only on H and is precomputed here, once per hue. Only the white bound stays
-	// per color (it lands at Pᵢ = L⁻³); see compute.
+	// only on H, and is computed here as hue-only data (memoized per hue by
+	// getHueData). Only the white bound stays per color (it lands at Pᵢ = L⁻³);
+	// see compute.
 
 	// Lower exit: smallest t > 0 where any channel reaches the black bound
 	// (channelᵢ = 0 ⟺ Pᵢ = 0). Every channel starts at Pᵢ(0) = 1, so the first
@@ -115,62 +114,80 @@ function getHueData (H) {
 		turn[i] = firstTurn(D[i], B[i], A[i]);
 	}
 
-	let data = {A, B, D, tLower, turn};
-	hueCache.set(H, data);
-	return data;
+	return {A, B, D, tLower, turn};
 }
 
-export function compute (color) {
-	color = color.to("oklch");
-	let [L, C, H] = color.coords;
+// Cached lookup: hue data is fully determined by H, so memoize it per hue. A
+// sweep over many lightnesses at one hue then pays the setup once.
+let hueCache = new Map(); // H → hue-only structure (see computeHueData)
 
-	// Return early for achromatic colors or white/black
-	let isBlack = L <= 0;
-	let isWhite = L >= 1;
-	let isGray = C <= 0 || C === null;
+function getHueData (H) {
+	if (!hueCache.has(H)) {
+		hueCache.set(H, computeHueData(H));
+	}
+	return hueCache.get(H);
+}
 
-	if (isBlack || isWhite || isGray) {
-		if (isBlack) {
-			color.coords[0] = 0;
+// Build the chroma-reduction compute() around a hue-data source. The cubic
+// solving is identical whether `getHueData` memoizes per hue or recomputes every
+// call; that choice is the only thing oklch-cubic and oklch-cubic-nocache differ
+// by, so it's injected here rather than hard-wired.
+export function makeCompute (getHueData) {
+	return function compute (color) {
+		color = color.to("oklch");
+		let [L, C, H] = color.coords;
+
+		// Return early for achromatic colors or white/black
+		let isBlack = L <= 0;
+		let isWhite = L >= 1;
+		let isGray = C <= 0 || C === null;
+
+		if (isBlack || isWhite || isGray) {
+			if (isBlack) {
+				color.coords[0] = 0;
+			}
+			else if (isWhite) {
+				color.coords[0] = 1;
+			}
+
+			color.coords[1] = 0;
+			return color;
 		}
-		else if (isWhite) {
-			color.coords[0] = 1;
+
+		let {A, B, D, tLower, turn} = getHueData(H);
+
+		// Work in t = c/L. The cap starts at the input chroma and the (hue-only) lower
+		// exit; the white bound below can only pull it lower.
+		let maxT = Math.min(C / L, tLower);
+
+		// White exit: the smallest t > 0 at which any channel reaches 1, i.e.
+		// Pᵢ(t) = L⁻³. Same cubic as Pᵢ, only the constant shifts to 1 − L⁻³. This is
+		// the one part that depends on L, so it's the only per-color solving left.
+		let target = 1 / L ** 3; // Pᵢ value at the white bound
+		let d = 1 - target; // constant term of Pᵢ(t) − L⁻³
+		for (let i = 0; i < 3; i++) {
+			// Monotonic up to the running cap (no turning point before it)? Then it can
+			// only reach the white bound if it's rising and not still below it at maxT —
+			// otherwise skip the solve. (Its black bound, if any, is already in tLower.)
+			if (turn[i] > maxT) {
+				if (A[i] <= 0) {
+					continue;
+				}
+				let PmaxT = ((D[i] * maxT + 3 * B[i]) * maxT + 3 * A[i]) * maxT + 1;
+				if (PmaxT < target) {
+					continue;
+				}
+			}
+			maxT = Math.min(maxT, firstRoot(D[i], 3 * B[i], 3 * A[i], d, 1e-9, maxT));
 		}
 
-		color.coords[1] = 0;
+		color.coords[1] = L * maxT; // replace input chroma with the reduced value
 		return color;
-	}
-
-	let {A, B, D, tLower, turn} = getHueData(H);
-
-	// Work in t = c/L. The cap starts at the input chroma and the (hue-only) lower
-	// exit; the white bound below can only pull it lower.
-	let maxT = Math.min(C / L, tLower);
-
-	// White exit: the smallest t > 0 at which any channel reaches 1, i.e.
-	// Pᵢ(t) = L⁻³. Same cubic as Pᵢ, only the constant shifts to 1 − L⁻³. This is
-	// the one part that depends on L, so it's the only per-color solving left.
-	let target = 1 / L ** 3; // Pᵢ value at the white bound
-	let d = 1 - target; // constant term of Pᵢ(t) − L⁻³
-	for (let i = 0; i < 3; i++) {
-		// Monotonic up to the running cap (no turning point before it)? Then it can
-		// only reach the white bound if it's rising and not still below it at maxT —
-		// otherwise skip the solve. (Its black bound, if any, is already in tLower.)
-		if (turn[i] > maxT) {
-			if (A[i] <= 0) {
-				continue;
-			}
-			let PmaxT = ((D[i] * maxT + 3 * B[i]) * maxT + 3 * A[i]) * maxT + 1;
-			if (PmaxT < target) {
-				continue;
-			}
-		}
-		maxT = Math.min(maxT, firstRoot(D[i], 3 * B[i], 3 * A[i], d, 1e-9, maxT));
-	}
-
-	color.coords[1] = L * maxT; // replace input chroma with the reduced value
-	return color;
+	};
 }
+
+// The default method memoizes hue data per hue.
+export const compute = makeCompute(getHueData);
 
 export default {
 	label: "OKLCh cubic",
