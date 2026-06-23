@@ -331,6 +331,24 @@ function formatTime (ms) {
 	return ms < 1 ? `${prec(ms * 1000, 3)} µs` : `${prec(ms, 3)} ms`;
 }
 
+// How much slower a time is than the fastest, as a human-readable string.
+// Small gaps read best as a percentage of extra time ("7%"), large ones as a
+// multiplier ("10×"); both use 1 significant figure so noise never inflates the
+// digits, and so a tiny ratio never collapses to a meaningless "0%" or "1×".
+function formatSlower (ratio) {
+	if (ratio >= 2) {
+		return `${prec(ratio, 2)}× slower`;
+	}
+	// Round the extra-time percentage to 1 significant figure. `prec` can't do
+	// this for values below 1, so round by the percentage's own magnitude.
+	let pct = (ratio - 1) * 100;
+	let exp = Math.floor(Math.log10(pct));
+	let factor = 10 ** exp;
+	let rounded = Math.round(pct / factor) * factor;
+	// toFixed cleans float noise; unary + strips any trailing zero (1.0 → 1).
+	return `${+rounded.toFixed(Math.max(0, -exp))}% slower`;
+}
+
 // avg/iqm/median/min/max/stdev over the first n entries of a metric's samples.
 // The typed array sorts numerically, so the median and IQM are exact.
 function summarize (values, n) {
@@ -434,13 +452,7 @@ function renderStats () {
 		g.statEls.time.textContent = Number.isFinite(t) ? formatTime(t) : "—";
 		// Annotate everything but the fastest with how much slower it is.
 		if (Number.isFinite(t) && t > minTime) {
-			let ratio = t / minTime;
-			// Significant figures of `ratio`: 1 for the leading "1", plus any zeros
-			// before the first differing digit, plus 1 meaningful digit of the
-			// difference. This keeps 1 sig fig of the *difference* from the fastest,
-			// so a tiny ratio like 1.0008 never collapses to a meaningless "1× slower".
-			let precision = 2 + Math.max(0, -Math.floor(Math.log10(ratio - 1)) - 1);
-			g.statEls.time.append(" ", el("small", {class: "slower"}, `(${prec(ratio, precision)}× slower)`));
+			g.statEls.time.append(" ", el("small", {class: "slower"}, `(${formatSlower(t / minTime)})`));
 		}
 
 		// Best/worst on the active sort key (skip "worst" when everything ties).
