@@ -434,7 +434,13 @@ function renderStats () {
 		g.statEls.time.textContent = Number.isFinite(t) ? formatTime(t) : "—";
 		// Annotate everything but the fastest with how much slower it is.
 		if (Number.isFinite(t) && t > minTime) {
-			g.statEls.time.append(" ", el("small", {class: "slower"}, `(${prec(t / minTime, 2)}× slower)`));
+			let ratio = t / minTime;
+			// Significant figures of `ratio`: 1 for the leading "1", plus any zeros
+			// before the first differing digit, plus 1 meaningful digit of the
+			// difference. This keeps 1 sig fig of the *difference* from the fastest,
+			// so a tiny ratio like 1.0008 never collapses to a meaningless "1× slower".
+			let precision = 2 + Math.max(0, -Math.floor(Math.log10(ratio - 1)) - 1);
+			g.statEls.time.append(" ", el("small", {class: "slower"}, `(${prec(ratio, precision)}× slower)`));
 		}
 
 		// Best/worst on the active sort key (skip "worst" when everything ties).
