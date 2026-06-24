@@ -1,2 +1,10 @@
 /*
 	Access-Control-Allow-Origin: *
+
+# Cross-origin isolate the GMA benchmark so performance.now() gets its
+# high-resolution timer (~5µs) instead of the coarsened default (~100µs),
+# for less noisy per-method timings. Safe here because the page and its whole
+# module graph are same-origin, so COEP: require-corp blocks nothing.
+/gamut-mapping/benchmark/*
+	Cross-Origin-Opener-Policy: same-origin
+	Cross-Origin-Embedder-Policy: require-corp
