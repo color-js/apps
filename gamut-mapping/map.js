@@ -1,3 +1,4 @@
+import { to, deltaE, OKLCH } from "colorjs.io/fn";
 import methods from "./methods.js";
 import stats, { time } from "./stats.js";
 
@@ -22,14 +23,14 @@ export const defaultWeights = {H: 8, L: 4, C: 1};
  * Raw (unrounded) deltas between an input color and one of its gamut-mapped
  * results. Takes the input's OKLCh coords so callers mapping one color through
  * many methods convert it once rather than per method.
- * @param {import("colorjs.io").default} color - the input color
- * @param {import("colorjs.io").default} mapped - the gamut-mapped color
+ * @param {import("colorjs.io/fn").ColorTypes} color - the input color
+ * @param {import("colorjs.io/fn").ColorTypes} mapped - the gamut-mapped color
  * @param {[number, number, number]} oklch - the input color's OKLCh coords [L, C, h]
  * @param {{L: number, C: number, H: number}} weights - per-axis Error weights
  * @returns {{error: number, E2K: number, EOK: number, L: number, C: number, H: number}}
  */
 export function getDeltas (color, mapped, [L1, C1, h1], weights) {
-	let [L2, C2, h2] = mapped.to("oklch").coords;
+	let [L2, C2, h2] = to(mapped, OKLCH).coords;
 
 	// Raw OKLCh differences. Δh is wrapped to the shortest signed arc, in degrees.
 	let ΔL = L2 - L1;
@@ -51,8 +52,8 @@ export function getDeltas (color, mapped, [L1, C1, h1], weights) {
 
 	return {
 		error,
-		E2K: color.deltaE(mapped, { method: "2000" }),
-		EOK: color.deltaE(mapped, { method: "OK" }),
+		E2K: deltaE(color, mapped, { method: "2000" }),
+		EOK: deltaE(color, mapped, { method: "OK" }),
 		// Signed values for display (direction matters); the consumer compares
 		// their magnitudes for best/worst highlighting. L in percentage points;
 		// hue as the signed shortest arc in degrees.

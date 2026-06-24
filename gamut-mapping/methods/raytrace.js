@@ -1,4 +1,6 @@
-import Color from "colorjs.io";
+import { to, inGamut, setAll, P3, P3_Linear, OKLCH, XYZ_D65 } from "colorjs.io/fn";
+// WHITES (white points), util, and the angle helper are internal utilities with
+// no dedicated package export, so they come from src/ directly.
 import { WHITES } from "colorjs.io/src/adapt.js";
 import * as util from "colorjs.io/src/util.js";
 import { constrain as constrainAngle } from "colorjs.io/src/angles.js";
@@ -194,8 +196,9 @@ function trace (orig) {
 	}
 
 	// Remove noise from floating point math by clipping
-	orig.setAll(
-		'p3-linear',
+	setAll(
+		orig,
+		P3_Linear,
 		[
 			util.clamp(0.0, mapColor[0], 1.0),
 			util.clamp(0.0, mapColor[1], 1.0),
@@ -203,24 +206,24 @@ function trace (orig) {
 		]
 	);
 
-	return orig.to("p3");
+	return to(orig, P3);
 }
 
 export function compute (color) {
 	// An approached originally designed for ColorAide.
 	// https://facelessuser.github.io/coloraide/gamut/#ray-tracing-chroma-reduction
-	if (color.inGamut("p3", { epsilon: 0 })) {
-		return color.to("p3");
+	if (inGamut(color, P3, { epsilon: 0 })) {
+		return to(color, P3);
 	}
 
-	let mapColor = color.to("oklch");
+	let mapColor = to(color, OKLCH);
 	let lightness = mapColor.coords[0];
 
 	if (lightness >= 1) {
-		return new Color({ space: "xyz-d65", coords: WHITES["D65"] }).to("p3");
+		return to({ space: XYZ_D65, coords: WHITES["D65"] }, P3);
 	}
 	else if (lightness <= 0) {
-		return new Color({ space: "xyz-d65", coords: [0, 0, 0] }).to("p3");
+		return to({ space: XYZ_D65, coords: [0, 0, 0] }, P3);
 	}
 	return trace(mapColor);
 }

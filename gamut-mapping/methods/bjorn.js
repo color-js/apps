@@ -1,3 +1,6 @@
+import { to, inGamut, OKLab, P3 } from "colorjs.io/fn";
+// util (clamp) and the Okhsl gamut helpers are internal utilities with no
+// dedicated package export, so they come from src/ directly.
 import * as util from "colorjs.io/src/util.js";
 import { findCusp, findGamutIntersection } from "colorjs.io/src/spaces/okhsl.js";
 
@@ -34,12 +37,12 @@ const P3Coeff = [
 export function compute (color) {
 	// Approach described in https://bottosson.github.io/posts/gamutclipping/
 	// For comparison against CSS approaches, constant lightness was used.
-	let oklab = color.to("oklab");
+	let oklab = to(color, OKLab); // OKLab coords are [l, a, b]
 
 	// Clamp lightness and see if we are in gamut.
-	oklab.l = util.clamp(0.0, oklab.l, 1.0);  // If doing adaptive lightness, this might not be wanted.
-	if (oklab.inGamut("p3", { epsilon: 0 })) {
-		return oklab.to("p3");
+	oklab.coords[0] = util.clamp(0.0, oklab.coords[0], 1.0);  // If doing adaptive lightness, this might not be wanted.
+	if (inGamut(oklab, P3, { epsilon: 0 })) {
+		return to(oklab, P3);
 	}
 
 	// Get coordinates and calculate chroma
@@ -65,14 +68,14 @@ export function compute (color) {
 
 	// Adjust lightness and chroma
 	if (target !== l) {
-		oklab.l = target * (1 - t) + t * l;
+		oklab.coords[0] = target * (1 - t) + t * l;
 	}
 	c *= t;
-	oklab.a = c * a;
-	oklab.b = c * b;
+	oklab.coords[1] = c * a;
+	oklab.coords[2] = c * b;
 
 	// Convert back to P3; any residual out-of-gamut is clipped by the registry.
-	return oklab.to('p3');
+	return to(oklab, P3);
 }
 
 export default {

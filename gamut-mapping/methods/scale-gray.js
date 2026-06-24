@@ -1,4 +1,4 @@
-import Color from "colorjs.io";
+import { to, P3, P3_Linear, OKLCH } from "colorjs.io/fn";
 
 function progress (n, min, max) {
 	return (n - min) / (max - min);
@@ -13,10 +13,11 @@ function clamp (min, n, max) {
 }
 
 export function compute (color) {
-	let p3 = color.to("p3-linear").coords;
-	let lch = color.to("oklch").coords;
+	let plinear = to(color, P3_Linear);
+	let p3 = plinear.coords;
+	let lch = to(color, OKLCH).coords;
 	// Gray with the same L has equal linear-P3 coords; use that value as the midpoint.
-	let midpoint = new Color("oklch", [lch[0], 0, 0]).to("p3-linear").coords[0];
+	let midpoint = to({ space: OKLCH, coords: [lch[0], 0, 0] }, P3_Linear).coords[0];
 
 	// For each out-of-gamut channel, the fraction (0–1) we must lerp it toward the
 	// midpoint to pull it back to the boundary. In-gamut channels naturally yield 0
@@ -26,9 +27,10 @@ export function compute (color) {
 	// colors (all channels on the midpoint) back in.
 	let maxP = Math.max(0, ...p3.map(c => c === midpoint ? 0 : progress(clamp(0, c, 1), c, midpoint)));
 
-	let scaledCoords = p3.map(c => lerp(maxP, c, midpoint));
+	// Reuse the same linear-P3 color for the result.
+	plinear.coords = p3.map(c => lerp(maxP, c, midpoint));
 
-	return new Color("p3-linear", scaledCoords).to("p3");
+	return to(plinear, P3);
 }
 
 export default {

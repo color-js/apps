@@ -1,5 +1,8 @@
+import { toGamut, clone, P3 } from "colorjs.io/fn";
+
 export function compute (color) {
-	return color.clone().toGamut({ space: "p3", method: "clip" });
+	// Clone so we never mutate the shared input; toGamut maps it in place.
+	return toGamut(clone(color), { space: P3, method: "clip" });
 }
 
 export default {

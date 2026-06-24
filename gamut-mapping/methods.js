@@ -1,6 +1,15 @@
 // Registry of gamut mapping methods. Each method lives in its own file under
 // methods/ so their relative sizes are easy to compare. A method is a config
 // object with `label`, `description`, and a `compute` function.
+
+// The methods use the procedural `colorjs.io/fn` API and import the color space
+// OBJECTS they need from it, passing those (not string ids) to conversions so
+// the timed work skips registry lookups. This import registers every space in
+// the global registry, still needed for id-based coordinate references like
+// `"oklch.l"` in restoreLH (and as a safety net). It must come first so the
+// spaces exist before any load-time conversion runs (Edge Seeker builds its LUT
+// on import).
+import "colorjs.io/spaces";
 import clip, { compute as clipToGamut } from "./methods/clip.js";
 import css from "./methods/css.js";
 import cssRec2020 from "./methods/css-rec2020.js";
@@ -12,6 +21,7 @@ import edgeSeeker from "./methods/edge-seeker/index.js";
 import hslClip from "./methods/hsl-clip.js";
 import scaleGray from "./methods/scale-gray.js";
 import oklchCubic from "./methods/oklch-cubic.js";
+import { to, set, inGamut, OKLCH, P3 } from "colorjs.io/fn";
 import { time } from "./stats.js";
 
 const methods = {
@@ -42,9 +52,16 @@ const MAX_CHROMA = 0.4;
 // than an out-of-gamut value the swatch would silently clip.
 function normalize (compute) {
 	return (color) => {
-		let input = color.to("oklch").set({ c: c => Math.min(c, MAX_CHROMA) });
+		// Convert to OKLCh and cap chroma at MAX_CHROMA so every method starts from
+		// the same input. `to` hands us a fresh color object to reuse, but we swap
+		// in a fresh coords array rather than capping in place: when the input is
+		// already OKLCh, `to` returns the caller's own coords by reference, so an
+		// in-place cap would corrupt the caller's color.
+		let input = to(color, OKLCH);
+		let [l, c, h] = input.coords;
+		input.coords = [l, Math.min(c, MAX_CHROMA), h];
 		let result = compute(input);
-		return result.inGamut("p3") ? result : clipToGamut(result);
+		return inGamut(result, P3) ? result : clipToGamut(result);
 	};
 }
 
@@ -56,8 +73,10 @@ function normalize (compute) {
 // Restore the original L,H onto a mapped color (chroma kept; out-of-gamut
 // results are clipped by normalize downstream).
 function restoreLH (mapped, original) {
-	let {l, h} = original.to("oklch");
-	return mapped.set({"oklch.l": l, "oklch.h": h});
+	let [l, , h] = to(original, OKLCH).coords;
+	// "oklch.l"/"oklch.h" are coordinate references (not space args), resolved by
+	// id via the registry — hence the `colorjs.io/spaces` import above.
+	return set(mapped, {"oklch.l": l, "oklch.h": h});
 }
 
 // The color after n converge iterations (n ≥ 2; see the c/p sketch above).

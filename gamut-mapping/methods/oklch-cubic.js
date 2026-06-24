@@ -1,9 +1,11 @@
+import { to, OKLCH, OKLab, P3_Linear } from "colorjs.io/fn";
+// multiplyMatrices/multiply_v3_m3x3 are math utilities with no dedicated package
+// export, so they come from src/. The space objects (for their `.M` matrices)
+// come from the dedicated `colorjs.io/fn` export.
 import { multiplyMatrices, multiply_v3_m3x3 } from "colorjs.io/src/util.js";
-import oklab from "colorjs.io/src/spaces/oklab.js";
-import p3linear from "colorjs.io/src/spaces/p3-linear.js";
 
-const oklabToLMS = oklab.M.LabtoLMS;                                  // OKLab → LMS'
-const lmsToRGB = multiplyMatrices(p3linear.M.fromXYZ, oklab.M.LMStoXYZ); // LMS³ → linear P3
+const oklabToLMS = OKLab.M.LabtoLMS;                                  // OKLab → LMS'
+const lmsToRGB = multiplyMatrices(P3_Linear.M.fromXYZ, OKLab.M.LMStoXYZ); // LMS³ → linear P3
 
 // Smallest real root of a·t³ + b·t² + c·t + d in the open interval (lo, hi), or
 // Infinity if none. Closed form (no iteration); returns a scalar, not an array,
@@ -116,7 +118,7 @@ function getHueData (H) {
 }
 
 export function compute (color) {
-	color = color.to("oklch");
+	color = to(color, OKLCH);
 	let [L, C, H] = color.coords;
 
 	// Return early for achromatic colors or white/black

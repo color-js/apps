@@ -1,5 +1,7 @@
+import { toGamut, clone, P3 } from "colorjs.io/fn";
+
 export function compute (color) {
-	return color.clone().toGamut({ space: "p3", method: "css" });
+	return toGamut(clone(color), { space: P3, method: "css" });
 }
 
 export default {

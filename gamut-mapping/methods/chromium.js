@@ -1,10 +1,12 @@
+import { to, inGamut, OKLab, REC_2020 } from "colorjs.io/fn";
+
 export function compute (color) {
 	// Implementation difference: The reference algorithm does not appear to
 	// return early for in-gamut colors.
-	if (color.inGamut("rec2020")) {
+	if (inGamut(color, REC_2020)) {
 		return color;
 	}
-	const oklab = color.to("oklab");
+	const oklab = to(color, OKLab);
 	const [l, a, b] = oklab.coords;
 	// Constants for the normal vector of the plane formed by white, black, and
 	// the specified vertex of the gamut.
@@ -116,11 +118,13 @@ export function compute (color) {
 		}
 	}
 
-	// Attenuate the ab coordinate by alpha.
+	// Attenuate the ab coordinate by alpha (OKLab coords are [l, a, b]).
 	// Implementation difference: The reference algorithm does not include a
 	// final clip, so some resulting colors may be outside of `rec2020`. The
 	// out-of-gamut result is clipped to P3 by the registry's final step.
-	return oklab.set({a: alpha * a, b: alpha * b});
+	oklab.coords[1] = alpha * a;
+	oklab.coords[2] = alpha * b;
+	return oklab;
 }
 
 export default {
