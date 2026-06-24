@@ -2,7 +2,7 @@ import { to, OKLCH, OKLab, P3_Linear } from "colorjs.io/fn";
 // multiplyMatrices/multiply_v3_m3x3 are math utilities with no dedicated package
 // export, so they come from src/. The space objects (for their `.M` matrices)
 // come from the dedicated `colorjs.io/fn` export.
-import { multiplyMatrices, multiply_v3_m3x3 } from "colorjs.io/src/util.js";
+import { multiplyMatrices, multiply_v3_m3x3, toPrecision } from "colorjs.io/src/util.js";
 
 const oklabToLMS = OKLab.M.LabtoLMS;                                  // OKLab → LMS'
 const lmsToRGB = multiplyMatrices(P3_Linear.M.fromXYZ, OKLab.M.LMStoXYZ); // LMS³ → linear P3
@@ -117,60 +117,92 @@ function getHueData (H) {
 	return {A, B, D, tLower, turn};
 }
 
-export function compute (color) {
-	color = to(color, OKLCH);
-	let [L, C, H] = color.coords;
+// Build the chroma-reduction compute() around a hue-data source. The cubic
+// solving is identical whether the per-hue structure is recomputed every call or
+// memoized; that choice is the only thing the two variants differ by, so it's
+// injected here rather than duplicated.
+function makeCompute (hueData) {
+	return function compute (color) {
+		color = to(color, OKLCH);
+		let [L, C, H] = color.coords;
 
-	// Return early for achromatic colors or white/black
-	let isBlack = L <= 0;
-	let isWhite = L >= 1;
-	let isGray = C <= 0 || C === null;
+		// Return early for achromatic colors or white/black
+		let isBlack = L <= 0;
+		let isWhite = L >= 1;
+		let isGray = C <= 0 || C === null;
 
-	if (isBlack || isWhite || isGray) {
-		if (isBlack) {
-			color.coords[0] = 0;
+		if (isBlack || isWhite || isGray) {
+			if (isBlack) {
+				color.coords[0] = 0;
+			}
+			else if (isWhite) {
+				color.coords[0] = 1;
+			}
+
+			color.coords[1] = 0;
+			return color;
 		}
-		else if (isWhite) {
-			color.coords[0] = 1;
+
+		let {A, B, D, tLower, turn} = hueData(H);
+
+		// Work in t = c/L. The cap starts at the input chroma and the (hue-only) lower
+		// exit; the white bound below can only pull it lower.
+		let maxT = Math.min(C / L, tLower);
+
+		// White exit: the smallest t > 0 at which any channel reaches 1, i.e.
+		// Pᵢ(t) = L⁻³. Same cubic as Pᵢ, only the constant shifts to 1 − L⁻³. This is
+		// the one part that depends on L, so it's the only per-color solving left.
+		let target = 1 / L ** 3; // Pᵢ value at the white bound
+		let d = 1 - target; // constant term of Pᵢ(t) − L⁻³
+		for (let i = 0; i < 3; i++) {
+			// Monotonic up to the running cap (no turning point before it)? Then it can
+			// only reach the white bound if it's rising and not still below it at maxT —
+			// otherwise skip the solve. (Its black bound, if any, is already in tLower.)
+			if (turn[i] > maxT) {
+				if (A[i] <= 0) {
+					continue;
+				}
+				let PmaxT = ((D[i] * maxT + 3 * B[i]) * maxT + 3 * A[i]) * maxT + 1;
+				if (PmaxT < target) {
+					continue;
+				}
+			}
+			maxT = Math.min(maxT, firstRoot(D[i], 3 * B[i], 3 * A[i], d, 1e-9, maxT));
 		}
 
-		color.coords[1] = 0;
+		color.coords[1] = L * maxT; // replace input chroma with the reduced value
 		return color;
-	}
-
-	let {A, B, D, tLower, turn} = getHueData(H);
-
-	// Work in t = c/L. The cap starts at the input chroma and the (hue-only) lower
-	// exit; the white bound below can only pull it lower.
-	let maxT = Math.min(C / L, tLower);
-
-	// White exit: the smallest t > 0 at which any channel reaches 1, i.e.
-	// Pᵢ(t) = L⁻³. Same cubic as Pᵢ, only the constant shifts to 1 − L⁻³. This is
-	// the one part that depends on L, so it's the only per-color solving left.
-	let target = 1 / L ** 3; // Pᵢ value at the white bound
-	let d = 1 - target; // constant term of Pᵢ(t) − L⁻³
-	for (let i = 0; i < 3; i++) {
-		// Monotonic up to the running cap (no turning point before it)? Then it can
-		// only reach the white bound if it's rising and not still below it at maxT —
-		// otherwise skip the solve. (Its black bound, if any, is already in tLower.)
-		if (turn[i] > maxT) {
-			if (A[i] <= 0) {
-				continue;
-			}
-			let PmaxT = ((D[i] * maxT + 3 * B[i]) * maxT + 3 * A[i]) * maxT + 1;
-			if (PmaxT < target) {
-				continue;
-			}
-		}
-		maxT = Math.min(maxT, firstRoot(D[i], 3 * B[i], 3 * A[i], d, 1e-9, maxT));
-	}
-
-	color.coords[1] = L * maxT; // replace input chroma with the reduced value
-	return color;
+	};
 }
+
+// No-cache: recompute the per-hue structure on every call.
+export const compute = makeCompute(getHueData);
+
+// Cached: the per-hue structure is fully determined by H, so memoize it — a
+// sweep over many lightnesses at one hue then pays the setup once. The key is
+// quantized to 4 significant digits so arbitrary float hues can't grow the Map
+// unbounded; that collapses hues within ~0.1° onto a shared (still exact-at-that-
+// hue) structure.
+let hueCache = new Map();
+function cachedHueData (H) {
+	let key = toPrecision(H, 4);
+	let data = hueCache.get(key);
+	if (data === undefined) {
+		data = getHueData(key);
+		hueCache.set(key, data);
+	}
+	return data;
+}
+export const cachedCompute = makeCompute(cachedHueData);
 
 export default {
 	label: "OKLCh cubic",
 	description: "Reduce OKLCh chroma to the exact P3 gamut boundary by solving, in closed form, the cubic that each linear-P3 channel traces as a function of chroma.",
 	compute,
+};
+
+export const cached = {
+	label: "OKLCh cubic (cached)",
+	description: "Like OKLCh cubic, but caches the per-hue structure (keyed by hue to 4 significant digits) so a sweep over many lightnesses at one hue solves it once.",
+	compute: cachedCompute,
 };
