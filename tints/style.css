@@ -83,6 +83,15 @@ body {
 	flex-wrap: wrap;
 }
 
+.scale-id {
+	font-size: 0.75em;
+	font-weight: normal;
+	color: GrayText;
+	background: light-dark(hsl(0 0% 0% / 0.06), hsl(0 0% 100% / 0.12));
+	padding: 0.15em 0.4em;
+	border-radius: 0.25em;
+}
+
 .weight-slider {
 	display: flex;
 	align-items: center;
@@ -93,6 +102,26 @@ body {
 	output {
 		min-width: 3em;
 		text-align: end;
+	}
+}
+
+.params {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.3em 1em;
+	margin-block: 0.4em;
+	font-size: 0.8em;
+
+	label {
+		display: flex;
+		align-items: center;
+		gap: 0.4em;
+	}
+
+	output {
+		min-width: 2em;
+		text-align: end;
+		font-variant-numeric: tabular-nums;
 	}
 }
 

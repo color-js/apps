@@ -28,6 +28,29 @@ const L = {
 	10: 0.2,
 };
 
+function progress(n, min, max) {
+	return (n - min) / (max - min);
+}
+
+/** Returns a version of `fn` that delays running until `delay` ms have passed without another call. */
+function debounce(fn, delay) {
+	let timer;
+	return (...args) => {
+		clearTimeout(timer);
+		timer = setTimeout(() => fn(...args), delay);
+	};
+}
+
+/**
+ * The tunable numeric params a scale exposes, as `{ name: {min, max, default, step?} }`.
+ * Everything on a scale def besides `name` and `getColor` is treated as a param.
+ * @param {object} scale
+ */
+function getParams (scale) {
+	let { name, getColor, ...params } = scale;
+	return params;
+}
+
 const scaleDefs = {
 	raw: {
 		name: "Raw",
@@ -63,6 +86,29 @@ const scaleDefs = {
 			return color.toGamut({ space: "p3", method: "oklch.c" });
 		},
 	},
+	oklchp3: {
+		name: "Using (oklch-P3)",
+		getColor: (level, color) => {
+			color = color.to("oklch-p3");
+			color.set("l", L[level]);
+			return color.to("oklch");
+		},
+	},
+	pow: {
+		name: "Power curve",
+		getColor (level, color) {
+			color = color.clone().to("oklch");
+			let l = color.get("oklch.l");
+			let targetL = L[level];
+			color.set("l", targetL);
+			let x = Math.max(progress(targetL, l, 0), progress(targetL, l, 1));
+			let exp = l < targetL ? this.exp_lighter : this.exp_darker;
+			color.set("c", c => c * (1 - x ** exp));
+			return color;
+		},
+		exp_lighter: {min: 0.5, max: 3, default: 1},
+		exp_darker: {min: 0.5, max: 3, default: 2},
+	},
 	colormix: {
 		name: "color-mix()",
 		getColor: (level, color) => {
@@ -78,9 +124,15 @@ const scaleDefs = {
 
 };
 
+const params = new URLSearchParams(location.search);
+
+// Set the base color via ?color=… (e.g. ?color=oklch(70% 0.16 205)), falling back
+// to the picker's default when absent. Any CSS color the picker understands works.
+const initialColor = params.get("color") || "oklch(70% 0.16 205)";
+
 // Restrict the visible scales via ?scales=id1,id2 (e.g. for demos or sharing).
 // Unknown ids are ignored; the URL order also defines display order.
-let only = new URLSearchParams(location.search).get("scales");
+let only = params.get("scales");
 const scales = only
 	? Object.fromEntries(
 		only.split(",")
@@ -89,6 +141,22 @@ const scales = only
 			.map(id => [id, scaleDefs[id]]),
 	)
 	: scaleDefs;
+
+// Slider descriptors per scale, derived from each scale's param defs. Only scales that
+// expose params get an entry; `paramValues` (in data) holds the live, editable values.
+const paramDefs = Object.fromEntries(
+	Object.entries(scales)
+		.map(([id, scale]) => [
+			id,
+			Object.entries(getParams(scale)).map(([name, def]) => ({
+				name,
+				label: name.replace(/_/g, " "),
+				step: 0.01,
+				...def,
+			})),
+		])
+		.filter(([, defs]) => defs.length > 0),
+);
 
 globalThis.app = createApp({
 	compilerOptions: {
@@ -100,6 +168,16 @@ globalThis.app = createApp({
 	data () {
 		return {
 			swatches,
+			paramDefs,
+			// Live param values, keyed `scaleId.paramName`. Bound to the sliders and read by
+			// getColor via `this` (each scale's getColor runs with its own values as `this`).
+			paramValues: Object.fromEntries(
+				Object.entries(paramDefs).map(([id, defs]) => [
+					id,
+					Object.fromEntries(defs.map(def => [def.name, def.default])),
+				]),
+			),
+			initialColor,
 			color: null,
 			darkMode: false,
 			// Maps each selected scale id to its weight (0–100). Weights always sum to 100.
@@ -120,9 +198,11 @@ globalThis.app = createApp({
 				let tints = {};
 				let cssVars = {};
 
+				// Run getColor with this scale's live param values as `this`, so a param-driven
+				// scale can read them as `this.paramName`. Param-free scales ignore `this`.
 				for (let level in L) {
-					tints[level] = scale.getColor(level, this.color.clone());
-					cssVars["--color-" + level] = tints[level].toString();
+					tints[level] = scale.getColor.call(this.paramValues[id], level, this.color.clone());
+					cssVars["--color-" + level] = tints[level].display();
 				}
 
 				return { id, name: scale.name, tints, cssVars };
@@ -246,5 +326,17 @@ globalThis.app = createApp({
 		darkMode (value) {
 			document.documentElement.style.colorScheme = value ? "dark" : "";
 		},
+
+		// Reflect the current color in the URL (?color=…) so refreshing or sharing keeps it.
+		// Debounced and using replaceState so dragging the picker doesn't spam history.
+		color: debounce(color => {
+			if (!color) {
+				return;
+			}
+
+			let params = new URLSearchParams(location.search);
+			params.set("color", color.toString());
+			history.replaceState(null, "", "?" + params);
+		}, 300),
 	},
 }).mount(document.body);
