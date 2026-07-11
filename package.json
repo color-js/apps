@@ -44,9 +44,9 @@
 		"release-it": "^17.1.1"
 	},
 	"dependencies": {
-		"color-elements": "^0.0.14",
-		"colorjs.io": "^0.7.0",
-		"incrementable": "^2.0.0",
+		"color-elements": "latest",
+		"colorjs.io": "latest",
+		"incrementable": "^2",
 		"vue": "^3"
 	},
 	"overrides": {
