@@ -1,4 +1,5 @@
 import Color from "colorjs.io";
+import { to, serialize, OKLCH, P3 } from "colorjs.io/fn";
 import { representatives } from "../methods.js";
 import { mapColor, getDeltas, defaultWeights as weights } from "../map.js";
 import stats, { average } from "../stats.js";
@@ -39,6 +40,13 @@ let [lMin, lMax] = range("l") ?? [lStep, 1 - lStep];
 const FRAME_BUDGET = 12; // ms
 
 const prec = Color.util.toPrecision;
+
+// A plain OKLCh color object for the sweep's fixed input chroma. Procedural
+// Color.js consumes these directly, with none of the per-color OOP overhead
+// (getter/setter definition, result re-wrapping) that would otherwise skew the
+// per-method timings. The space is the OKLCH object (not a string id), so no
+// registry lookup happens on the timed path.
+let oklchColor = (l, h) => ({space: OKLCH, coords: [l, CHROMA, h], alpha: 1});
 
 // Delta metrics the avg/min/max/median stats can report on (keys match getDeltas).
 const METRICS = {
@@ -180,7 +188,7 @@ function buildInspector () {
 // Recompute a single patch across every GMA. Calls compute() directly (not
 // mapColor) so hovering never adds to the timing stats.
 function inspect (l, h) {
-	let color = new Color("oklch", [l, CHROMA, h]);
+	let color = oklchColor(l, h);
 	let oklch = [l, CHROMA, h];
 	inspector.classList.add("active");
 	coords.textContent = `oklch(${prec(l, 3)} ${CHROMA} ${h})`;
@@ -188,7 +196,7 @@ function inspect (l, h) {
 	for (let g of gmas) {
 		let mapped = g.config.compute(color);
 		let deltas = getDeltas(color, mapped, oklch, weights);
-		g.inspectSwatch.style.background = mapped.to("p3").toString({precision: 3});
+		g.inspectSwatch.style.background = serialize(to(mapped, P3), {precision: 3});
 		g.inspectErr.textContent = prec(deltas[view.metric], 2);
 	}
 }
@@ -268,19 +276,19 @@ function tick () {
 		let cells = gmas.map(() => "");
 
 		for (let h of hues) {
-			let color = new Color("oklch", [l, CHROMA, h]);
+			let color = oklchColor(l, h);
 			let oklch = [l, CHROMA, h];
 			let mapped = mapColor(color, representatives); // timed (incl. final P3 clip)
 
 			gmas.forEach((g, gi) => {
 				let mc = mapped[g.id];
-				// Deltas are measured outside the timed region.
+				// Deltas and swatch serialization are measured outside the timed region.
 				let deltas = getDeltas(color, mc, oklch, weights);
 				for (let m in METRICS) {
 					g.samples[m][g.n] = deltas[m];
 				}
 				g.n++;
-				cells[gi] += `<td style="background:${mc.to("p3").toString({precision: 3})}"></td>`;
+				cells[gi] += `<td style="background:${serialize(to(mc, P3), {precision: 3})}"></td>`;
 			});
 		}
 

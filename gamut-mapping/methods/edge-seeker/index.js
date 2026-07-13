@@ -1,27 +1,32 @@
-import Color from "colorjs.io";
+import { to, P3, OKLCH } from "colorjs.io/fn";
 import { makeEdgeSeeker } from "./makeEdgeSeeker.js";
 
 // Make a function to get the maximum chroma for a given lightness and hue
 // Lookup table is created once and reused
 const p3EdgeSeeker = makeEdgeSeeker((r, g, b) => {
-	const [l, c, h = 0] = new Color("p3", [r, g, b]).to("oklch").coords;
+	const [l, c, h = 0] = to({ space: P3, coords: [r, g, b] }, OKLCH).coords;
 	return { l, c, h };
 });
 
 export function compute (color) {
-	let [l, c, h] = color.to("oklch").coords;
+	// `to` gives us a fresh OKLCh color object we can reduce in place.
+	let result = to(color, OKLCH);
+	let [l, c] = result.coords;
 	if (l <= 0) {
-		return new Color("oklch", [0, 0, h]);
+		result.coords[0] = result.coords[1] = 0; // black, hue preserved
+		return result;
 	}
 	if (l >= 1) {
-		return new Color("oklch", [1, 0, h]);
+		result.coords[0] = 1;
+		result.coords[1] = 0; // white, hue preserved
+		return result;
 	}
-	let maxChroma = p3EdgeSeeker(l, h || 0);
+	let maxChroma = p3EdgeSeeker(l, result.coords[2] || 0);
 	if (c > maxChroma) {
-		c = maxChroma;
+		// Any residual out-of-gamut from the LUT approximation is clipped by the registry.
+		result.coords[1] = maxChroma;
 	}
-	// Any residual out-of-gamut from the LUT approximation is clipped by the registry.
-	return new Color("oklch", [l, c, h]);
+	return result;
 }
 
 export default {

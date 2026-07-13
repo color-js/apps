@@ -1,8 +1,8 @@
+import { toGamut, clone, REC_2020 } from "colorjs.io/fn";
+
 export function compute (color) {
 	// CSS-map into rec2020; the out-of-gamut result is clipped to P3 by the registry.
-	return color
-		.clone()
-		.toGamut({ space: "rec2020", method: "css" });
+	return toGamut(clone(color), { space: REC_2020, method: "css" });
 }
 
 export default {

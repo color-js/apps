@@ -1,18 +1,18 @@
-import Color from "colorjs.io";
+import { to, P3, P3_Linear } from "colorjs.io/fn";
 
 export function compute (color) {
+	let plinear = to(color, P3_Linear);
+
 	// Make in gamut range symmetrical around 0 [-0.5, 0.5] instead of [0, 1]
-	let deltas = color.to("p3-linear").coords.map(c => c - .5);
+	let deltas = plinear.coords.map(c => c - .5);
 
 	let maxDistance = Math.max(...deltas.map(c => Math.abs(c)));
 	let scalingFactor = maxDistance / .5;
 
-	let scaledCoords = deltas.map((delta, i) => {
-		let scaled = delta / scalingFactor;
-		return scaled + .5;
-	});
+	// Scale every channel back into [0, 1]; reuse the same color for the P3 conversion.
+	plinear.coords = deltas.map(delta => delta / scalingFactor + .5);
 
-	return new Color("p3-linear", scaledCoords).to("p3");
+	return to(plinear, P3);
 }
 
 export default {

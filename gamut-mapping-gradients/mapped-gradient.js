@@ -1,4 +1,5 @@
 import methods from "../gamut-mapping/methods.js";
+import { serialize } from "colorjs.io/fn";
 
 export default {
 	props: {
@@ -24,22 +25,20 @@ export default {
 	methods: {
 		mapSteps () {
 			const start = performance.now();
-			let steps = this.steps.map(step => {
-				let mappedColor;
+			let mapped = this.steps.map(step => {
 				if (this.method === "none") {
 					return step;
 				}
 				if (methods[this.method].compute) {
-					mappedColor = methods[this.method].compute(step);
+					return methods[this.method].compute(step);
 				}
-				else {
-					mappedColor = step.clone().toGamut({ space: "p3", method: this.method });
-				}
-				return mappedColor;
+				return step.clone().toGamut({ space: "p3", method: this.method });
 			});
 			this.time = Color.util.toPrecision(performance.now() - start, 4);
 			this.$emit("report-time", {time: this.time, method: this.method});
-			this.mappedSteps = steps;
+			// compute() returns plain color objects now; serialize outside the timed
+			// region so the gradient's --step-color CSS variable gets a color string.
+			this.mappedSteps = mapped.map(color => serialize(color));
 		},
 	},
 
