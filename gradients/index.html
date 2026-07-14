@@ -51,6 +51,9 @@
 		<details open>
 			<summary>
 				<span property="space" mv-edit="#space" mv-default="lch"></span> interpolation,
+				<span mv-if="hasHue(space)">
+					<span property="hueInterpolation" mv-edit="#hue" mv-default="shorter"></span> hue,
+				</span>
 				<label><input type="number" property="numSteps" value="10" min="2" /> steps</label>
 				<input type="number" property="delta" value="" min="0" /> max ΔE
 				<em>(<span property="stepCount">[count(step)]</span> resulting steps)</em>
@@ -58,7 +61,7 @@
 
 			<div>
 				Colors:
-				<div mv-value="colorSteps(color1.steps(color2, group(steps: numSteps, maxDeltaE: delta, deltaEMethod: '2000', space: space, outputSpace: space)), outputSpace, gamutMapping)" mv-multiple="step" style="--color: [outputColor & ''];">
+				<div mv-value="colorSteps(color1.steps(color2, group(steps: numSteps, maxDeltaE: delta, deltaEMethod: '2000', space: space, outputSpace: space, hue: hueInterpolation)), outputSpace, gamutMapping)" mv-multiple="step" style="--color: [outputColor & ''];">
 					<code>[color & ""]</code> &rarr; <code>[outputColor & ""]</code>
 					<meta property="color" />
 					<meta property="outputColor" content="[color.to(outputSpace)]" />
@@ -80,6 +83,13 @@
 	<select id="space">
 		<option mv-value="ColorSpaces" mv-multiple="colorSpace" mv-group value="[colorSpace.id]">[colorSpace.name]</option>
 	</select>
+
+	<select id="hue">
+		<option value="shorter">shorter</option>
+		<option value="longer">longer</option>
+		<option value="increasing">increasing</option>
+		<option value="decreasing">decreasing</option>
+	</select>
 </div>
 <script type="module">
 	import Color from "colorjs.io";
@@ -87,6 +97,18 @@
 	window.ColorSpaces = Object.values(Color.spaces).map(s => {
 		return {id: s.id, name: s.name}
 	});
+
+	// The hue arc only has an effect in spaces with a hue coordinate,
+	// which is exactly the condition Color.js uses to apply the `hue` option.
+	window.hasHue = function (spaceId) {
+		try {
+			return Boolean(Color.Space.get(Mavo.value(spaceId)).hueId);
+		}
+		catch (e) {
+			// Space not resolved yet, e.g. during the initial render
+			return false;
+		}
+	}
 
 	// Map steps to objects with a color property
 	// because Mavo fiddles with object data
