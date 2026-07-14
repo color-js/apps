@@ -124,7 +124,7 @@ export function compute (color) {
 }
 
 export default {
-	label: "Chromium",
-	description: "A port of the 'baked-in' Chromium implementation, mapping to an approximation of the rec2020 gamut.",
+	label: "Baked-in",
+	description: "A port of the 'baked-in' GMA that was tested in Chromium, mapping to an approximation of the rec2020 gamut.",
 	compute,
 };
