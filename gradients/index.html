@@ -51,7 +51,7 @@
 		<details open>
 			<summary>
 				<span property="space" mv-edit="#space" mv-default="lch"></span> interpolation,
-				<span mv-if="hasHue(space)">
+				<span class="hue-method [if(hasHue(space), '', 'no-hue')]">
 					<span property="hueInterpolation" mv-edit="#hue" mv-default="shorter"></span> hue,
 				</span>
 				<label><input type="number" property="numSteps" value="10" min="2" /> steps</label>
