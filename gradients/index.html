@@ -51,8 +51,13 @@
 		<details open>
 			<summary>
 				<span property="space" mv-edit="#space" mv-default="lch"></span> interpolation,
-				<span mv-if="hasHue(space)">
-					<span property="hueInterpolation" mv-edit="#hue" mv-default="shorter"></span> hue,
+				<span class="hue-method [if(hasHue(space), '', 'no-hue')]">
+					<select property="hueInterpolation" mv-default="shorter">
+						<option value="shorter" selected>shorter</option>
+						<option value="longer">longer</option>
+						<option value="increasing">increasing</option>
+						<option value="decreasing">decreasing</option>
+					</select> hue,
 				</span>
 				<label><input type="number" property="numSteps" value="10" min="2" /> steps</label>
 				<input type="number" property="delta" value="" min="0" /> max ΔE
@@ -61,7 +66,7 @@
 
 			<div>
 				Colors:
-				<div mv-value="colorSteps(color1.steps(color2, group(steps: numSteps, maxDeltaE: delta, deltaEMethod: '2000', space: space, outputSpace: space, hue: hueInterpolation)), outputSpace, gamutMapping)" mv-multiple="step" style="--color: [outputColor & ''];">
+				<div mv-value="colorSteps(color1.steps(color2, stepOptions(group(steps: numSteps, maxDeltaE: delta, deltaEMethod: '2000', space: space, outputSpace: space, hue: hueInterpolation))), outputSpace, gamutMapping)" mv-multiple="step" style="--color: [outputColor & ''];">
 					<code>[color & ""]</code> &rarr; <code>[outputColor & ""]</code>
 					<meta property="color" />
 					<meta property="outputColor" content="[color.to(outputSpace)]" />
@@ -83,13 +88,6 @@
 	<select id="space">
 		<option mv-value="ColorSpaces" mv-multiple="colorSpace" mv-group value="[colorSpace.id]">[colorSpace.name]</option>
 	</select>
-
-	<select id="hue">
-		<option value="shorter">shorter</option>
-		<option value="longer">longer</option>
-		<option value="increasing">increasing</option>
-		<option value="decreasing">decreasing</option>
-	</select>
 </div>
 <script type="module">
 	import Color from "colorjs.io";
@@ -97,6 +95,16 @@
 	window.ColorSpaces = Object.values(Color.spaces).map(s => {
 		return {id: s.id, name: s.name}
 	});
+
+	// Mavo passes property values into function calls as wrapped objects,
+	// so the hue arc arrives as a String wrapper. Color.js matches the arc
+	// with === , which is false for a wrapper, so it silently falls back to
+	// "shorter". Unwrap it to a primitive string. (Space ids and step counts
+	// survive wrapping because Color.js coerces them; only hue uses === .)
+	window.stepOptions = function (options) {
+		let hue = Mavo.value(options.hue);
+		return Object.assign({}, options, {hue: hue == null ? undefined : String(hue)});
+	}
 
 	// The hue arc only has an effect in spaces with a hue coordinate,
 	// which is exactly the condition Color.js uses to apply the `hue` option.

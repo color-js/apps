@@ -76,3 +76,10 @@ input {
 meta[property][mv-mode="edit"] {
 	display: none;
 }
+
+/* Hue interpolation only applies to spaces with a hue coordinate.
+   The property stays in the DOM (so its value is always available to the
+   gradient expression) and is merely hidden for non-hue spaces. */
+.hue-method.no-hue {
+	display: none;
+}
