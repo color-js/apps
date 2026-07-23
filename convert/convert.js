@@ -17,9 +17,11 @@ function renderSpace(space, format, color) {
 	}
 
 	let precision = precisionInput.value;
+	let gamutMapping = gamutMappingInput.checked;
 	let inGamut = converted.inGamut();
 	let str = converted.toString({precision, inGamut: false, format});
 	let str_mapped = converted.toString({precision, inGamut: true, format});
+	let showMapped = gamutMapping && str !== str_mapped;
 	let permalink = `?color=${encodeURIComponent(str)}&precision=${encodeURIComponent(precision)}`;
 	let permalink_mapped = `?color=${encodeURIComponent(str_mapped)}&precision=${encodeURIComponent(precision)}`;
 
@@ -32,7 +34,7 @@ function renderSpace(space, format, color) {
 				<a href="${permalink}" ${!inGamut ? 'title="Out of gamut"' : ""}>${str}</a>
 				<button class="copy" data-clipboard-text="${str}" title="Copy">📋</button>
 			</div>
-			${str !== str_mapped ? `
+			${showMapped ? `
 			<div class="serialization gamut-mapped">
 				<a href="${permalink_mapped}">${str_mapped}</a>
 				<button class="copy" data-clipboard-text="${str_mapped}" title="Copy">📋</button>
@@ -97,6 +99,7 @@ let urlParams = getURLParams();
 
 colorInput.addEventListener("input", update);
 precisionInput.addEventListener("input", update);
+gamutMappingInput.addEventListener("input", update);
 
 function updateFromURL () {
 	colorInput.value = urlParams.color || colorInput.value;
