@@ -100,16 +100,25 @@ tbody th {
 		color: hsl(0 90% 38%);
 	}
 
-	&.gamut-mapped::after {
-		content: "Gamut\amapped";
+	&.gamut-mapped::after,
+	&.clipped::after {
 		display: inline-block;
 		font: bold 9px/1 var(--font-ui);
-		background: hsl(0 40% 50% / .15);
 		text-transform: uppercase;
 		white-space: pre-line;
 		padding: .4em .6em;
 		border-radius: .3em;
 		margin: auto 0 auto .5em;
+	}
+
+	&.gamut-mapped::after {
+		content: "Gamut\amapped";
+		background: hsl(0 40% 50% / .15);
+	}
+
+	&.clipped::after {
+		content: "Clipped";
+		background: hsl(35 60% 50% / .2);
 	}
 
 	& button {

@@ -13,13 +13,20 @@ function renderSpace(space, format, color) {
 
 	if (id === "srgb" || (id === "p3") && supportsP3) {
 		colorOutput.style.background = converted;
-		favicon.href = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"><rect width="100%" fill="${converted}" /></svg>`;
+		let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" fill="${converted}" /></svg>`;
+		favicon.href = `data:image/svg+xml,${encodeURIComponent(svg)}`;
 	}
 
 	let precision = precisionInput.value;
 	let inGamut = converted.inGamut();
-	let str = converted.toString({precision, inGamut: false, format});
+	// Hex can only represent sRGB, so toString({format: "hex"}) always gamut-maps
+	// out-of-gamut colors. Use a naive clip for the raw value so hex shows both a
+	// clipped and a gamut-mapped serialization, like every other format.
+	let str = format === "hex"
+		? converted.clone().toGamut({method: "clip"}).toString({precision, format})
+		: converted.toString({precision, inGamut: false, format});
 	let str_mapped = converted.toString({precision, inGamut: true, format});
+	let clipped = format === "hex" && str !== str_mapped;
 	let permalink = `?color=${encodeURIComponent(str)}&precision=${encodeURIComponent(precision)}`;
 	let permalink_mapped = `?color=${encodeURIComponent(str_mapped)}&precision=${encodeURIComponent(precision)}`;
 
@@ -28,7 +35,7 @@ function renderSpace(space, format, color) {
 		<th>${space.name}${ format ? ` (${format})` : '' }</th>
 		<td>${converted.coords.join(", ")}</td>
 		<td>
-			<div class="serialization ${inGamut || str === str_mapped ? "in-gamut" : "out-of-gamut"} ${!inGamut && str === str_mapped ? "gamut-mapped" : ""}">
+			<div class="serialization ${inGamut || str === str_mapped ? "in-gamut" : "out-of-gamut"} ${!inGamut && str === str_mapped ? "gamut-mapped" : ""} ${clipped ? "clipped" : ""}">
 				<a href="${permalink}" ${!inGamut ? 'title="Out of gamut"' : ""}>${str}</a>
 				<button class="copy" data-clipboard-text="${str}" title="Copy">📋</button>
 			</div>
