@@ -26,6 +26,7 @@ function renderSpace(space, format, color) {
 		? converted.clone().toGamut({method: "clip"}).toString({precision, format})
 		: converted.toString({precision, inGamut: false, format});
 	let str_mapped = converted.toString({precision, inGamut: true, format});
+	let clipped = format === "hex" && str !== str_mapped;
 	let permalink = `?color=${encodeURIComponent(str)}&precision=${encodeURIComponent(precision)}`;
 	let permalink_mapped = `?color=${encodeURIComponent(str_mapped)}&precision=${encodeURIComponent(precision)}`;
 
@@ -34,7 +35,7 @@ function renderSpace(space, format, color) {
 		<th>${space.name}${ format ? ` (${format})` : '' }</th>
 		<td>${converted.coords.join(", ")}</td>
 		<td>
-			<div class="serialization ${inGamut || str === str_mapped ? "in-gamut" : "out-of-gamut"} ${!inGamut && str === str_mapped ? "gamut-mapped" : ""}">
+			<div class="serialization ${inGamut || str === str_mapped ? "in-gamut" : "out-of-gamut"} ${!inGamut && str === str_mapped ? "gamut-mapped" : ""} ${clipped ? "clipped" : ""}">
 				<a href="${permalink}" ${!inGamut ? 'title="Out of gamut"' : ""}>${str}</a>
 				<button class="copy" data-clipboard-text="${str}" title="Copy">📋</button>
 			</div>
