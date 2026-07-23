@@ -37,18 +37,6 @@ input:is(
 		display: block;
 	}
 
-	.inputs .gamut-mapping-toggle {
-		grid-column: 1 / -1;
-		display: flex;
-		align-items: center;
-		gap: .4em;
-	}
-
-		.inputs .gamut-mapping-toggle input {
-			display: inline-block;
-			width: auto;
-		}
-
 table {
 	width: 100%;
 	display: grid;
