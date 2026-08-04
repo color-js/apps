@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oklab vs. Oklrab interpolation</title>
+<link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+
+<h1>Oklab vs. Oklrab interpolation</h1>
+
+<p class="intro">
+	Oklab assumes no primary adaptive white, while Oklrab has a “toe” that predicts lightness
+	better against a white background. Pick two colors to compare how each space interpolates
+	between them, and toggle the page background to see how that changes.
+</p>
+
+<div class="inputs">
+	<label>
+		Color 1:
+		<input type="text" id="color1" value="navy">
+	</label>
+
+	<label>
+		Color 2:
+		<input type="text" id="color2" value="gold">
+	</label>
+
+	<label class="bg-toggle">
+		<input type="checkbox" id="bgToggle">
+		Black background
+	</label>
+
+	<a id="permalink" href="">Permalink</a>
+</div>
+
+<div class="stage">
+	<figure>
+		<figcaption>Oklab</figcaption>
+		<div class="gradient" id="gradientOklab"></div>
+	</figure>
+
+	<figure>
+		<figcaption>Oklrab</figcaption>
+		<div class="gradient" id="gradientOklrab"></div>
+	</figure>
+</div>
+
+<script src="../importmap.js"></script>
+<script type="module" src="index.js"></script>
+</body>
+</html>

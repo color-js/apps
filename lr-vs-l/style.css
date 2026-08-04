@@ -1,0 +1,83 @@
+:root {
+	--font-ui: system-ui, Helvetica Neue, Helvetica, Segoe UI, sans-serif;
+}
+
+body {
+	font: 120%/1.5 var(--font-ui);
+	width: 90vw;
+	max-width: 60em;
+	margin: 1em auto;
+	padding: 0 2em;
+	transition: background .2s ease, color .2s ease;
+}
+
+body.bg-black {
+	background: black;
+	color: white;
+}
+
+h1 {
+	text-align: center;
+}
+
+.intro {
+	max-width: 42em;
+	margin: 0 auto 2em;
+	text-align: center;
+	opacity: .8;
+}
+
+.inputs {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: 1.5em;
+	margin-bottom: 2em;
+}
+
+.inputs label {
+	display: flex;
+	align-items: center;
+	gap: .5em;
+}
+
+.inputs input[type="text"] {
+	font: inherit;
+	font-size: 100%;
+	padding: .3em .6em;
+	border: 3px solid var(--color, silver);
+	border-radius: .3em;
+	background: hsl(0 0% 100% / .8);
+	color: black;
+}
+
+.inputs input:invalid {
+	border-color: hsl(0 90% 45%);
+}
+
+.bg-toggle {
+	cursor: pointer;
+}
+
+.stage {
+	display: grid;
+	gap: 2em;
+	padding: 2em;
+	border-radius: .5em;
+}
+
+figure {
+	margin: 0;
+}
+
+figcaption {
+	font-weight: bold;
+	margin-bottom: .5em;
+}
+
+.gradient {
+	height: 4em;
+	border-radius: .3em;
+	box-shadow: 0 0 0 1px hsl(0 0% 50% / .3);
+}
