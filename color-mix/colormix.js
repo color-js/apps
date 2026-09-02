@@ -245,7 +245,8 @@ function parseMixItem (str, index) {
  * color-mix() = color-mix( <color-interpolation-method>? , [ <color> && <percentage [0,100]>? ]# )
  */
 export function parseColorMix (input) {
-	let str = String(input).trim();
+	// Tolerate a trailing semicolon, which comes along easily when pasting from a stylesheet
+	let str = String(input).trim().replace(/;+$/, "").trim();
 	let match = str.match(/^color-mix\s*\(([\s\S]*)\)$/i);
 
 	if (!match || !balanced(match[1])) {
