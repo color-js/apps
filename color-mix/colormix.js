@@ -1,6 +1,7 @@
 /**
  * A traced implementation of CSS Color 5 color-mix(),
- * following https://www.w3.org/TR/css-color-5/#color-mix-result
+ * following § 3.3 Calculating the Result of color-mix
+ * <https://www.w3.org/TR/css-color-5/#color-mix-result>
  * step by step so that every intermediate value can be displayed.
  *
  * Color.js is used for parsing colors and for color space conversion,
@@ -35,11 +36,18 @@ export const POLAR_SPACES = ["hsl", "hwb", "lch", "oklch"];
 /** <hue-interpolation-method> */
 export const HUE_METHODS = ["shorter", "longer", "increasing", "decreasing"];
 
-/** If no <color-interpolation-method> is given, CSS Color 5 3.1 says to assume Oklab */
+/**
+ * If no <color-interpolation-method> is given, assume Oklab.
+ * CSS Color 5 § 3.1 Colorspace for mixing
+ * <https://www.w3.org/TR/css-color-5/#color-mix-space>
+ */
 export const DEFAULT_SPACE = "oklab";
 
 /**
- * Analogous components, CSS Color 4 13.3.
+ * Analogous components.
+ * CSS Color 4 § 13.3 Interpolating with Missing Components
+ * <https://www.w3.org/TR/css-color-4/#interpolation-missing>
+ *
  * Keyed by the component names Color.js uses, which are distinct across spaces
  * (HWB's "Blackness" is deliberately not the same as sRGB's "Blue").
  * Whiteness and Blackness have no analogs, so they are absent here.
@@ -279,7 +287,11 @@ export function parseColorMix (input) {
 /* -------------------------------------------------- percentage normalization -- */
 
 /**
- * Normalize mix percentages, CSS Values 5 6.1.
+ * Normalize mix percentages.
+ * CSS Values 5 § 6.1 Normalizing Mix Percentages
+ * <https://drafts.csswg.org/css-values-5/#mix-percentage-normalization>
+ * (linked to the Editor's Draft: the section is not in the TR version yet)
+ *
  * color-mix() invokes this with the force normalization flag set.
  * `percentages` holds one number, or null for an omitted percentage, per mix item.
  */
@@ -320,14 +332,17 @@ export function componentNames (space) {
 }
 
 /**
- * Convert a color to the interpolation space, carrying missing components
- * forward as described in CSS Color 4 13.3.
+ * Convert a color to the interpolation space, carrying missing components forward.
+ * CSS Color 4 § 13.3 Interpolating with Missing Components
+ * <https://www.w3.org/TR/css-color-4/#interpolation-missing>
  */
 export function convertForInterpolation (color, space) {
 	let converted = normalizeColor(new Color(color.spaceId, color.coords, color.alpha).to(space.id));
 
-	// Color.js applies the "powerless component" rule of CSS Color 4 4.4.1 while
-	// converting, so an achromatic color arrives here with its hue already missing.
+	// Color.js applies the "powerless component" rule while converting, so an achromatic
+	// color arrives here with its hue already missing.
+	// CSS Color 4 § 4.4.1 "Powerless" Color Components
+	// <https://www.w3.org/TR/css-color-4/#powerless>
 	let powerless = converted.coords
 		.map((v, i) => (v === null && color.spaceId !== space.id ? i : -1))
 		.filter(i => i >= 0);
@@ -387,7 +402,11 @@ export function convertForInterpolation (color, space) {
 
 /* -------------------------------------------------------------- interpolation -- */
 
-/** Hue fix-up, CSS Color 4 13.5 */
+/**
+ * Hue fix-up.
+ * CSS Color 4 § 13.5 Hue Interpolation
+ * <https://www.w3.org/TR/css-color-4/#hue-interpolation>
+ */
 export function adjustHues (arc, hue1, hue2) {
 	if (hue1 === null || hue2 === null) {
 		return [hue1, hue2];
@@ -431,6 +450,12 @@ export function adjustHues (arc, hue1, hue2) {
 
 	return [θ1, θ2];
 }
+
+/*
+ * The quoted rules in premultiply() and unpremultiply() below are from
+ * CSS Color 4 § 13.4 Interpolating with Alpha
+ * <https://www.w3.org/TR/css-color-4/#interpolation-alpha>
+ */
 
 function premultiply (color, hueIndex) {
 	// "If the alpha value is none, the premultiplied value is the un-premultiplied value"
