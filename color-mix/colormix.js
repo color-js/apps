@@ -290,7 +290,9 @@ export function parseColorMix (input) {
  * Normalize mix percentages.
  * CSS Values 5 § 6.1 Normalizing Mix Percentages
  * <https://drafts.csswg.org/css-values-5/#mix-percentage-normalization>
- * (linked to the Editor's Draft: the section is not in the TR version yet)
+ * Linked to the Editor's Draft because the TR version is stale and does not
+ * have this section yet; switch to /TR once it is republished.
+ * <https://github.com/w3c/csswg-drafts/issues/14435>
  *
  * color-mix() invokes this with the force normalization flag set.
  * `percentages` holds one number, or null for an omitted percentage, per mix item.
