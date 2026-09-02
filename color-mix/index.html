@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>color-mix() step by step</title>
+<link rel="shortcut icon" href="https://colorjs.io/logo.svg">
+<link rel="stylesheet" href="style.css">
+
+<!-- Must come before any module script, including the one the Eleventy dev server
+     injects into <head>: an import map is rejected once a module load has started. -->
+<script src="../importmap.js"></script>
+
+</head>
+<body>
+
+<h1><code>color-mix()</code> step by step</h1>
+
+<p class="intro">
+	Type any legal <a href="https://www.w3.org/TR/css-color-5/#color-mix">CSS Color 5 <code>color-mix()</code></a> value.
+	It is parsed here in JavaScript, every color is listed both in its own color space and in the mixing color space,
+	and each stage of <a href="https://www.w3.org/TR/css-color-5/#color-mix-result">the color-mix() algorithm</a>
+	is shown with the value of every component.
+</p>
+
+<form class="inputs" id="form">
+	<label for="input"><code>color-mix()</code> value</label>
+	<input type="text" id="input" spellcheck="false" autocapitalize="off" autocomplete="off"
+	       value="color-mix(in lch, peru 40%, palegoldenrod)">
+	<a id="permalink" href="">Permalink</a>
+</form>
+
+<div class="examples">
+	<span>Try:</span>
+	<button type="button">color-mix(in lch, teal 65%, olive)</button>
+	<button type="button">color-mix(in oklch, white, blue)</button>
+	<button type="button">color-mix(in srgb, red 20%, blue 20%)</button>
+	<button type="button">color-mix(in srgb, rgb(100% 0% 0% / 0.7) 20%, rgb(0% 100% 0% / 0.2) 60%)</button>
+	<button type="button">color-mix(in oklch longer hue, oklch(70% 0.2 20), oklch(70% 0.2 300))</button>
+	<button type="button">color-mix(in oklch, lch(50% 0.02 none), color(display-p3 0.7 0.5 none))</button>
+	<button type="button">color-mix(in hsl, color(display-p3 0 1 0) 80%, yellow)</button>
+	<button type="button">color-mix(in xyz, white, black)</button>
+	<button type="button">color-mix(in oklch, red, green, blue)</button>
+	<button type="button">color-mix(firebrick, goldenrod)</button>
+</div>
+
+<p class="error" id="error" hidden></p>
+
+<div id="output" hidden></div>
+
+<div id="probe" aria-hidden="true"></div>
+
+<footer>
+	A <a href="https://colorjs.io">Color.js</a> app.
+	The mixing is implemented from the specification rather than delegated to Color.js,
+	so that every intermediate value can be shown; Color.js does the color parsing and the
+	color space conversions. <a href="https://github.com/color-js/apps/tree/main/color-mix">Source</a>.
+</footer>
+
+<script type="module" src="index.js"></script>
+</body>
+</html>

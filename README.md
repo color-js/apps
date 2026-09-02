@@ -16,6 +16,7 @@ They are useful in their own right, but also serve as [Color.js](https://colorjs
 - [Convert across everything](convert)
 - [Black or white?](blackwhite)
 - [Gradient interpolation](gradients)
+- [color-mix() step by step](color-mix)
 - [Named color proximity](named)
 
 ## Research Apps
