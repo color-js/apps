@@ -9,3 +9,7 @@ Where the browser supports `style()` container queries on a custom property regi
 The comparison is implemented from the specification in [`compare.js`](compare.js) rather than being delegated to Color.js, so that every intermediate value can be shown. Color.js does the color parsing and the color space conversions.
 
 System colors are not supported, since they have no value outside a browser.
+
+## The examples as spec text
+
+Every pair offered by the app's *Try:* buttons is also written up in [`color-4-section-12-examples.bs`](color-4-section-12-examples.bs) as Bikeshed `<div class="example">` blocks, grouped by which step of the algorithm decides the answer, for pasting into [CSS Color 4 § 12](https://www.w3.org/TR/css-color-4/#comparing-color-values).
