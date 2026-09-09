@@ -50,7 +50,7 @@ a {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: end;
-	gap: .8em 1.2em;
+	gap: .8em 1.5em;
 	margin-bottom: .8em;
 }
 
@@ -71,6 +71,9 @@ a {
 }
 
 .inputs input {
+	/* The padding and border have to come out of the field's width, or the input
+	   overflows its wrapper and eats the flex gap on both sides */
+	box-sizing: border-box;
 	inline-size: 100%;
 	font-family: var(--font-code);
 	font-size: 105%;
@@ -520,6 +523,16 @@ footer {
 }
 
 @media (width < 45em) {
+	/* One field per row, and the permalink on a row of its own, rather than
+	   leaving it wedged beside whichever field wrapped */
+	.inputs .field {
+		min-width: 100%;
+	}
+
+	#permalink {
+		padding-bottom: 0;
+	}
+
 	.verdict-grid {
 		grid-template-columns: 1fr;
 	}
