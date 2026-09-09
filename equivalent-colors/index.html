@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Equivalent colors, step by step</title>
+<link rel="shortcut icon" href="https://colorjs.io/logo.svg">
+<link rel="stylesheet" href="style.css">
+
+<!-- Must come before any module script, including the one the Eleventy dev server
+     injects into <head>: an import map is rejected once a module load has started. -->
+<script src="../importmap.js"></script>
+
+</head>
+<body>
+
+<h1>Are these two colors <em>equivalent</em>?</h1>
+
+<p class="intro">
+	Type any two legal <a href="https://www.w3.org/TR/css-color-4/#color-syntax">CSS colors</a>.
+	They are parsed here in JavaScript, and
+	<a href="https://www.w3.org/TR/css-color-4/#comparing-color-values">the CSS Color 4 algorithm for comparing
+	<code>&lt;color&gt;</code> values</a> is then run on them step by step, showing why they are, or are not,
+	<b>equivalent colors</b>. This is the comparison that
+	<a href="https://www.w3.org/TR/css-conditional-5/#style-container">style container queries</a> and
+	<a href="https://www.w3.org/TR/css-transitions-1/">CSS Transitions</a> use to decide whether a color
+	has changed — and it is not the same question as whether the two colors <em>look</em> alike.
+</p>
+
+<form class="inputs" id="form">
+	<div class="field">
+		<label for="a">First color <span>C<sub>1</sub></span></label>
+		<input type="text" id="a" spellcheck="false" autocapitalize="off" autocomplete="off"
+		       value="red">
+	</div>
+	<div class="field">
+		<label for="b">Second color <span>C<sub>2</sub></span></label>
+		<input type="text" id="b" spellcheck="false" autocapitalize="off" autocomplete="off"
+		       value="color(srgb 1 0 0)">
+	</div>
+	<a id="permalink" href="">Permalink</a>
+</form>
+
+<div class="examples">
+	<span>Try:</span>
+	<button type="button" data-a="red" data-b="color(srgb 1 0 0)">red <i>⟷</i> color(srgb 1 0 0)</button>
+	<button type="button" data-a="red" data-b="rgb(255, 0, 0)">red <i>⟷</i> rgb(255, 0, 0)</button>
+	<button type="button" data-a="#ff000080" data-b="rgb(255 0 0 / 50%)">#ff000080 <i>⟷</i> rgb(255 0 0 / 50%)</button>
+	<button type="button" data-a="hsl(0 0% 50%)" data-b="hsl(200 0% 50%)">hsl(0 0% 50%) <i>⟷</i> hsl(200 0% 50%)</button>
+	<button type="button" data-a="oklch(50% 0 40)" data-b="oklch(50% 0 200)">oklch(50% 0 40) <i>⟷</i> oklch(50% 0 200)</button>
+	<button type="button" data-a="oklch(50% 0 none)" data-b="oklab(50% 0 0)">oklch(50% 0 none) <i>⟷</i> oklab(50% 0 0)</button>
+	<button type="button" data-a="lch(50% 0.001 30)" data-b="lch(50% 0.001 200)">lch(50% 0.001 30) <i>⟷</i> lch(50% 0.001 200)</button>
+	<button type="button" data-a="lch(50% 30 0)" data-b="lch(50% 30 360)">lch(50% 30 0) <i>⟷</i> lch(50% 30 360)</button>
+	<button type="button" data-a="white" data-b="hwb(120 100% 0%)">white <i>⟷</i> hwb(120 100% 0%)</button>
+	<button type="button" data-a="rgb(none 128 0)" data-b="rgb(0 128 0)">rgb(none 128 0) <i>⟷</i> rgb(0 128 0)</button>
+	<button type="button" data-a="lab(50% 0 0)" data-b="oklab(0.5 0 0)">lab(50% 0 0) <i>⟷</i> oklab(0.5 0 0)</button>
+	<button type="button" data-a="color(display-p3 1 1 1)" data-b="white">color(display-p3 1 1 1) <i>⟷</i> white</button>
+	<button type="button" data-a="red" data-b="color(srgb-linear 1 0 0)">red <i>⟷</i> color(srgb-linear 1 0 0)</button>
+</div>
+
+<p class="error" id="error" hidden></p>
+
+<div id="output" hidden></div>
+
+<div id="probe" aria-hidden="true"><div id="probe-inner"></div></div>
+
+<footer>
+	A <a href="https://colorjs.io">Color.js</a> app.
+	The comparison is implemented from the specification rather than delegated to Color.js, so that
+	every intermediate value can be shown; Color.js does the color parsing and the color space
+	conversions. System colors are not supported, since they have no value outside a browser.
+	<a href="https://github.com/color-js/apps/tree/main/equivalent-colors">Source</a>.
+</footer>
+
+<script type="module" src="index.js"></script>
+</body>
+</html>

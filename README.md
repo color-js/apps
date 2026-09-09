@@ -17,6 +17,7 @@ They are useful in their own right, but also serve as [Color.js](https://colorjs
 - [Black or white?](blackwhite)
 - [Gradient interpolation](gradients)
 - [color-mix() step by step](color-mix)
+- [Are these two colors equivalent?](equivalent-colors)
 - [Named color proximity](named)
 
 ## Research Apps

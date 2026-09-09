@@ -1,0 +1,530 @@
+:root {
+	--font-ui: system-ui, Helvetica Neue, Helvetica, Segoe UI, sans-serif;
+	--font-code: ui-monospace, SFMono-Regular, Consolas, Liberation Mono, monospace;
+	--hairline: hsl(220 15% 85%);
+	--muted: hsl(220 10% 40%);
+	--accent: oklch(55% 0.17 265);
+	--panel: hsl(220 25% 98%);
+	--yes: oklch(48% 0.13 150);
+	--no: oklch(52% 0.18 30);
+}
+
+body {
+	font: 105%/1.5 var(--font-ui);
+	width: 92vw;
+	max-width: 76em;
+	margin: 1em auto 4em;
+	padding: 0 1em;
+	color: hsl(220 15% 15%);
+}
+
+h1 {
+	text-align: center;
+	font-weight: 600;
+}
+
+h1 em {
+	font-style: normal;
+	color: var(--accent);
+}
+
+.intro {
+	max-width: 50em;
+	margin: 0 auto 2em;
+	text-align: center;
+	color: var(--muted);
+}
+
+code {
+	font-family: var(--font-code);
+	font-size: 90%;
+}
+
+a {
+	color: var(--accent);
+}
+
+/* ------------------------------------------------------------------ inputs -- */
+
+.inputs {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: end;
+	gap: .8em 1.2em;
+	margin-bottom: .8em;
+}
+
+.inputs .field {
+	flex: 1;
+	min-width: 18em;
+}
+
+.inputs label {
+	display: block;
+	margin-bottom: .2em;
+	font-weight: 600;
+}
+
+.inputs label span {
+	color: var(--muted);
+	font-weight: 400;
+}
+
+.inputs input {
+	inline-size: 100%;
+	font-family: var(--font-code);
+	font-size: 105%;
+	padding: .5em .7em;
+	border: 2px solid var(--hairline);
+	border-radius: .3em;
+	background: white;
+}
+
+.inputs input:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 1px;
+	border-color: transparent;
+}
+
+.inputs input:invalid {
+	border-color: oklch(58% 0.21 25);
+}
+
+#permalink {
+	padding-bottom: .6em;
+}
+
+.examples {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: .4em;
+	margin-bottom: 1.5em;
+	font-size: 85%;
+	color: var(--muted);
+}
+
+.examples button {
+	font-family: var(--font-code);
+	font-size: 95%;
+	padding: .25em .6em;
+	border: 1px solid var(--hairline);
+	border-radius: 1em;
+	background: var(--panel);
+	color: inherit;
+	cursor: pointer;
+}
+
+.examples button i {
+	font-style: normal;
+	color: var(--muted);
+	padding: 0 .2em;
+}
+
+.examples button:hover {
+	border-color: var(--accent);
+	color: var(--accent);
+}
+
+.error {
+	padding: .8em 1em;
+	border-radius: .3em;
+	border-inline-start: .4em solid oklch(58% 0.21 25);
+	background: oklch(96% 0.03 25);
+	color: oklch(35% 0.12 25);
+}
+
+/* ---------------------------------------------------------------- swatches -- */
+
+.swatch {
+	display: inline-block;
+	inline-size: 1.3em;
+	block-size: 1.3em;
+	vertical-align: -.3em;
+	margin-inline-end: .45em;
+	border-radius: .2em;
+	box-shadow: 0 0 0 1px hsl(220 15% 0% / .25) inset;
+	background:
+		linear-gradient(var(--color, transparent) 0 100%),
+		conic-gradient(hsl(0 0% 80%) 0 25%, white 0 50%, hsl(0 0% 80%) 0 75%, white 0) 0 0 / .7em .7em;
+}
+
+.swatch.big {
+	inline-size: 3.5em;
+	block-size: 3.5em;
+	border-radius: .3em;
+}
+
+.swatch.huge {
+	display: block;
+	inline-size: 100%;
+	block-size: 5em;
+	margin: 0;
+	border-radius: .4em;
+	background-size: auto, 1.2em 1.2em;
+}
+
+/* ---------------------------------------------------------------- sections -- */
+
+section {
+	margin: 2.5em 0;
+	padding-top: .5em;
+	border-top: 1px solid var(--hairline);
+}
+
+section > h2 {
+	font-size: 1.15em;
+	font-weight: 600;
+	letter-spacing: .01em;
+}
+
+section > p {
+	max-width: 50em;
+	color: var(--muted);
+}
+
+/* ------------------------------------------------------------------ result -- */
+
+.result {
+	border-top: 0;
+	padding: 1.2em 1.4em;
+	border-radius: .5em;
+	background: var(--panel);
+	border: 1px solid var(--hairline);
+	border-inline-start: .4em solid var(--verdict, var(--accent));
+}
+
+.result.yes {
+	--verdict: var(--yes);
+}
+
+.result.no {
+	--verdict: var(--no);
+}
+
+.result > h2 {
+	margin-top: 0;
+	font-size: 1.4em;
+	color: var(--verdict);
+}
+
+.verdict-grid {
+	display: grid;
+	grid-template-columns: minmax(10em, 20em) 1fr;
+	gap: 1.5em 2em;
+	align-items: start;
+}
+
+.verdict-colors {
+	display: grid;
+	gap: .8em;
+}
+
+.verdict-color .written {
+	margin: .35em 0 0;
+	font-size: 90%;
+	overflow-wrap: anywhere;
+}
+
+.tag {
+	display: inline-block;
+	min-inline-size: 1.8em;
+	margin-inline-end: .3em;
+	color: var(--muted);
+	font-weight: 600;
+}
+
+.reason {
+	margin-top: 0;
+	font-size: 110%;
+}
+
+.result dl {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	gap: .3em 1em;
+	margin: 0;
+	font-size: 90%;
+}
+
+.result dt {
+	color: var(--muted);
+}
+
+.result dd {
+	margin: 0;
+}
+
+.browser {
+	max-width: 55em;
+	margin: -1.5em 0 2.5em;
+	padding: .8em 1em;
+	border-radius: .3em;
+	background: var(--panel);
+	border: 1px solid var(--hairline);
+	font-size: 90%;
+	color: var(--muted);
+}
+
+.browser.agrees {
+	color: oklch(45% 0.13 150);
+}
+
+.browser.differs {
+	color: oklch(48% 0.16 55);
+}
+
+/* --------------------------------------------------------------- algorithm -- */
+
+.algorithm {
+	max-width: 54em;
+	padding-inline-start: 1.4em;
+}
+
+.algorithm li {
+	margin-bottom: .5em;
+	padding: .4em .7em;
+	border-radius: .3em;
+}
+
+.algorithm li.taken {
+	background: var(--panel);
+	border-inline-start: .25em solid var(--accent);
+	padding-inline-start: .8em;
+}
+
+.algorithm li.skipped {
+	color: var(--muted);
+	opacity: .65;
+}
+
+/* ------------------------------------------------------------- color cards -- */
+
+.color-cards {
+	display: grid;
+	gap: 1.2em;
+}
+
+.color-cards.two {
+	grid-template-columns: repeat(auto-fit, minmax(20em, 1fr));
+}
+
+.color-card {
+	padding: 1em 1.2em;
+	border: 1px solid var(--hairline);
+	border-radius: .4em;
+}
+
+.color-card-head {
+	display: flex;
+	align-items: center;
+	gap: 1em;
+}
+
+.written {
+	font-size: 105%;
+	font-weight: 600;
+	overflow-wrap: anywhere;
+}
+
+.color-card-head .written {
+	margin: 0;
+}
+
+.pct {
+	margin: .2em 0 0;
+	font-size: 90%;
+	color: var(--muted);
+	font-weight: 400;
+}
+
+dl.components-list {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	gap: .25em 1.2em;
+	margin: .8em 0 0;
+	font-size: 90%;
+}
+
+dl.components-list dt {
+	color: var(--muted);
+}
+
+dl.components-list dd {
+	margin: 0;
+	font-family: var(--font-code);
+	font-variant-numeric: tabular-nums;
+}
+
+dl.components-list dd.missing,
+.missing {
+	color: oklch(52% 0.16 300);
+}
+
+dl.components-list dd.missing {
+	font-style: italic;
+}
+
+/* ------------------------------------------------------------------- steps -- */
+
+.step-colors {
+	display: grid;
+	gap: 1.2em;
+	grid-template-columns: repeat(auto-fit, minmax(22em, 1fr));
+	align-items: start;
+}
+
+.step-color {
+	padding: .9em 1.1em;
+	border: 1px solid var(--hairline);
+	border-radius: .4em;
+}
+
+.step-color h3 {
+	margin: 0 0 .3em;
+	font-size: 1em;
+	font-weight: 600;
+	overflow-wrap: anywhere;
+}
+
+.step-color p {
+	margin: 0;
+	color: var(--muted);
+	font-size: 95%;
+}
+
+ul.spaces,
+ul.notes-list {
+	max-width: 54em;
+	padding-inline-start: 1.2em;
+	color: var(--muted);
+}
+
+ul.notes-list li {
+	margin-bottom: .5em;
+}
+
+.callout {
+	max-width: 54em;
+	margin-top: 1em;
+	padding: .7em 1em;
+	border-radius: .3em;
+	border-inline-start: .3em solid var(--accent);
+	background: var(--panel);
+	color: inherit;
+}
+
+.note {
+	color: var(--muted);
+	font-size: 90%;
+	font-weight: 400;
+}
+
+/* ------------------------------------------------------------------ tables -- */
+
+.scroller {
+	overflow-x: auto;
+	margin: .8em 0;
+}
+
+table.components {
+	border-collapse: collapse;
+	font-size: 90%;
+}
+
+table.components caption {
+	text-align: start;
+	padding-bottom: .4em;
+	color: var(--muted);
+}
+
+table.components th,
+table.components td {
+	padding: .35em .8em;
+	border: 1px solid var(--hairline);
+	text-align: end;
+	white-space: nowrap;
+}
+
+table.components thead th {
+	background: var(--panel);
+	font-weight: 600;
+}
+
+table.components tbody th,
+table.components thead th:first-child {
+	text-align: start;
+	font-weight: 400;
+}
+
+table.components thead th:first-child {
+	font-weight: 600;
+}
+
+table.components td {
+	font-family: var(--font-code);
+	font-variant-numeric: tabular-nums;
+}
+
+table.components tr.muted {
+	color: var(--muted);
+	background: hsl(220 25% 99%);
+}
+
+table.components td.missing {
+	font-style: italic;
+}
+
+table.compare tbody th {
+	font-weight: 600;
+}
+
+table.compare tr.differs {
+	background: oklch(97% 0.03 30);
+}
+
+table.compare td.equal {
+	color: var(--yes);
+	font-family: var(--font-ui);
+}
+
+table.compare td.unequal {
+	color: var(--no);
+	font-weight: 600;
+	font-family: var(--font-ui);
+}
+
+table.compare td.why {
+	font-family: var(--font-ui);
+	color: var(--muted);
+	text-align: start;
+	white-space: normal;
+	max-inline-size: 22em;
+}
+
+/* The style() container query probe, which must be rendered but never seen */
+#probe {
+	position: absolute;
+	inline-size: 0;
+	block-size: 0;
+	overflow: hidden;
+	visibility: hidden;
+}
+
+footer {
+	margin-top: 3em;
+	padding-top: 1em;
+	border-top: 1px solid var(--hairline);
+	font-size: 85%;
+	color: var(--muted);
+}
+
+@media (width < 45em) {
+	.verdict-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.result dl {
+		grid-template-columns: 1fr;
+	}
+}
