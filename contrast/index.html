@@ -47,7 +47,7 @@
 					class="level" :class="{ pass: level.pass, partial: level.partial }">
 					<span class="badge">{{ level.label }}</span>
 					<span class="description">{{ level.description }}</span>
-					<span class="pct" v-if="level.pct != null">{{ level.pct }}%</span>
+					<span class="pct" v-if="level.pct != null" title="Percentage of the contrast range that meets this level">{{ level.pct }}% of range</span>
 				</div>
 			</div>
 		</article>
@@ -61,7 +61,7 @@
 					<span class="badge">Lc {{ level.min }}+</span>
 					<span class="description">{{ level.label }}</span>
 					<span class="font" v-if="level.font">{{ level.font }}</span>
-					<span class="pct" v-if="level.pct != null">{{ level.pct }}%</span>
+					<span class="pct" v-if="level.pct != null" title="Percentage of the contrast range that meets this level">{{ level.pct }}% of range</span>
 				</div>
 			</div>
 		</article>
