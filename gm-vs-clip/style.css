@@ -1,0 +1,519 @@
+:root {
+	--font-ui: system-ui, Helvetica Neue, Helvetica, Segoe UI, sans-serif;
+	--font-code: ui-monospace, SFMono-Regular, Consolas, Liberation Mono, monospace;
+	--hairline: hsl(220 15% 85%);
+	--muted: hsl(220 10% 40%);
+	--accent: oklch(55% 0.17 265);
+	--panel: hsl(220 25% 98%);
+	--yes: oklch(48% 0.13 150);
+	--no: oklch(52% 0.18 30);
+	--gm: oklch(50% 0.15 265);
+	--clip: oklch(55% 0.2 30);
+}
+
+body {
+	font: 105%/1.5 var(--font-ui);
+	width: 92vw;
+	max-width: 76em;
+	margin: 1em auto 4em;
+	padding: 0 1em;
+	color: hsl(220 15% 15%);
+}
+
+h1 {
+	text-align: center;
+	font-weight: 600;
+}
+
+h1 em {
+	font-style: normal;
+	color: var(--accent);
+}
+
+.intro {
+	max-width: 50em;
+	margin: 0 auto 2em;
+	text-align: center;
+	color: var(--muted);
+}
+
+code,
+pre {
+	font-family: var(--font-code);
+	font-size: 90%;
+}
+
+a {
+	color: var(--accent);
+}
+
+button {
+	font: inherit;
+	font-size: 90%;
+	padding: .3em .8em;
+	border: 1px solid var(--hairline);
+	border-radius: .3em;
+	background: var(--panel);
+	color: inherit;
+	cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+	border-color: var(--accent);
+	color: var(--accent);
+}
+
+button:disabled {
+	cursor: default;
+	opacity: .55;
+}
+
+/* ------------------------------------------------------------------ inputs -- */
+
+.inputs {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: end;
+	gap: .8em 1.5em;
+	margin-bottom: .4em;
+}
+
+.inputs .field {
+	flex: 1;
+	min-width: 18em;
+}
+
+.inputs .field.narrow {
+	flex: 0 1 10em;
+	min-width: 8em;
+}
+
+.inputs label {
+	display: block;
+	margin-bottom: .2em;
+	font-weight: 600;
+}
+
+.inputs label span {
+	color: var(--muted);
+	font-weight: 400;
+}
+
+.inputs input,
+.inputs select {
+	/* The padding and border have to come out of the field's width, or the input
+	   overflows its wrapper and eats the flex gap on both sides */
+	box-sizing: border-box;
+	inline-size: 100%;
+	font-family: var(--font-code);
+	font-size: 105%;
+	padding: .5em .7em;
+	border: 2px solid var(--hairline);
+	border-radius: .3em;
+	background: white;
+}
+
+.inputs input:focus-visible,
+.inputs select:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 1px;
+	border-color: transparent;
+}
+
+#permalink {
+	padding-bottom: .6em;
+}
+
+.hint {
+	max-width: 50em;
+	margin: 0 0 1em;
+	font-size: 85%;
+	color: var(--muted);
+}
+
+.examples {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: .4em;
+	margin-bottom: 1.5em;
+	font-size: 85%;
+	color: var(--muted);
+}
+
+.examples button {
+	font-family: var(--font-code);
+	font-size: 95%;
+	padding: .25em .6em;
+	border-radius: 1em;
+}
+
+.error {
+	padding: .8em 1em;
+	border-radius: .3em;
+	border-inline-start: .4em solid oklch(58% 0.21 25);
+	background: oklch(96% 0.03 25);
+	color: oklch(35% 0.12 25);
+}
+
+.note {
+	color: var(--muted);
+	font-size: 90%;
+	font-weight: 400;
+}
+
+/* ---------------------------------------------------------------- swatches -- */
+
+.swatch {
+	display: inline-block;
+	inline-size: 1.3em;
+	block-size: 1.3em;
+	vertical-align: -.3em;
+	margin-inline-end: .45em;
+	border-radius: .2em;
+	box-shadow: 0 0 0 1px hsl(220 15% 0% / .25) inset;
+	background: var(--color, transparent);
+}
+
+.swatch.big {
+	flex: none;
+	inline-size: 3.5em;
+	block-size: 3.5em;
+	border-radius: .3em;
+}
+
+.swatch.huge {
+	flex: none;
+	inline-size: 7em;
+	block-size: 7em;
+	margin: 0;
+	border-radius: .4em;
+}
+
+/* ---------------------------------------------------------------- sections -- */
+
+section {
+	margin: 2.5em 0;
+	padding-top: .5em;
+	border-top: 1px solid var(--hairline);
+}
+
+section > h2 {
+	font-size: 1.15em;
+	font-weight: 600;
+	letter-spacing: .01em;
+}
+
+section > p {
+	max-width: 50em;
+	color: var(--muted);
+}
+
+dl {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	gap: .3em 1em;
+	margin: 0;
+}
+
+dt {
+	color: var(--muted);
+}
+
+dd {
+	margin: 0;
+	overflow-wrap: anywhere;
+}
+
+/* ------------------------------------------------------------------ origin -- */
+
+.origin {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 1em 1.5em;
+	border-top: 0;
+}
+
+.origin .out {
+	color: var(--clip);
+	font-weight: 700;
+}
+
+.origin > p {
+	flex-basis: 100%;
+	margin: 0;
+}
+
+/* ----------------------------------------------------------------- verdict -- */
+
+.verdict {
+	padding: 1.2em 1.4em;
+	border-radius: .5em;
+	background: var(--panel);
+	border: 1px solid var(--hairline);
+	border-inline-start: .4em solid var(--verdict);
+}
+
+.verdict.yes {
+	--verdict: var(--yes);
+}
+
+.verdict.no {
+	--verdict: var(--no);
+}
+
+.verdict > h2 {
+	margin-top: 0;
+	font-size: 1.4em;
+	color: var(--verdict);
+}
+
+.verdict > p {
+	max-width: 55em;
+	color: inherit;
+	font-size: 105%;
+}
+
+.verdict dl {
+	margin-bottom: 1em;
+}
+
+/* ------------------------------------------------------------------ tables -- */
+
+.scroller {
+	overflow-x: auto;
+	margin: .8em 0;
+}
+
+table.values {
+	border-collapse: collapse;
+	font-size: 90%;
+}
+
+table.values th,
+table.values td {
+	padding: .35em .8em;
+	border: 1px solid var(--hairline);
+	text-align: end;
+	white-space: nowrap;
+}
+
+table.values thead th {
+	background: var(--panel);
+	font-weight: 600;
+	text-align: center;
+}
+
+table.values tbody th {
+	text-align: start;
+	font-weight: 600;
+}
+
+table.values tbody th .note a {
+	color: inherit;
+}
+
+table.values td {
+	font-family: var(--font-code);
+	font-variant-numeric: tabular-nums;
+}
+
+table.values tr.clip th {
+	color: var(--clip);
+}
+
+table.values tr.gm th {
+	color: var(--gm);
+}
+
+table.values tr.mean {
+	background: var(--panel);
+}
+
+table.scan tbody th {
+	font-weight: 400;
+}
+
+table.scan td.actions {
+	display: flex;
+	gap: .4em;
+	font-family: var(--font-ui);
+}
+
+/* ------------------------------------------------------------ channel plot -- */
+
+.plot {
+	max-width: 50em;
+	margin: 1.5em 0;
+}
+
+.track {
+	display: flex;
+	align-items: center;
+	gap: .8em;
+	margin-bottom: .6em;
+}
+
+.channel {
+	inline-size: 1em;
+	font-family: var(--font-code);
+	color: var(--muted);
+}
+
+.rail {
+	position: relative;
+	flex: 1;
+	block-size: 1.6em;
+	border-radius: .2em;
+	background: linear-gradient(transparent calc(50% - 1px), var(--hairline) 0 calc(50% + 1px), transparent 0);
+}
+
+.band {
+	position: absolute;
+	inset-block: 0;
+	/* A zero-width band would vanish; keep a sliver so E itself stays visible */
+	min-inline-size: 2px;
+	border-radius: .2em;
+	background: oklch(from var(--yes) l c h / .25);
+	box-shadow: 0 0 0 1px var(--yes) inset;
+}
+
+.mark {
+	position: absolute;
+	inset-block: .15em;
+	inline-size: 3px;
+	margin-inline-start: -1.5px;
+	border-radius: 2px;
+}
+
+.mark.gm {
+	background: var(--gm);
+}
+
+.mark.clip {
+	inset-block: -.15em;
+	inline-size: 4px;
+	margin-inline-start: -2px;
+	background: var(--clip);
+}
+
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: .4em 1.4em;
+	margin: .4em 0 0 1.8em;
+	font-size: 85%;
+}
+
+.key {
+	display: inline-block;
+	inline-size: .8em;
+	block-size: .8em;
+	margin-inline-end: .35em;
+	vertical-align: -.05em;
+	border-radius: .15em;
+}
+
+.key.band {
+	position: static;
+	background: oklch(from var(--yes) l c h / .25);
+	box-shadow: 0 0 0 1px var(--yes) inset;
+}
+
+.key.gm {
+	background: var(--gm);
+}
+
+.key.clip {
+	background: var(--clip);
+}
+
+/* --------------------------------------------------------- in this browser -- */
+
+.readback {
+	display: flex;
+	align-items: center;
+	gap: 1em;
+	max-width: 55em;
+}
+
+.readback.control {
+	margin-top: .8em;
+}
+
+.readback.yes b {
+	color: var(--yes);
+}
+
+.readback.no b {
+	color: var(--no);
+}
+
+/* -------------------------------------------------------------------- test -- */
+
+.test {
+	margin-top: 2em;
+}
+
+.test h3 {
+	margin-bottom: .4em;
+	font-size: 1em;
+	font-weight: 600;
+}
+
+.cases {
+	padding: 0;
+	list-style: none;
+}
+
+.cases li {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: .2em .6em;
+	margin-bottom: .4em;
+}
+
+.cases .remove {
+	padding: 0 .5em;
+	line-height: 1.4;
+}
+
+.source-head {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	align-items: center;
+	gap: .5em;
+	font-size: 90%;
+	color: var(--muted);
+}
+
+pre {
+	overflow-x: auto;
+	padding: 1em 1.2em;
+	border: 1px solid var(--hairline);
+	border-radius: .4em;
+	background: var(--panel);
+	tab-size: 4;
+}
+
+footer {
+	margin-top: 3em;
+	padding-top: 1em;
+	border-top: 1px solid var(--hairline);
+	font-size: 85%;
+	color: var(--muted);
+}
+
+@media (width < 45em) {
+	.inputs .field,
+	.inputs .field.narrow {
+		min-width: 100%;
+	}
+
+	#permalink {
+		padding-bottom: 0;
+	}
+}

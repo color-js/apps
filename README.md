@@ -26,6 +26,7 @@ They are useful in their own right, but also serve as [Color.js](https://colorjs
 	- [Gamut Mapping Playground](gamut-mapping)
 	- [GMA Benchmark](gamut-mapping/benchmark)
 	- [Gamut Mapping Gradients](gamut-mapping-gradients)
+	- [Gamut mapped, or clipped?](gm-vs-clip)
 - [Gamut Wheel](gamut)
 - [Tints](tints)
 - [Oklab vs. Oklrab interpolation](lr-vs-l)

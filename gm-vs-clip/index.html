@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gamut mapped, or clipped?</title>
+<link rel="shortcut icon" href="https://colorjs.io/logo.svg">
+<link rel="stylesheet" href="style.css">
+
+<!-- Must come before any module script, including the one the Eleventy dev server
+     injects into <head>: an import map is rejected once a module load has started. -->
+<script src="../importmap.js"></script>
+
+</head>
+<body>
+
+<h1>Gamut mapped, or <em>clipped</em>?</h1>
+
+<p class="intro">
+	Give a color <b>O</b> outside the gamut of a canvas color space, <code>display-p3</code> or
+	<code>srgb</code>. It is <a href="https://drafts.csswg.org/css-color-4/#css-gamut-mapping">CSS gamut mapped</a>
+	into that space by each of the three algorithms CSS Color 4 allows, giving
+	G<sub>1</sub>, G<sub>2</sub> and G<sub>3</sub>, and also naïvely clipped, giving C.
+	Their mean G, and a tolerance S within which all three fit but C does not, are what a
+	web-platform-test needs to paint O into a canvas, read the pixel back,
+	and tell whether the browser gamut mapped or clipped it.
+</p>
+
+<form class="inputs" id="form">
+	<div class="field">
+		<label for="color">Out of gamut color <span>O</span></label>
+		<input type="text" id="color" spellcheck="false" autocapitalize="off" autocomplete="off"
+		       value="oklch(76% 0.27 60)">
+	</div>
+	<div class="field narrow">
+		<label for="space">Canvas</label>
+		<select id="space">
+			<option value="p3">display-p3</option>
+			<option value="srgb">sRGB</option>
+		</select>
+	</div>
+	<div class="field narrow">
+		<label for="margin">Margin <span>8-bit steps</span></label>
+		<input type="number" id="margin" min="0" max="20" step="0.5" value="1">
+	</div>
+	<a id="permalink" href="">Permalink</a>
+</form>
+
+<p class="hint">
+	The margin is slack for implementations whose arithmetic differs a little from Color.js:
+	anything within it of any of the three algorithms must still pass, and anything within it of
+	the clipped color must still fail.
+</p>
+
+<div class="examples">
+	<span>Try:</span>
+	<button type="button">oklch(76% 0.27 60)</button>
+	<button type="button">color(display-p3 1.1 0.4 0.2)</button>
+	<button type="button">color(rec2020 0 1 0)</button>
+	<button type="button">color(rec2020 0 0 1)</button>
+	<button type="button">color(rec2020 1 0 0)</button>
+	<button type="button">oklch(50% 0.35 300)</button>
+	<button type="button">color(rec2020 1 1 0)</button>
+	<button type="button">oklch(70% 0.35 145)</button>
+	<button type="button">color(display-p3 1 0 0)</button>
+	<button type="button">color(display-p3 0 1 0)</button>
+	<button type="button">color(display-p3 0 0 1)</button>
+</div>
+
+<p class="error" id="error" hidden></p>
+
+<div id="output" hidden></div>
+
+<section id="browser" hidden>
+	<h2>In this browser</h2>
+	<div id="browser-output"></div>
+</section>
+
+<section>
+	<h2>Find test colors</h2>
+	<p>
+		Scans the display-p3 and Rec. 2020 primaries and secondaries, and round-number Oklch colors
+		(lightness 30%–90%, chroma 0.2–0.35, every 30° of hue), keeping only those outside the chosen
+		canvas’s gamut where a test can tell the three algorithms from clipping. Best first: a tight S that could grow many times
+		over before it admitted the clipped color.
+	</p>
+	<button type="button" id="scan">Scan</button>
+	<div id="scan-output"></div>
+</section>
+
+<section>
+	<h2>The tests</h2>
+	<p>
+		One test per canvas color space, since a browser can gamut map on one without supporting the
+		other. <b>Add to test</b> adds a color to the test for the canvas chosen above. Each color is
+		painted as a 5×5 patch into a canvas with <code>colorType: "unorm8"</code> — the case the spec
+		says must be gamut mapped, as it cannot store out-of-gamut values — and the center pixel, clear
+		of any antialiasing, is read back and reported as gamut mapped, clipped, or neither.
+	</p>
+	<div class="test" data-space="p3">
+		<h3>display-p3 canvas</h3>
+		<ul class="cases"></ul>
+		<div class="source-head">
+			<span>Suggested path: <code class="path"></code></span>
+			<button type="button" class="copy">Copy</button>
+		</div>
+		<pre class="source"></pre>
+	</div>
+	<div class="test" data-space="srgb">
+		<h3>sRGB canvas</h3>
+		<ul class="cases"></ul>
+		<div class="source-head">
+			<span>Suggested path: <code class="path"></code></span>
+			<button type="button" class="copy">Copy</button>
+		</div>
+		<pre class="source"></pre>
+	</div>
+</section>
+
+<footer>
+	A <a href="https://colorjs.io">Color.js</a> app.
+	Binary search with local MINDE and Ray Trace are Color.js’s own <code>toGamut()</code> methods
+	<code>"css"</code> and <code>"raytrace"</code>; EdgeSeeker is the one from the
+	<a href="../gamut-mapping/">Gamut Mapping Playground</a>, which CSS Color 4 cites as its
+	reference implementation, with its lookup table built for each canvas color space.
+	Unlike the Playground, the input chroma is not capped.
+	<a href="https://github.com/color-js/apps/tree/main/gm-vs-clip">Source</a>.
+</footer>
+
+<script type="module" src="index.js"></script>
+</body>
+</html>
