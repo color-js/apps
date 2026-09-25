@@ -23,7 +23,13 @@ let app = createApp({
 			precision: 3,
 		};
 
-		if (localStorage.picker_color) {
+		// URL ?color= takes priority over localStorage so shared links work.
+		let urlColor = new URL(location).searchParams.get("color");
+		if (urlColor) {
+			try { ret.color = new Color(urlColor); }
+			catch {}
+		}
+		else if (localStorage.picker_color) {
 			let o = JSON.parse(localStorage.picker_color);
 			ret.color = new Color(o);
 		}
@@ -170,6 +176,8 @@ let app = createApp({
 		},
 		// Encode every picker's space in the URL (e.g. /picker/oklch+p3) and keep
 		// the title in sync with the primary (first) picker.
+		// Uses pushState — structural changes (add/remove/change space) are
+		// intentional navigation steps worth recording in history.
 		updateLocation () {
 			let spaces = this.pickers.map(p => p.spaceId).join("+");
 			if (spaces === this._locationSpaces) {
@@ -185,7 +193,15 @@ let app = createApp({
 
 			let url = new URL(location);
 			url.pathname = url.pathname.replace(/\/picker\/[^/?#]*/, `/picker/${spaces}`);
+			url.searchParams.set("color", this.color.toString({inGamut: false}));
 			history.pushState(null, "", url.href);
+		},
+		// Keep the ?color= param in sync with the current color using replaceState
+		// so the URL is always shareable without spamming browser history.
+		updateColorInURL () {
+			let url = new URL(location);
+			url.searchParams.set("color", this.color.toString({inGamut: false}));
+			history.replaceState(null, "", url.href);
 		},
 	},
 	watch: {
@@ -204,6 +220,7 @@ let app = createApp({
 
 			requestIdleCallback(() => {
 				localStorage.picker_color = JSON.stringify(this.color);
+				this.updateColorInURL();
 			});
 		},
 	},
