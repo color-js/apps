@@ -1,4 +1,5 @@
 node_modules/
+client_modules/
 importmap.js
 .claude
 
