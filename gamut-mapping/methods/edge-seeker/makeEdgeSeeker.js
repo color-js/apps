@@ -6,6 +6,7 @@ const SLICES = 400;
 
 /**
  * Creates a function that returns the maximum chroma for a given lightness and hue
+ * for an RGB space with non-imaginary primaries (not, for example, ProPhoto RGB)
  * @param rgbToOklch converter from RGB to OKLCH
  * @returns function that returns the maximum chroma for a given lightness and hue
  */
@@ -25,46 +26,28 @@ export function makeEdgeSeeker (rgbToOklch) {
 
 		// The top (bright) part is approximated by an arc
 		const x = (1 - l) / (1 - lutItem.l); // Normalize l to 0-1 in arc space
-		return lutItem.c * intersectionWithArc(x, lutItem.curvature);
+		return lutItem.c * normalizedChromaOnArc(x, lutItem.curvature);
 	};
 }
 
-/** Finds the intersection of a line and an arc */
-function intersectionWithArc (x, curvature) {
-	if (curvature === 0) {
-		return x;
-	} // straight line
-
-	const radius = Math.abs(1 / curvature);
-	// Midpoint of the line segment from (0,0) to (1,1)
-	const midpoint = { x: 0.5, y: 0.5 };
-
-	// Distance from midpoint to any of the points (0,0) or (1,1)
-	const halfDiagonal = Math.sqrt(midpoint.x ** 2 + midpoint.y ** 2);
-
-	// Distance from midpoint to the center (using Pythagorean theorem)
-	const distanceToCenter = Math.sqrt(radius ** 2 - halfDiagonal ** 2);
-
-	// Since the bisector's slope is -1, the line is at 45 degrees, so the offsets for h and k are equal
-	const offset = distanceToCenter / Math.sqrt(2);
-
-	// Position of the center of the circle. Sign helps to determine the correct center
-	const centerX = (curvature > 0 ? offset : -offset) + midpoint.x;
-	const centerY = (curvature > 0 ? -offset : offset) + midpoint.y;
-
-	// Calculate y for given x
-	const underRoot = radius ** 2 - (x - centerX) ** 2;
-
-	// If the value under the square root is negative, no solution exists for this center
-	if (underRoot < 0) {
-		return 0;
-	}
-	const sqrtVal = Math.sqrt(underRoot);
-	const res1 = centerY + sqrtVal;
-	if (res1 >= 0 && res1 <= 1) {
-		return res1;
-	}
-	else {
-		return centerY - sqrtVal;
-	}
+/**
+ * Finds the normalized chroma on the upper gamut boundary arc,
+ * the arc through (0,0) and (1,1) with the given signed curvature (|curvature| < 1).
+ * Rather than locating the center of the circle, which is very far away
+ * when the curvature is close to 0, the circle's equation is multiplied through
+ * by the curvature and solved directly:
+ * curvature × y² + b × y − d = 0
+ * This avoids subtracting large, nearly equal values,
+ * and needs no test to choose between the two roots.
+ */
+function normalizedChromaOnArc (x, curvature) {
+	const t = Math.sqrt(2 - curvature ** 2);
+	const b = t - curvature;
+	const d = x * (t + curvature * (1 - x));
+	// Never negative in exact arithmetic for 0 <= x <= 1,
+	// because the circle passes through (0,0) and (1,1)
+	const disc = Math.max(0, b ** 2 + 4 * curvature * d);
+	// The upper root for a positive curvature and the lower root for a negative one;
+	// with a curvature of 0 this equals x, a straight line
+	return 2 * d / (b + Math.sqrt(disc));
 }

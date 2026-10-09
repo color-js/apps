@@ -1,5 +1,6 @@
 import Color from "colorjs.io";
 import { makeEdgeSeeker } from "./makeEdgeSeeker.js";
+import { compute as clipToGamut } from "../clip.js";
 
 // Make a function to get the maximum chroma for a given lightness and hue
 // Lookup table is created once and reused
@@ -9,6 +10,12 @@ const p3EdgeSeeker = makeEdgeSeeker((r, g, b) => {
 });
 
 export function compute (color) {
+	// Colors inside the destination gamut are unchanged;
+	// the LUT is only an approximation, and in places lies inside the true gamut
+	if (color.inGamut("p3")) {
+		return clipToGamut(color);
+	}
+
 	let [l, c, h] = color.to("oklch").coords;
 	if (l <= 0) {
 		return new Color("oklch", [0, 0, h]);
