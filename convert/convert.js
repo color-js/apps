@@ -6,6 +6,7 @@ const supportsP3 = window.CSS && CSS.supports("color", "color(display-p3 0 1 0)"
 function getURLParams () {
 	return Object.fromEntries(new URL(location).searchParams);
 }
+const HDR_UNBOUNDED_SPACES = new Set(["rec2100-linear"]);
 
 function renderSpace(space, format, color) {
 	let id = space.id;
@@ -18,14 +19,15 @@ function renderSpace(space, format, color) {
 	}
 
 	let precision = precisionInput.value;
-	let inGamut = converted.inGamut();
+	let isHDR = HDR_UNBOUNDED_SPACES.has(id);
+	let inGamut = isHDR || converted.inGamut();
 	// Hex can only represent sRGB, so toString({format: "hex"}) always gamut-maps
 	// out-of-gamut colors. Use a naive clip for the raw value so hex shows both a
 	// clipped and a gamut-mapped serialization, like every other format.
 	let str = format === "hex"
 		? converted.clone().toGamut({method: "clip"}).toString({precision, format})
 		: converted.toString({precision, inGamut: false, format});
-	let str_mapped = converted.toString({precision, inGamut: true, format});
+	let str_mapped = isHDR ? str : converted.toString({precision, inGamut: true, format});
 	let clipped = format === "hex" && str !== str_mapped;
 	let permalink = `?color=${encodeURIComponent(str)}&precision=${encodeURIComponent(precision)}`;
 	let permalink_mapped = `?color=${encodeURIComponent(str_mapped)}&precision=${encodeURIComponent(precision)}`;
