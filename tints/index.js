@@ -41,16 +41,24 @@ function debounce(fn, delay) {
 	};
 }
 
+/** The color space scales are computed in, unless a scale def sets its own `space`. */
+const DEFAULT_SPACE = "oklch";
+
 /**
  * The tunable numeric params a scale exposes, as `{ name: {min, max, default, step?} }`.
- * Everything on a scale def besides `name` and `getColor` is treated as a param.
+ * Everything on a scale def besides `name`, `space` and `getColor` is treated as a param.
  * @param {object} scale
  */
 function getParams (scale) {
-	let { name, getColor, ...params } = scale;
+	let { name, space, getColor, ...params } = scale;
 	return params;
 }
 
+/**
+ * Scale definitions. `getColor(level, color)` receives a clone of the base color converted
+ * to the scale's `space` (default: oklch), so coordinate-based operations like set("l")
+ * operate in that space regardless of the space the picker produced the color in.
+ */
 const scaleDefs = {
 	raw: {
 		name: "Raw",
@@ -63,7 +71,7 @@ const scaleDefs = {
 	mapped: {
 		name: "Gamut mapped (sRGB)",
 		getColor: (level, color) => {
-			let l = color.get("oklch.l");
+			let l = color.get("l");
 			let targetL = L[level];
 			color.set("l", L[level]);
 			if (targetL <= l + 0.01 && targetL >= l - 0.01) {
@@ -76,7 +84,7 @@ const scaleDefs = {
 	mapped_p3: {
 		name: "Gamut mapped (P3)",
 		getColor: (level, color) => {
-			let l = color.get("oklch.l");
+			let l = color.get("l");
 			let targetL = L[level];
 			color.set("l", L[level]);
 			if (targetL <= l + 0.01 && targetL >= l - 0.01) {
@@ -88,17 +96,15 @@ const scaleDefs = {
 	},
 	oklchp3: {
 		name: "Using (oklch-P3)",
-		getColor: (level, color) => {
-			color = color.to("oklch-p3");
-			color.set("l", L[level]);
-			return color.to("oklch");
-		},
+		// Chroma in oklch-p3 is relative to the P3 gamut, so keeping it while changing L
+		// keeps every tint in gamut.
+		space: "oklch-p3",
+		getColor: (level, color) => color.set("l", L[level]),
 	},
 	pow: {
 		name: "Power curve",
 		getColor (level, color) {
-			color = color.clone().to("oklch");
-			let l = color.get("oklch.l");
+			let l = color.get("l");
 			let targetL = L[level];
 			color.set("l", targetL);
 			let x = Math.max(progress(targetL, l, 0), progress(targetL, l, 1));
@@ -112,7 +118,7 @@ const scaleDefs = {
 	colormix: {
 		name: "color-mix()",
 		getColor: (level, color) => {
-			let l = color.get("oklch.l");
+			let l = color.get("l");
 			let targetL = L[level];
 			let mixWith = targetL > l ? "white" : "black";
 			let extremeL = targetL > l ? 1 : 0;
@@ -197,11 +203,12 @@ globalThis.app = createApp({
 			return Object.entries(scales).map(([id, scale]) => {
 				let tints = {};
 				let cssVars = {};
+				let base = this.color.to(scale.space ?? DEFAULT_SPACE);
 
 				// Run getColor with this scale's live param values as `this`, so a param-driven
 				// scale can read them as `this.paramName`. Param-free scales ignore `this`.
 				for (let level in L) {
-					tints[level] = scale.getColor.call(this.paramValues[id], level, this.color.clone());
+					tints[level] = scale.getColor.call(this.paramValues[id], level, base.clone());
 					cssVars["--color-" + level] = tints[level].display();
 				}
 
@@ -260,7 +267,7 @@ globalThis.app = createApp({
 				}
 
 				tints[level] = result;
-				cssVars["--color-" + level] = result.toString();
+				cssVars["--color-" + level] = result.display();
 			}
 
 			let isEqual = new Set(this.selectedScales.map(s => nw[s.id])).size === 1;
