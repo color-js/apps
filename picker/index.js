@@ -16,6 +16,24 @@ function detectDeviceGamut () {
 	return "srgb";
 }
 
+function colorFromURL () {
+	let urlColor = new URL(location).searchParams.get("color");
+	if (urlColor) {
+		try { return new Color(urlColor); }
+		catch {}
+	}
+	return null;
+}
+
+function spacesFromURL () {
+	let raw = location.pathname.match(/\/picker\/([^/?#]+)/)?.[1]
+		?? new URL(location).searchParams.get("space") ?? "";
+	return raw.split(/[+ ]/).map(s => s.trim()).filter(id => {
+		try { return !!Color.Space.get(id); }
+		catch { return false; }
+	});
+}
+
 let app = createApp({
 	data () {
 		let ret = {
@@ -24,10 +42,8 @@ let app = createApp({
 		};
 
 		// URL ?color= takes priority over localStorage so shared links work.
-		let urlColor = new URL(location).searchParams.get("color");
-		if (urlColor) {
-			try { ret.color = new Color(urlColor); }
-			catch {}
+		if (new URL(location).searchParams.get("color")) {
+			ret.color = colorFromURL() ?? ret.color;
 		}
 		else if (localStorage.picker_color) {
 			let o = JSON.parse(localStorage.picker_color);
@@ -36,12 +52,7 @@ let app = createApp({
 
 		// The URL encodes every picker's color space (e.g. /picker/oklch+p3) so
 		// the whole picker configuration can be restored on load.
-		let raw = location.pathname.match(/\/picker\/([^/?#]+)/)?.[1]
-			?? new URL(location).searchParams.get("space") ?? "";
-		let spaceIds = raw.split(/[+ ]/).map(s => s.trim()).filter(id => {
-			try { return !!Color.Space.get(id); }
-			catch { return false; }
-		});
+		let spaceIds = spacesFromURL();
 
 		if (spaceIds.length === 0) {
 			spaceIds = [ret.color.space.id];
@@ -203,6 +214,52 @@ let app = createApp({
 			url.searchParams.set("color", this.color.toString({inGamut: false}));
 			history.replaceState(null, "", url.href);
 		},
+		// Push the current color (in each picker's own space) into the
+		// <color-picker> elements, without reacting to the echoed events.
+		syncPickerElements () {
+			this._syncing = true;
+			let els = this.pickerElements();
+			this.pickers.forEach((entry, i) => {
+				let el = els[i];
+				if (el) {
+					el.spaceId = entry.spaceId;
+					el.color = this.color.to(entry.spaceId);
+				}
+			});
+
+			// Setting spaceId re-expresses the color in a deferred `updated()`
+			// (microtask), emitting a colorchange. Keep the guard up until it settles.
+			queueMicrotask(() => {
+				this._syncing = false;
+				this.showRawValues();
+			});
+		},
+		// Back/Forward: restore the pickers and color from the URL of the history
+		// entry we navigated to, without pushing a new entry.
+		restoreFromURL () {
+			let color = colorFromURL() ?? this.color;
+			let spaceIds = spacesFromURL();
+
+			if (spaceIds.length === 0) {
+				spaceIds = [color.space.id];
+			}
+
+			if (spaceIds[0] !== color.space.id) {
+				color = color.to(spaceIds[0], {inGamut: true});
+			}
+
+			// Keep each position's pin state; new positions follow the defaults.
+			this.pickers = spaceIds.map((spaceId, i) => ({
+				id: this.nextId++,
+				spaceId,
+				pinned: this.pickers[i]?.pinned ?? i !== 0,
+			}));
+			this._locationSpaces = spaceIds.join("+");
+			document.title = `${Color.Space.get(spaceIds[0]).name} color picker`;
+
+			this.color = color;
+			this.$nextTick(() => this.syncPickerElements());
+		},
 	},
 	watch: {
 		color (newColor) {
@@ -233,23 +290,11 @@ let app = createApp({
 		}
 
 		this._locationSpaces = this.pickers.map(p => p.spaceId).join("+");
+		this.syncPickerElements();
 
-		this._syncing = true;
-		let els = this.pickerElements();
-		this.pickers.forEach((entry, i) => {
-			let el = els[i];
-			if (el) {
-				el.spaceId = entry.spaceId;
-				el.color = this.color.to(entry.spaceId);
-			}
-		});
-
-		// Setting spaceId re-expresses the color in a deferred `updated()`
-		// (microtask), emitting a colorchange. Keep the guard up until it settles.
-		queueMicrotask(() => {
-			this._syncing = false;
-			this.showRawValues();
-		});
+		// updateLocation() records structural changes with pushState, so Back
+		// and Forward must restore the picker setup from the URL.
+		addEventListener("popstate", () => this.restoreFromURL());
 	},
 	compilerOptions: {
 		isCustomElement (tag) {
